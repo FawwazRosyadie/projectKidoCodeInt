@@ -7,7 +7,7 @@
 <style>
     body {
         font-family: Arial, sans-serif;
-        background: #f2f6ff;
+        background: #0a101d;
         display: flex;
         justify-content: center;
         align-items: center;
@@ -16,10 +16,10 @@
     }
 
     .game {
-        background: white;
+        background: rgba(255, 255, 255, 0.1);
         padding: 20px 30px;
         border-radius: 12px;
-        box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        box-shadow: 0 8px 20px rgb(109, 108, 108);
         text-align: center;
         width: 360px;
     }
@@ -40,7 +40,7 @@
         width: 120px;
         padding: 10px;
         border-radius: 10px;
-        background: #eef2ff;
+        background: #202537;
     }
 
     .icons {
@@ -127,10 +127,10 @@
         else correct = "=";
 
         if (symbol === correct) {
-            document.getElementById("result").textContent = "✅ Correct! The assignment works.";
+            document.getElementById("result").textContent = "✅ Correct!";
             score++;
         } else {
-            document.getElementById("result").textContent = "❌ Oops! That doesn't fit.";
+            document.getElementById("result").textContent = "❌ Oops! Wrong.";
         }
 
         document.getElementById("score").textContent = score;
