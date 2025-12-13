@@ -1,0 +1,566 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Multiplication Dash — Mini Math Game</title>
+<style>
+  :root{
+    --bg:#0f1724; --card:#0b1220; --accent:#06b6d4; --muted:#9ca3af;
+    --success:#10b981; --danger:#ef4444; --glass: rgba(255,255,255,0.04);
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; background:linear-gradient(180deg,#031226 0%, #071426 100%);
+    color:#e6eef6; display:flex; align-items:center; justify-content:center;
+    padding:20px;
+  }
+
+  .wrap{
+    width:100%; max-width:950px; background:linear-gradient(180deg,var(--card), #071320);
+    border-radius:14px; box-shadow: 0 10px 30px rgba(2,6,23,0.7);
+    overflow:hidden; display:grid; grid-template-columns: 360px 1fr;
+  }
+
+  /* Left panel */
+  .sidebar{
+    padding:20px; background: linear-gradient(180deg, rgba(255,255,255,0.02), transparent);
+    border-right: 1px solid rgba(255,255,255,0.03);
+  }
+  h1{font-size:20px;margin:0 0 10px}
+  p.lead{margin:6px 0 18px;color:var(--muted); font-size:13px}
+  label{font-size:13px; color:var(--muted)}
+  .control{margin-bottom:12px}
+  select,input[type="range"]{width:100%; padding:8px 10px; border-radius:8px; border:1px solid rgba(255,255,255,0.04); background:var(--glass); color:inherit}
+  .modes {display:flex; gap:8px; margin:10px 0 16px}
+  .mode-btn {flex:1; padding:10px; border-radius:8px; background:transparent; border:1px solid rgba(255,255,255,0.04); cursor:pointer}
+  .mode-btn.active{background:linear-gradient(90deg,var(--accent), #7dd3fc33); border-color:var(--accent); color:#001217; font-weight:600}
+  button.start{width:100%; background:var(--accent); color:#021217; border:none; padding:12px; border-radius:10px; font-weight:700; cursor:pointer; margin-top:6px}
+  .meta{display:flex; gap:8px; margin-top:14px; font-size:13px; color:var(--muted); flex-wrap:wrap}
+  .meta .chip{background:rgba(255,255,255,0.02); padding:8px 10px; border-radius:999px; border:1px solid rgba(255,255,255,0.03)}
+
+  /* Right panel */
+  .play-area{padding:26px; min-height:420px; display:flex; flex-direction:column; gap:14px; align-items:stretch}
+  .question{
+    background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);
+    border-radius:12px; padding:20px; display:flex; gap:18px; align-items:center; justify-content:space-between;
+    border:1px solid rgba(255,255,255,0.03);
+  }
+  .question .left{display:flex; gap:16px; align-items:center}
+  .problem{font-size:44px; font-weight:800; letter-spacing:1px}
+  .hint{color:var(--muted); font-size:13px}
+  .input-row{display:flex; gap:8px; align-items:center}
+  input.answer{
+    font-size:22px; padding:10px 14px; border-radius:10px; width:160px; background:transparent; border:1px solid rgba(255,255,255,0.06); color:inherit;
+  }
+  button.submit{padding:10px 14px; border-radius:10px; background:var(--accent); color:#001217; border:none; cursor:pointer; font-weight:700}
+  .stats{display:flex; gap:8px; align-items:center; flex-wrap:wrap}
+  .stat{background:rgba(255,255,255,0.02); padding:8px 10px; border-radius:8px; border:1px solid rgba(255,255,255,0.03); font-weight:600}
+  .progress{height:10px; background:rgba(255,255,255,0.02); border-radius:999px; overflow:hidden}
+  .progress > i{display:block; height:100%; width:0%; background: linear-gradient(90deg,var(--accent), #60a5fa);}
+
+  .feedback{height:28px; font-weight:700; display:flex; align-items:center; gap:8px}
+  .feedback.ok{color:var(--success)}
+  .feedback.bad{color:var(--danger)}
+
+  .footer-row{display:flex; justify-content:space-between; align-items:center; gap:12px; margin-top:auto; color:var(--muted); font-size:13px}
+  .small{font-size:12px;color:var(--muted)}
+
+  /* responsive */
+  @media (max-width:880px){
+    .wrap{grid-template-columns:1fr; padding:0}
+    .sidebar{order:2}
+    .play-area{order:1}
+  }
+
+  /* confetti canvas overlay */
+  #confetti{position:absolute; inset:0; pointer-events:none}
+</style>
+</head>
+<body>
+<div class="wrap" role="application" aria-labelledby="title">
+  <div class="sidebar" aria-hidden="false">
+    <h1 id="title">Multiplication Dash</h1>
+    <p class="lead">Sharpen your times-table speed and accuracy. Choose a mode, practice the table ranges, and beat your high score!</p>
+
+    <div class="control">
+      <label for="mode">Mode</label>
+      <div class="modes" role="tablist" aria-label="Game modes">
+        <button class="mode-btn active" data-mode="practice" role="tab" aria-selected="true">Practice</button>
+        <button class="mode-btn" data-mode="timed" role="tab">Timed</button>
+        <button class="mode-btn" data-mode="survival" role="tab">Survival</button>
+      </div>
+    </div>
+
+    <div class="control">
+      <label for="minmax">Multiplicands range</label>
+      <div style="display:flex;gap:8px">
+        <select id="min" aria-label="Minimum number">
+          <!-- filled by JS -->
+        </select>
+        <select id="max" aria-label="Maximum number">
+          <!-- filled by JS -->
+        </select>
+      </div>
+    </div>
+
+    <div class="control">
+      <label for="difficulty">Difficulty (speed / choices)</label>
+      <input id="difficulty" type="range" min="1" max="5" value="3" />
+    </div>
+
+    <div class="control">
+      <label for="typed">Input type</label>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button class="mode-btn active" id="typedBtn" data-input="typed">Typed</button>
+        <button class="mode-btn" id="choiceBtn" data-input="choice">Multiple Choice</button>
+      </div>
+    </div>
+
+    <div class="meta">
+      <div class="chip">Streak: <strong id="uiStreak">0</strong></div>
+      <div class="chip">Correct: <strong id="uiCorrect">0</strong></div>
+      <div class="chip">Wrong: <strong id="uiWrong">0</strong></div>
+      <div class="chip">Best (Timed): <strong id="uiBest">0</strong></div>
+    </div>
+
+    <button class="start" id="startBtn">Start Game</button>
+    <div style="margin-top:10px">
+      <small class="small">Quick controls: press Enter to submit, number keys to pick choices in Multiple Choice mode.</small>
+    </div>
+  </div>
+
+  <div class="play-area">
+    <div class="question" aria-live="polite">
+      <div class="left">
+        <div>
+          <div class="problem" id="problem">— × — = ?</div>
+          <div class="hint" id="hint">Choose mode & start to play</div>
+        </div>
+      </div>
+
+      <div class="input-row">
+        <input inputmode="numeric" pattern="[0-9]*" id="answerInput" class="answer" placeholder="Your answer" aria-label="Answer" />
+        <div id="choicesWrap" style="display:none"></div>
+        <button class="submit" id="submitBtn" aria-label="Submit answer">Submit</button>
+      </div>
+    </div>
+
+    <div class="stats" aria-hidden="false">
+      <div class="stat">Time: <span id="uiTime">0</span>s</div>
+      <div class="stat">Mode: <span id="uiMode">Practice</span></div>
+      <div class="stat">Lives: <span id="uiLives">∞</span></div>
+      <div class="stat">Accuracy: <span id="uiAcc">0%</span></div>
+      <div class="stat">Streak: <span id="uiStreak2">0</span></div>
+      <div class="stat">Score: <span id="uiScore">0</span></div>
+    </div>
+
+    <div class="progress" aria-hidden="false" title="progress bar"><i id="progressBar"></i></div>
+
+    <div class="feedback" id="feedback" aria-live="assertive"></div>
+
+    <div class="footer-row">
+      <div>
+        <small>Questions: <span id="qCount">0</span></small>
+        <div class="small" id="lastQ"></div>
+      </div>
+      <div>
+        <small>Tip: you can increase difficulty to include bigger numbers and more choices.</small>
+      </div>
+    </div>
+  </div>
+</div>
+
+<canvas id="confetti"></canvas>
+
+<script>
+(() => {
+  // ---- State ----
+  const state = {
+    running:false,
+    mode:'practice', // practice, timed, survival
+    inputMode:'typed', // typed or choice
+    min:2, max:9,
+    difficulty:3, // 1..5
+    timeLeft:0, totalTime:60,
+    score:0, streak:0, correct:0, wrong:0, questions:0, lives:3,
+    current: null,
+    timerId: null,
+    progress:0,
+  };
+
+  // ---- Elements ----
+  const startBtn = document.getElementById('startBtn');
+  const modeBtns = [...document.querySelectorAll('.mode-btn[data-mode]')];
+  const inputTypedBtn = document.getElementById('typedBtn');
+  const inputChoiceBtn = document.getElementById('choiceBtn');
+  const minSel = document.getElementById('min');
+  const maxSel = document.getElementById('max');
+  const diff = document.getElementById('difficulty');
+  const problemEl = document.getElementById('problem');
+  const hintEl = document.getElementById('hint');
+  const answerInput = document.getElementById('answerInput');
+  const submitBtn = document.getElementById('submitBtn');
+  const choicesWrap = document.getElementById('choicesWrap');
+  const uiStreak = document.getElementById('uiStreak');
+  const uiCorrect = document.getElementById('uiCorrect');
+  const uiWrong = document.getElementById('uiWrong');
+  const uiBest = document.getElementById('uiBest');
+  const uiTime = document.getElementById('uiTime');
+  const uiMode = document.getElementById('uiMode');
+  const uiLives = document.getElementById('uiLives');
+  const uiAcc = document.getElementById('uiAcc');
+  const uiStreak2 = document.getElementById('uiStreak2');
+  const uiScore = document.getElementById('uiScore');
+  const progressBar = document.getElementById('progressBar');
+  const feedback = document.getElementById('feedback');
+  const qCount = document.getElementById('qCount');
+  const lastQ = document.getElementById('lastQ');
+
+  // confetti canvas
+  const confettiCanvas = document.getElementById('confetti');
+  const C = confettiCanvas;
+  const ctx = C.getContext('2d');
+  function resizeCanvas(){ C.width = innerWidth; C.height = innerHeight; }
+  resizeCanvas(); addEventListener('resize', resizeCanvas);
+
+  // ---- helpers ----
+  function randInt(a,b){ return Math.floor(Math.random()*(b-a+1)) + a; }
+  function clamp(v,a,b){ return Math.min(b,Math.max(a,v)); }
+  function saveBest(value){
+    const key = 'multdash_best_timed';
+    const old = parseInt(localStorage.getItem(key) || '0',10);
+    if(value>old) localStorage.setItem(key,String(value));
+    uiBest.textContent = Math.max(old,value);
+  }
+  function loadBest(){
+    const old = parseInt(localStorage.getItem('multdash_best_timed') || '0',10);
+    uiBest.textContent = old;
+  }
+
+  // populate min/max dropdowns
+  function populateRange(){
+    minSel.innerHTML = ''; maxSel.innerHTML = '';
+    for(let i=2;i<=20;i++){
+      const o1 = document.createElement('option'); o1.value=i; o1.textContent=i;
+      const o2 = o1.cloneNode(true);
+      minSel.appendChild(o1); maxSel.appendChild(o2);
+    }
+    minSel.value = state.min; maxSel.value = state.max;
+  }
+
+  // create a new problem
+  function newProblem(){
+    const a = randInt(state.min, state.max);
+    const b = randInt(state.min, state.max);
+    const correct = a * b;
+    state.current = {a,b,correct};
+    problemEl.textContent = `${a} × ${b} = ?`;
+    hintEl.textContent = `Difficulty ${state.difficulty} • ${state.inputMode === 'typed' ? 'Type your answer' : 'Pick the correct option'}`;
+    answerInput.value = '';
+    if(state.inputMode === 'typed'){
+      choicesWrap.style.display = 'none';
+      answerInput.style.display = '';
+      answerInput.focus();
+    } else {
+      // populate choices
+      answerInput.style.display = 'none';
+      choicesWrap.style.display = '';
+      choicesWrap.innerHTML = '';
+      const choices = makeChoices(correct);
+      choices.forEach((val,i) => {
+        const btn = document.createElement('button');
+        btn.className='mode-btn';
+        btn.style.padding='10px 12px';
+        btn.style.minWidth='72px';
+        btn.textContent = `${i+1}. ${val}`;
+        btn.setAttribute('data-val', val);
+        btn.addEventListener('click', () => {
+          handleAnswer(String(val));
+        });
+        choicesWrap.appendChild(btn);
+      });
+    }
+    qCount.textContent = state.questions + 1;
+  }
+
+  // generate multiple choice options
+  function makeChoices(correct){
+    const opts = new Set([correct]);
+    const spread = Math.max(6, Math.floor(correct * 0.25) + 2);
+    const choiceCount = clamp(3 + Math.floor(state.difficulty/2), 3, 6);
+    while(opts.size < choiceCount){
+      const noise = randInt(-spread, spread);
+      const candidate = Math.max(0, correct + noise);
+      opts.add(candidate);
+    }
+    // shuffle
+    return Array.from(opts).sort(()=>Math.random()-0.5);
+  }
+
+  // UI update
+  function updateUI(){
+    uiStreak.textContent = state.streak;
+    uiCorrect.textContent = state.correct;
+    uiWrong.textContent = state.wrong;
+    uiTime.textContent = Math.max(0, Math.ceil(state.timeLeft));
+    uiMode.textContent = capitalize(state.mode);
+    uiLives.textContent = state.mode === 'survival' ? state.lives : '∞';
+    uiAcc.textContent = state.questions ? Math.round((state.correct/state.questions)*100) + '%' : '0%';
+    uiStreak2.textContent = state.streak;
+    uiScore.textContent = state.score;
+    progressBar.style.width = (state.progress*100) + '%';
+  }
+
+  function capitalize(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
+
+  // Start / Stop
+  function startGame(){
+    if(state.running) return stopGame();
+    // sync options
+    state.mode = document.querySelector('.mode-btn[data-mode].active').dataset.mode;
+    state.inputMode = document.querySelector('#typedBtn').classList.contains('active') ? 'typed' : 'choice';
+    state.min = parseInt(minSel.value,10);
+    state.max = parseInt(maxSel.value,10);
+    state.difficulty = parseInt(diff.value,10);
+    // reset stats
+    state.running = true;
+    state.score = 0; state.streak = 0; state.correct = 0; state.wrong = 0; state.questions = 0;
+    state.progress = 0; state.feedback = '';
+    state.timeLeft = state.mode === 'timed' ? 60 : 0;
+    state.totalTime = state.timeLeft;
+    state.lives = state.mode === 'survival' ? 3 + Math.floor(state.difficulty/2) : Infinity;
+    startBtn.textContent = 'Stop';
+    answerInput.disabled = false;
+    choicesWrap.innerHTML = '';
+    feedback.textContent = '';
+    newProblem();
+    state.questions = 0; // will be incremented by newProblem when shown
+    // timer
+    if(state.mode === 'timed'){
+      state.timerId = setInterval(()=> {
+        state.timeLeft -= 0.25;
+        state.progress = 1 - (state.timeLeft/state.totalTime);
+        if(state.timeLeft <= 0){
+          endGame('time');
+        }
+        updateUI();
+      }, 250);
+    }
+    updateUI();
+  }
+
+  function stopGame(){
+    state.running = false;
+    clearInterval(state.timerId);
+    state.timerId = null;
+    startBtn.textContent = 'Start Game';
+    feedback.textContent = 'Stopped.';
+    answerInput.disabled = true;
+    updateUI();
+  }
+
+  function endGame(reason){
+    clearInterval(state.timerId);
+    state.timerId = null;
+    state.running = false;
+    startBtn.textContent = 'Start Game';
+    // finalize score, save high score for timed
+    if(state.mode === 'timed'){
+      saveBest(state.score);
+    }
+    // final messages
+    if(reason === 'won'){
+      feedback.className = 'feedback ok';
+      feedback.textContent = `Nice! You won — Score ${state.score}`;
+      burstConfetti();
+    } else if(reason === 'lives'){
+      feedback.className = 'feedback bad';
+      feedback.textContent = `Out of lives — final score ${state.score}`;
+    } else if(reason === 'time'){
+      feedback.className = 'feedback ok';
+      feedback.textContent = `Time's up — final score ${state.score}`;
+    } else {
+      feedback.className = '';
+      feedback.textContent = 'Game ended.';
+    }
+    updateUI();
+  }
+
+  // Answer handling
+  function handleAnswer(raw){
+    if(!state.running) return;
+    const ans = Number(raw);
+    const correct = state.current.correct;
+    state.questions++;
+    if(ans === correct){
+      // correct
+      state.correct++;
+      state.streak++;
+      const added = 10 + Math.floor(state.difficulty*state.streak/2);
+      state.score += added;
+      feedback.className = 'feedback ok';
+      feedback.textContent = `Correct! +${added} points`;
+      lastQ.textContent = `${state.current.a}×${state.current.b} = ${correct}`;
+      uiCorrect.textContent = state.correct;
+      // small progress reward in survival
+      if(state.mode === 'survival') state.lives = Math.min(9, state.lives + 0); // keep same or add mechanics
+      // quick confetti on streak milestones
+      if(state.streak > 0 && state.streak % 5 === 0) burstConfetti(40);
+    } else {
+      // wrong
+      state.wrong++;
+      state.streak = 0;
+      const penalty = Math.max(0, 5 - state.difficulty);
+      state.score = Math.max(0, state.score - penalty);
+      feedback.className = 'feedback bad';
+      feedback.textContent = `Wrong — ${state.current.a}×${state.current.b} = ${correct} (−${penalty})`;
+      lastQ.textContent = `You answered ${ans}`;
+      if(state.mode === 'survival'){
+        state.lives--;
+        if(state.lives <= 0){
+          endGame('lives');
+          return;
+        }
+      }
+    }
+    // timed scoring: bonus for fast answers
+    if(state.mode === 'timed'){
+      state.score += Math.max(0, Math.floor(state.timeLeft / 3));
+    }
+    state.questions = state.questions;
+    // set small progress increment
+    state.progress = clamp(state.progress + 0.02 + (state.difficulty * 0.01), 0, 1);
+    updateUI();
+    state.questions = state.questions;
+    // prepare next
+    setTimeout(() => {
+      state.questions = state.questions; // no-op but keeps flow clear
+      newProblem();
+      updateUI();
+    }, 400);
+  }
+
+  // submit button event
+  submitBtn.addEventListener('click', ()=> {
+    if(state.inputMode === 'typed'){
+      handleAnswer(answerInput.value.trim());
+    } else {
+      // for choice mode, ignore
+    }
+  });
+
+  // keyboard: Enter to submit, numeric keys to pick choices when in choice mode
+  window.addEventListener('keydown', (e) => {
+    if(!state.running) {
+      if(e.key === 'Enter') startGame();
+      return;
+    }
+    if(e.key === 'Enter'){
+      if(state.inputMode === 'typed') handleAnswer(answerInput.value.trim());
+    } else if(state.inputMode === 'choice' && /^[1-9]$/.test(e.key)){
+      const idx = Number(e.key) -1;
+      const btn = choicesWrap.children[idx];
+      if(btn) btn.click();
+    }
+  });
+
+  // UI listeners for mode buttons
+  modeBtns.forEach(btn => {
+    if(btn.dataset.mode){
+      btn.addEventListener('click', ()=> {
+        modeBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+      });
+    }
+  });
+
+  // input type toggle
+  inputTypedBtn.addEventListener('click', ()=> {
+    inputTypedBtn.classList.add('active');
+    inputChoiceBtn.classList.remove('active');
+  });
+  inputChoiceBtn.addEventListener('click', ()=> {
+    inputChoiceBtn.classList.add('active');
+    inputTypedBtn.classList.remove('active');
+  });
+
+  // start button
+  startBtn.addEventListener('click', () => {
+    if(state.running) stopGame();
+    else startGame();
+    loadBest();
+  });
+
+  // set select change
+  diff.addEventListener('input', ()=> {
+    // live update hint/difficulty
+    state.difficulty = parseInt(diff.value,10);
+    hintEl.textContent = `Difficulty ${state.difficulty}`;
+  });
+
+  // populate selects and load best
+  populateRange();
+  loadBest();
+
+  // initialize UI
+  updateUI();
+
+  // seed random first problem to show sample
+  state.current = {a:2,b:3,correct:6};
+  problemEl.textContent = '2 × 3 = ?';
+  hintEl.textContent = 'Pick a mode and press Start';
+
+  // ---- confetti (small implementation) ----
+  const pieces = [];
+  function burstConfetti(count=24){
+    for(let i=0;i<count;i++){
+      pieces.push({
+        x: randInt(0,C.width),
+        y: randInt(0, C.height/2),
+        vx: (Math.random()-0.5)*6,
+        vy: Math.random()*-8 - 2,
+        rot: Math.random()*360,
+        vr: (Math.random()-0.5)*10,
+        size: randInt(6,12),
+        life: randInt(60,140),
+        color: `hsl(${randInt(0,360)}, 80%, ${randInt(45,65)}%)`
+      });
+    }
+    // start animation loop if not already running
+    if(!confettiAnimating) { confettiAnimating = true; requestAnimationFrame(confettiLoop); }
+  }
+  let confettiAnimating = false;
+  function confettiLoop(){
+    ctx.clearRect(0,0,C.width,C.height);
+    for(let i=pieces.length-1;i>=0;i--){
+      const p=pieces[i];
+      p.x += p.vx; p.y += p.vy; p.vy += 0.25; p.vr *= 0.99; p.rot += p.vr;
+      p.life--;
+      ctx.save();
+      ctx.translate(p.x,p.y);
+      ctx.rotate(p.rot * Math.PI/180);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size);
+      ctx.restore();
+      if(p.y > C.height + 20 || p.life <= 0) pieces.splice(i,1);
+    }
+    if(pieces.length>0) requestAnimationFrame(confettiLoop);
+    else confettiAnimating=false;
+  }
+
+  // accessibility improvements: focus input when typed mode
+  answerInput.addEventListener('focus', ()=> {
+    answerInput.select();
+  });
+
+  // randomly seed something on initial load for playfulness
+  setTimeout(()=> {
+    hintEl.textContent = 'Tip: try Timed mode for a 60s challenge!';
+  },1200);
+})();
+</script>
+</body>
+</html>
