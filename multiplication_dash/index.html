@@ -480,6 +480,11 @@ function playWrongSound() {
       newProblem();
       updateUI();
     }, 400);
+    if(ans === correct){
+      playCorrectSound();
+    }
+    else
+      playWrongSound();
   }
 
   // submit button event
