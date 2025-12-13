@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Classroom Capacity Game</title>
+
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background: #f2f6ff;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+    }
+
+    .game {
+        background: white;
+        padding: 20px 30px;
+        border-radius: 12px;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        text-align: center;
+        width: 360px;
+    }
+
+    h1 {
+        margin-bottom: 10px;
+    }
+
+    .row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin: 20px 0;
+        font-size: 22px;
+    }
+
+    .box {
+        width: 120px;
+        padding: 10px;
+        border-radius: 10px;
+        background: #eef2ff;
+    }
+
+    .icons {
+        font-size: 24px;
+        line-height: 1.4;
+        margin-top: 8px;
+    }
+
+    .buttons button {
+        font-size: 22px;
+        margin: 5px;
+        padding: 10px 16px;
+        border-radius: 8px;
+        border: none;
+        cursor: pointer;
+        background: #4f46e5;
+        color: white;
+    }
+
+    .buttons button:hover {
+        background: #4338ca;
+    }
+
+    .result {
+        margin-top: 15px;
+        font-size: 18px;
+        font-weight: bold;
+    }
+
+    .score {
+        margin-top: 10px;
+        font-size: 14px;
+        color: #444;
+    }
+</style>
+</head>
+
+<body>
+<div class="game">
+    <h1>🏫 Classroom Capacity</h1>
+    <p>Choose the correct sign!</p>
+
+    <div class="row">
+        <div class="box">
+            👦 Students<hr>
+            <div class="icons" id="students"></div>
+        </div>
+
+        <div style="font-size: 28px;">?</div>
+
+        <div class="box">
+            🪑 Seats<hr>
+            <div class="icons" id="seats"></div>
+        </div>
+    </div>
+
+    <div class="buttons">
+        <button onclick="check('<')">&lt;</button>
+        <button onclick="check('=')">=</button>
+        <button onclick="check('>')">&gt;</button>
+    </div>
+
+    <div class="result" id="result"></div>
+    <div class="score">Score: <span id="score">0</span></div>
+</div>
+
+<script>
+    let studentCount, seatCount;
+    let score = 0;
+
+    function generate() {
+        studentCount = Math.floor(Math.random() * 8) + 2;
+        seatCount = Math.floor(Math.random() * 8) + 2;
+
+        document.getElementById("students").textContent = "👦".repeat(studentCount);
+        document.getElementById("seats").textContent = "🪑".repeat(seatCount);
+        document.getElementById("result").textContent = "";
+    }
+
+    function check(symbol) {
+        let correct;
+        if (studentCount < seatCount) correct = "<";
+        else if (studentCount > seatCount) correct = ">";
+        else correct = "=";
+
+        if (symbol === correct) {
+            document.getElementById("result").textContent = "✅ Correct! The assignment works.";
+            score++;
+        } else {
+            document.getElementById("result").textContent = "❌ Oops! That doesn't fit.";
+        }
+
+        document.getElementById("score").textContent = score;
+        setTimeout(generate, 1200);
+    }
+
+    generate();
+</script>
+</body>
+</html>
