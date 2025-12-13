@@ -2,12 +2,12 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Classroom Capacity Game</title>
+<title>Bell Is Ringing! Classroom Capacity</title>
 
 <style>
     body {
         font-family: Arial, sans-serif;
-        background: #0a101d;
+        background: linear-gradient(#fef3c7, #fde68a);
         display: flex;
         justify-content: center;
         align-items: center;
@@ -16,44 +16,56 @@
     }
 
     .game {
-        background: rgba(255, 255, 255, 0.1);
-        padding: 20px 30px;
-        border-radius: 12px;
-        box-shadow: 0 8px 20px rgb(109, 108, 108);
+        background: white;
+        padding: 24px;
+        border-radius: 14px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.15);
         text-align: center;
-        width: 360px;
+        width: 380px;
     }
 
     h1 {
-        margin-bottom: 10px;
+        margin: 0;
+    }
+
+    .scenario {
+        font-size: 14px;
+        margin: 10px 0;
+        color: #444;
+    }
+
+    .timer {
+        font-size: 22px;
+        font-weight: bold;
+        color: #dc2626;
+        margin-top: 10px;
     }
 
     .row {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin: 20px 0;
-        font-size: 22px;
+        margin: 18px 0;
     }
 
     .box {
-        width: 120px;
+        width: 130px;
         padding: 10px;
         border-radius: 10px;
-        background: #202537;
+        background: #eef2ff;
     }
 
     .icons {
         font-size: 24px;
+        margin-top: 6px;
         line-height: 1.4;
-        margin-top: 8px;
     }
 
     .buttons button {
         font-size: 22px;
-        margin: 5px;
-        padding: 10px 16px;
-        border-radius: 8px;
+        margin: 6px;
+        padding: 10px 18px;
+        border-radius: 10px;
         border: none;
         cursor: pointer;
         background: #4f46e5;
@@ -65,34 +77,49 @@
     }
 
     .result {
-        margin-top: 15px;
-        font-size: 18px;
+        margin-top: 12px;
         font-weight: bold;
+        height: 24px;
     }
 
     .score {
-        margin-top: 10px;
+        margin-top: 6px;
         font-size: 14px;
-        color: #444;
+    }
+
+    .shake {
+        animation: shake 0.4s;
+    }
+
+    @keyframes shake {
+        0% { transform: translateX(0); }
+        25% { transform: translateX(-5px); }
+        50% { transform: translateX(5px); }
+        75% { transform: translateX(-5px); }
+        100% { transform: translateX(0); }
     }
 </style>
 </head>
 
 <body>
-<div class="game">
-    <h1>🏫 Classroom Capacity</h1>
-    <p>Choose the correct sign!</p>
+<div class="game" id="game">
+    <h1>🔔 Bell Is Ringing!</h1>
+    <div class="scenario">
+        Students are rushing in. Decide FAST if the class fits!
+    </div>
+
+    <div class="timer">⏱ Time: <span id="time">5</span>s</div>
 
     <div class="row">
         <div class="box">
-            👦 Students<hr>
+            👦 Students
             <div class="icons" id="students"></div>
         </div>
 
         <div style="font-size: 28px;">?</div>
 
         <div class="box">
-            🪑 Seats<hr>
+            🪑 Seats
             <div class="icons" id="seats"></div>
         </div>
     </div>
@@ -104,40 +131,90 @@
     </div>
 
     <div class="result" id="result"></div>
-    <div class="score">Score: <span id="score">0</span></div>
+    <div class="score">Classes saved: <span id="score">0</span></div>
 </div>
 
 <script>
-    let studentCount, seatCount;
+    let students, seats;
     let score = 0;
+    let timeLeft = 5;
+    let timer;
 
-    function generate() {
-        studentCount = Math.floor(Math.random() * 8) + 2;
-        seatCount = Math.floor(Math.random() * 8) + 2;
-
-        document.getElementById("students").textContent = "👦".repeat(studentCount);
-        document.getElementById("seats").textContent = "🪑".repeat(seatCount);
+    function startRound() {
+        clearInterval(timer);
+        timeLeft = 5;
+        document.getElementById("time").textContent = timeLeft;
         document.getElementById("result").textContent = "";
+
+        students = Math.floor(Math.random() * 7) + 3;
+        seats = Math.floor(Math.random() * 7) + 3;
+
+        document.getElementById("students").textContent = "👦".repeat(students);
+        document.getElementById("seats").textContent = "🪑".repeat(seats);
+
+        timer = setInterval(() => {
+            timeLeft--;
+            document.getElementById("time").textContent = timeLeft;
+
+            if (timeLeft <= 0) {
+                clearInterval(timer);
+                fail("⏰ Time’s up! Students block the hallway!");
+            }
+        }, 1000);
     }
 
     function check(symbol) {
-        let correct;
-        if (studentCount < seatCount) correct = "<";
-        else if (studentCount > seatCount) correct = ">";
-        else correct = "=";
+        clearInterval(timer);
 
-        if (symbol === correct) {
-            document.getElementById("result").textContent = "✅ Correct!";
-            score++;
-        } else {
-            document.getElementById("result").textContent = "❌ Oops! Wrong.";
+        let correctSymbol;
+        if (students < seats) correctSymbol = "<";
+        else if (students > seats) correctSymbol = ">";
+        else correctSymbol = "=";
+
+        // Wrong comparison
+        if (symbol !== correctSymbol) {
+            fail("🚨 Wrong decision! Classroom confusion!");
+            return;
         }
 
+        // Correct comparison — now scenario-aware
+        if (students > seats) {
+            document.getElementById("result").textContent =
+                "⚠️ Correct answer, but the students will NOT fit!";
+            document.getElementById("game").classList.add("shake");
+            setTimeout(() => {
+                document.getElementById("game").classList.remove("shake");
+                startRound();
+            }, 1300);
+            return;
+        }
+
+        // Successful fit cases
+        score++;
         document.getElementById("score").textContent = score;
-        setTimeout(generate, 1200);
+
+        if (students === seats) {
+            document.getElementById("result").textContent =
+                "✅ Perfect fit! Every seat is taken!";
+        } else {
+            document.getElementById("result").textContent =
+                "✅ Plenty of seats! Class settles calmly.";
+        }
+
+        setTimeout(startRound, 900);
     }
 
-    generate();
+    function fail(message) {
+        document.getElementById("result").textContent = message;
+        document.getElementById("game").classList.add("shake");
+
+        setTimeout(() => {
+            document.getElementById("game").classList.remove("shake");
+            startRound();
+        }, 1200);
+    }
+
+    startRound();
 </script>
 </body>
 </html>
