@@ -18,6 +18,7 @@
     .game-wrapper {
         display: flex;
         gap: 20px;
+        position: relative;
     }
 
     .board {
@@ -56,13 +57,25 @@
         box-shadow: 0 4px 10px rgba(0,0,0,0.1);
     }
 
-    h2 {
-        margin-top: 0;
+    /* GAME OVER OVERLAY */
+    .overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(0,0,0,0.75);
+        color: white;
+        display: none;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        font-size: 24px;
+        text-align: center;
+        z-index: 10;
     }
 
-    .small {
-        font-size: 14px;
-        color: #555;
+    .overlay small {
+        margin-top: 10px;
+        font-size: 16px;
+        opacity: 0.9;
     }
 </style>
 </head>
@@ -85,6 +98,11 @@
             Number → Operator → Number
         </p>
     </div>
+
+    <div class="overlay" id="overlay">
+        <div>GAME OVER</div>
+        <small>Press Enter to Restart</small>
+    </div>
 </div>
 
 <script>
@@ -92,15 +110,22 @@ const COLS = 6;
 const ROWS = 10;
 const board = document.getElementById("board");
 const scoreEl = document.getElementById("score");
+const overlay = document.getElementById("overlay");
 
 let grid = [];
 let current = null;
 let score = 0;
+let gameOver = false;
 
 // Initialize grid
-for (let r = 0; r < ROWS; r++) {
-    grid[r] = Array(COLS).fill(null);
+function resetGrid() {
+    grid = [];
+    for (let r = 0; r < ROWS; r++) {
+        grid[r] = Array(COLS).fill(null);
+    }
 }
+
+resetGrid();
 
 // Create board cells
 for (let i = 0; i < ROWS * COLS; i++) {
@@ -123,6 +148,11 @@ function spawn() {
         row: 0,
         col: Math.floor(COLS / 2)
     };
+
+    // GAME OVER CHECK
+    if (!canMove(current.row, current.col)) {
+        endGame();
+    }
 }
 
 function draw() {
@@ -134,8 +164,7 @@ function draw() {
 
     for (let r = 0; r < ROWS; r++) {
         for (let c = 0; c < COLS; c++) {
-            const block = grid[r][c];
-            if (block) paint(r, c, block);
+            if (grid[r][c]) paint(r, c, grid[r][c]);
         }
     }
 
@@ -166,6 +195,13 @@ function lock() {
         type: current.type,
         value: current.value
     };
+
+    // TOP OVERFLOW CHECK
+    if (current.row === 0) {
+        endGame();
+        return;
+    }
+
     mergeCheck();
     spawn();
 }
@@ -202,17 +238,39 @@ function mergeCheck() {
     }
 }
 
+function endGame() {
+    gameOver = true;
+    overlay.style.display = "flex";
+}
+
+function restart() {
+    resetGrid();
+    score = 0;
+    scoreEl.textContent = 0;
+    gameOver = false;
+    overlay.style.display = "none";
+    current = null;
+}
+
 document.addEventListener("keydown", e => {
-    if (!current) return;
+    if (gameOver && e.key === "Enter") {
+        restart();
+        return;
+    }
+
+    if (!current || gameOver) return;
+
     if (e.key === "ArrowLeft" && canMove(current.row, current.col - 1))
         current.col--;
     if (e.key === "ArrowRight" && canMove(current.row, current.col + 1))
         current.col++;
     if (e.key === "ArrowDown") moveDown();
-    if (e.key === "Enter") while (canMove(current.row + 1, current.col)) current.row++;
+    if (e.key === "Enter")
+        while (canMove(current.row + 1, current.col)) current.row++;
 });
 
 function gameLoop() {
+    if (gameOver) return;
     if (!current) spawn();
     moveDown();
     draw();
