@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Math Merge Tetris</title>
+
+<style>
+    body {
+        margin: 0;
+        background: #f2f4f8;
+        font-family: "Segoe UI", sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+    }
+
+    .game-wrapper {
+        display: flex;
+        gap: 20px;
+    }
+
+    .board {
+        display: grid;
+        grid-template-columns: repeat(6, 60px);
+        grid-template-rows: repeat(10, 60px);
+        background: #dbe2ef;
+        border: 4px solid #112d4e;
+    }
+
+    .cell {
+        border: 1px solid #9aa6b2;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 24px;
+        font-weight: bold;
+        user-select: none;
+    }
+
+    .number {
+        background: #3f72af;
+        color: white;
+    }
+
+    .operator {
+        background: #f9a826;
+        color: black;
+    }
+
+    .info {
+        width: 200px;
+        background: white;
+        padding: 15px;
+        border-radius: 8px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+        margin-top: 0;
+    }
+
+    .small {
+        font-size: 14px;
+        color: #555;
+    }
+</style>
+</head>
+<body>
+
+<div class="game-wrapper">
+    <div class="board" id="board"></div>
+
+    <div class="info">
+        <h2>Math Merge</h2>
+        <p><b>Score:</b> <span id="score">0</span></p>
+        <hr>
+        <p class="small">
+            ← → Move<br>
+            ↓ Drop<br>
+            Enter Hard Drop
+        </p>
+        <p class="small">
+            Merge:<br>
+            Number → Operator → Number
+        </p>
+    </div>
+</div>
+
+<script>
+const COLS = 6;
+const ROWS = 10;
+const board = document.getElementById("board");
+const scoreEl = document.getElementById("score");
+
+let grid = [];
+let current = null;
+let score = 0;
+
+// Initialize grid
+for (let r = 0; r < ROWS; r++) {
+    grid[r] = Array(COLS).fill(null);
+}
+
+// Create board cells
+for (let i = 0; i < ROWS * COLS; i++) {
+    const cell = document.createElement("div");
+    cell.className = "cell";
+    board.appendChild(cell);
+}
+
+function randomBlock() {
+    if (Math.random() < 0.6) {
+        return { type: "number", value: Math.floor(Math.random() * 9) + 1 };
+    }
+    const ops = ["+", "-", "*", "/"];
+    return { type: "operator", value: ops[Math.floor(Math.random() * ops.length)] };
+}
+
+function spawn() {
+    current = {
+        ...randomBlock(),
+        row: 0,
+        col: Math.floor(COLS / 2)
+    };
+}
+
+function draw() {
+    const cells = document.querySelectorAll(".cell");
+    cells.forEach(c => {
+        c.textContent = "";
+        c.className = "cell";
+    });
+
+    for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS; c++) {
+            const block = grid[r][c];
+            if (block) paint(r, c, block);
+        }
+    }
+
+    if (current) paint(current.row, current.col, current);
+}
+
+function paint(r, c, block) {
+    const index = r * COLS + c;
+    const cell = board.children[index];
+    cell.textContent = block.value;
+    cell.classList.add(block.type);
+}
+
+function canMove(r, c) {
+    return r >= 0 && r < ROWS && c >= 0 && c < COLS && !grid[r][c];
+}
+
+function moveDown() {
+    if (canMove(current.row + 1, current.col)) {
+        current.row++;
+    } else {
+        lock();
+    }
+}
+
+function lock() {
+    grid[current.row][current.col] = {
+        type: current.type,
+        value: current.value
+    };
+    mergeCheck();
+    spawn();
+}
+
+function mergeCheck() {
+    for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS - 2; c++) {
+            const a = grid[r][c];
+            const b = grid[r][c + 1];
+            const d = grid[r][c + 2];
+
+            if (
+                a && b && d &&
+                a.type === "number" &&
+                b.type === "operator" &&
+                d.type === "number"
+            ) {
+                let result = null;
+                if (b.value === "+") result = a.value + d.value;
+                if (b.value === "-") result = a.value - d.value;
+                if (b.value === "*") result = a.value * d.value;
+                if (b.value === "/" && d.value !== 0)
+                    result = Math.floor(a.value / d.value);
+
+                if (result !== null) {
+                    grid[r][c] = { type: "number", value: result };
+                    grid[r][c + 1] = null;
+                    grid[r][c + 2] = null;
+                    score += Math.abs(result);
+                    scoreEl.textContent = score;
+                }
+            }
+        }
+    }
+}
+
+document.addEventListener("keydown", e => {
+    if (!current) return;
+    if (e.key === "ArrowLeft" && canMove(current.row, current.col - 1))
+        current.col--;
+    if (e.key === "ArrowRight" && canMove(current.row, current.col + 1))
+        current.col++;
+    if (e.key === "ArrowDown") moveDown();
+    if (e.key === "Enter") while (canMove(current.row + 1, current.col)) current.row++;
+});
+
+function gameLoop() {
+    if (!current) spawn();
+    moveDown();
+    draw();
+}
+
+setInterval(gameLoop, 700);
+</script>
+</body>
+</html>
