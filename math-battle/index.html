@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Math Operations Battle</title>
+
+<style>
+    body {
+        font-family: "Segoe UI", Arial, sans-serif;
+        background: #f4f6f8;
+        color: #222;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+    }
+
+    .game {
+        background: white;
+        padding: 24px;
+        border-radius: 12px;
+        width: 440px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        text-align: center;
+    }
+
+    h1 {
+        margin-bottom: 5px;
+    }
+
+    .round {
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+
+    .battle {
+        display: flex;
+        justify-content: space-between;
+        margin: 18px 0;
+    }
+
+    .side {
+        width: 45%;
+        padding: 10px;
+        border-radius: 8px;
+        font-size: 14px;
+    }
+
+    .player {
+        background: #e8f4ff;
+    }
+
+    .computer {
+        background: #ffe8e8;
+    }
+
+    .score {
+        font-size: 20px;
+        font-weight: bold;
+    }
+
+    .question {
+        font-size: 28px;
+        margin: 20px 0;
+    }
+
+    input {
+        font-size: 22px;
+        padding: 8px;
+        width: 140px;
+        text-align: center;
+    }
+
+    .hint {
+        font-size: 12px;
+        color: #666;
+        margin-top: 6px;
+    }
+
+    .status {
+        margin-top: 15px;
+        min-height: 22px;
+        font-weight: bold;
+    }
+
+    .computer-status {
+        font-size: 12px;
+        margin-top: 5px;
+        color: #555;
+    }
+
+    .final {
+        font-size: 22px;
+        margin-top: 20px;
+    }
+</style>
+</head>
+
+<body>
+<div class="game">
+    <h1>⚔️ Math Battle</h1>
+    <div class="round" id="roundInfo"></div>
+
+    <div class="battle">
+        <div class="side player">
+            👦 Player
+            <div class="score" id="playerScore">0</div>
+        </div>
+
+        <div class="side computer">
+            💻 Computer
+            <div class="score" id="computerScore">0</div>
+            <div class="computer-status" id="computerStatus">Waiting…</div>
+        </div>
+    </div>
+
+    <div class="question" id="question"></div>
+
+    <input
+        type="number"
+        id="answer"
+        autofocus
+        onkeydown="if(event.key==='Enter') submitAnswer()"
+    >
+
+    <div class="hint">Press ENTER to submit</div>
+    <div class="status" id="status"></div>
+</div>
+
+<script>
+let round = 1;
+let questionNum = 0;
+
+let playerCorrect = 0;
+let computerCorrect = 0;
+
+let playerRounds = 0;
+let computerRounds = 0;
+
+let correctAnswer = 0;
+
+// Computer difficulty scaling
+const computerAccuracy = [0.6, 0.7, 0.8, 0.9, 0.97];
+const computerSpeed = [2600, 2100, 1700, 1300, 900];
+
+const operations = ["+", "-", "*", "/"];
+
+function newQuestion() {
+    questionNum++;
+    document.getElementById("roundInfo").innerText =
+        `Round ${round} — Question ${questionNum} / 7`;
+
+    let op = operations[Math.floor(Math.random() * operations.length)];
+    let a, b;
+
+    switch (op) {
+        case "+":
+            a = rand(1, 30);
+            b = rand(1, 30);
+            correctAnswer = a + b;
+            break;
+
+        case "-":
+            a = rand(10, 40);
+            b = rand(1, a);
+            correctAnswer = a - b;
+            break;
+
+        case "*":
+            a = rand(2, 12);
+            b = rand(2, 12);
+            correctAnswer = a * b;
+            break;
+
+        case "/":
+            b = rand(2, 12);
+            correctAnswer = rand(2, 12);
+            a = b * correctAnswer; // clean division
+            break;
+    }
+
+    document.getElementById("question").innerText = `${a} ${op} ${b}`;
+    document.getElementById("status").innerText = "";
+    document.getElementById("answer").value = "";
+    document.getElementById("answer").focus();
+
+    computerThink();
+}
+
+function computerThink() {
+    const status = document.getElementById("computerStatus");
+    status.innerText = "Thinking…";
+
+    setTimeout(() => {
+        if (Math.random() < computerAccuracy[round - 1]) {
+            computerCorrect++;
+            status.innerText = "Answered ✔";
+        } else {
+            status.innerText = "Answered ✖";
+        }
+        updateScores();
+    }, computerSpeed[round - 1]);
+}
+
+function submitAnswer() {
+    if (document.getElementById("status").innerText !== "") return;
+
+    let val = Number(document.getElementById("answer").value);
+
+    if (val === correctAnswer) {
+        playerCorrect++;
+        document.getElementById("status").innerText = "✅ Correct!";
+    } else {
+        document.getElementById("status").innerText =
+            `❌ Incorrect (Answer: ${correctAnswer})`;
+    }
+
+    updateScores();
+
+    if (questionNum < 7) {
+        setTimeout(newQuestion, 800);
+    } else {
+        setTimeout(endRound, 1200);
+    }
+}
+
+function updateScores() {
+    document.getElementById("playerScore").innerText = playerCorrect;
+    document.getElementById("computerScore").innerText = computerCorrect;
+}
+
+function endRound() {
+    let result;
+
+    if (playerCorrect > computerCorrect) {
+        playerRounds++;
+        result = "🏆 You win this round!";
+    } else if (computerCorrect > playerCorrect) {
+        computerRounds++;
+        result = "💻 Computer wins this round!";
+    } else {
+        result = "🤝 Round tied!";
+    }
+
+    document.querySelector(".game").innerHTML +=
+        `<div class="final">${result}</div>`;
+
+    setTimeout(() => {
+        if (round < 5) {
+            round++;
+            resetRound();
+        } else {
+            endGame();
+        }
+    }, 2000);
+}
+
+function resetRound() {
+    questionNum = 0;
+    playerCorrect = 0;
+    computerCorrect = 0;
+    document.querySelector(".final").remove();
+    updateScores();
+    newQuestion();
+}
+
+function endGame() {
+    let msg;
+
+    if (playerRounds > computerRounds) msg = "🎉 YOU WIN THE GAME!";
+    else if (computerRounds > playerRounds) msg = "🤖 COMPUTER WINS!";
+    else msg = "⚖️ GAME TIED!";
+
+    document.querySelector(".game").innerHTML =
+        `<h1>${msg}</h1>
+         <p>Player Rounds Won: ${playerRounds}</p>
+         <p>Computer Rounds Won: ${computerRounds}</p>`;
+}
+
+function rand(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+// Start game
+newQuestion();
+</script>
+</body>
+</html>
