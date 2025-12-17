@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Hack-It</title>
+
+<style>
+body {
+    margin: 0;
+    background: #000;
+    font-family: Consolas, monospace;
+    color: #00ff9c;
+}
+
+#game {
+    width: 100vw;
+    height: 100vh;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.hud {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.box {
+    border: 2px solid #00ff9c;
+    padding: 12px 20px;
+    text-align: center;
+}
+
+.center {
+    justify-self: center;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: 200px 1fr 200px;
+    gap: 40px;
+    align-items: center;
+    margin-top: 30px;
+}
+
+.column {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.node {
+    border: 2px solid #00ff9c;
+    padding: 20px;
+    text-align: center;
+}
+
+.node.active {
+    outline: 3px solid #00ff9c;
+}
+
+.node.used {
+    opacity: 0.3;
+    border-style: dashed;
+}
+
+svg {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+.vibrate {
+    animation: shake 0.3s;
+}
+
+@keyframes shake {
+    0% { transform: translateX(0); }
+    25% { transform: translateX(-6px); }
+    50% { transform: translateX(6px); }
+    75% { transform: translateX(-6px); }
+    100% { transform: translateX(0); }
+}
+</style>
+</head>
+
+<body>
+
+<div id="game">
+    <div class="hud">
+        <div class="box">⏱ <span id="timer">180</span>s</div>
+        <div class="box center">HACK-IT</div>
+        <div></div>
+    </div>
+
+    <div class="box center" style="margin: 10px auto 30px;">
+        TARGET NUMBER: <span id="target"></span>
+    </div>
+
+    <div class="grid">
+        <div class="column" id="left"></div>
+        <div></div>
+        <div class="column" id="right"></div>
+    </div>
+
+    <div class="box" style="margin-top:30px">
+        CURRENT TOTAL: <span id="current"></span>
+    </div>
+</div>
+
+<svg id="wires"></svg>
+
+<script>
+/* ------------------ DATA ------------------ */
+let leftNums=[], rightOps=[], decisions=[];
+let startingNumber=0, target=0;
+let usedLeft=[false,false,false];
+let usedRight=[false,false,false];
+
+let timeLeft=180, timer;
+let phase="idle", leftIndex=0, rightIndex=0;
+let selectedLeft=null;
+let previewLine=null;
+
+/* ------------------ ELEMENTS ------------------ */
+const leftCol=document.getElementById("left");
+const rightCol=document.getElementById("right");
+const currentEl=document.getElementById("current");
+const targetEl=document.getElementById("target");
+const timerEl=document.getElementById("timer");
+const wires=document.getElementById("wires");
+const game=document.getElementById("game");
+
+/* ------------------ UTILS ------------------ */
+const rand=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
+
+function apply(num,op,val){
+    if(op==="×") return num*val;
+    if(op==="÷") return Math.floor(num/val);
+    if(op==="+") return num+val;
+    if(op==="−") return num-val;
+}
+
+/* ------------------ INIT ------------------ */
+function startGame(){
+    leftNums=[rand(2,9),rand(2,9),rand(2,9)];
+    rightOps=[
+        {op:"×",num:rand(2,9)},
+        {op:"÷",num:rand(2,9)},
+        {op:"+",num:rand(2,9)}
+    ];
+
+    startingNumber=rand(5,15);
+    decisions=[];
+    usedLeft=[false,false,false];
+    usedRight=[false,false,false];
+
+    target=startingNumber;
+    for(let i=0;i<3;i++)
+        target+=apply(leftNums[i],rightOps[i].op,rightOps[i].num);
+
+    render();
+    updateCurrent();
+
+    timer=setInterval(()=>{
+        timerEl.textContent=--timeLeft;
+        if(timeLeft<=0) location.reload();
+    },1000);
+
+    phase="left";
+    highlight();
+}
+
+/* ------------------ RENDER ------------------ */
+function render(){
+    leftCol.innerHTML="";
+    rightCol.innerHTML="";
+    wires.innerHTML="";
+
+    leftNums.forEach((n,i)=>{
+        const d=document.createElement("div");
+        d.className="node";
+        d.textContent=n;
+        if(usedLeft[i]) d.classList.add("used");
+        leftCol.appendChild(d);
+    });
+
+    rightOps.forEach((o,i)=>{
+        const d=document.createElement("div");
+        d.className="node";
+        d.textContent=`${o.op} ${o.num}`;
+        if(usedRight[i]) d.classList.add("used");
+        rightCol.appendChild(d);
+    });
+
+    targetEl.textContent=target;
+}
+
+/* ------------------ CURRENT ------------------ */
+function updateCurrent(){
+    let total=startingNumber;
+    decisions.forEach(d=>total+=d);
+    currentEl.textContent=total;
+}
+
+/* ------------------ HIGHLIGHT ------------------ */
+function highlight(){
+    document.querySelectorAll(".node").forEach(n=>n.classList.remove("active"));
+    if(phase==="left" && !usedLeft[leftIndex])
+        leftCol.children[leftIndex].classList.add("active");
+    if(phase==="right" && !usedRight[rightIndex])
+        rightCol.children[rightIndex].classList.add("active");
+
+    updatePreviewWire();
+}
+
+/* ------------------ INPUT ------------------ */
+document.addEventListener("keydown",e=>{
+    if(phase==="idle"){ startGame(); return; }
+
+    if(e.key==="ArrowUp"||e.key==="ArrowDown"){
+        const dir=e.key==="ArrowUp"?2:1;
+        if(phase==="left"){
+            do{ leftIndex=(leftIndex+dir)%3 }while(usedLeft[leftIndex]);
+        }
+        if(phase==="right"){
+            do{ rightIndex=(rightIndex+dir)%3 }while(usedRight[rightIndex]);
+        }
+        highlight();
+    }
+
+    if(e.key==="Enter"){
+        if(phase==="left"){
+            selectedLeft=leftIndex;
+            phase="right";
+            createPreviewWire();
+            highlight();
+        }
+        else{
+            const val=apply(
+                leftNums[selectedLeft],
+                rightOps[rightIndex].op,
+                rightOps[rightIndex].num
+            );
+
+            decisions.push(val);
+            usedLeft[selectedLeft]=true;
+            usedRight[rightIndex]=true;
+
+            finalizeWire(selectedLeft,rightIndex);
+            previewLine=null;
+
+            phase="left";
+            render();
+            updateCurrent();
+            highlight();
+
+            if(decisions.length===3) checkResult();
+        }
+    }
+});
+
+/* ------------------ WIRES ------------------ */
+function createPreviewWire(){
+    previewLine=document.createElementNS("http://www.w3.org/2000/svg","line");
+    previewLine.setAttribute("stroke","#00ff9c");
+    previewLine.setAttribute("stroke-width","2");
+    wires.appendChild(previewLine);
+}
+
+function updatePreviewWire(){
+    if(!previewLine||phase!=="right") return;
+    const ln=leftCol.children[selectedLeft].getBoundingClientRect();
+    const rn=rightCol.children[rightIndex].getBoundingClientRect();
+    previewLine.setAttribute("x1",ln.right);
+    previewLine.setAttribute("y1",ln.top+ln.height/2);
+    previewLine.setAttribute("x2",rn.left);
+    previewLine.setAttribute("y2",rn.top+rn.height/2);
+}
+
+function finalizeWire(l,r){
+    if(previewLine){
+        previewLine.setAttribute("stroke-width","4");
+        previewLine=null;
+    }
+}
+
+/* ------------------ CHECK ------------------ */
+function checkResult(){
+    let final=startingNumber;
+    decisions.forEach(d=>final+=d);
+    if(final!==target){
+        game.classList.add("vibrate");
+        timeLeft-=10;
+        setTimeout(()=>game.classList.remove("vibrate"),300);
+    }
+}
+</script>
+</body>
+</html>
