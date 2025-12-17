@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Target Card Math Game</title>
+
+<style>
+body {
+    margin: 0;
+    background: #0f172a;
+    font-family: "Segoe UI", sans-serif;
+    color: #e5e7eb;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+#game {
+    background: #020617;
+    padding: 24px;
+    border-radius: 12px;
+    width: 700px;
+    box-shadow: 0 0 30px rgba(0,0,0,0.6);
+    text-align: center;
+}
+
+h1 {
+    margin-bottom: 10px;
+    color: #38bdf8;
+}
+
+.cards {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin: 20px 0;
+}
+
+.card {
+    width: 80px;
+    height: 120px;
+    background: white;
+    color: black;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    font-size: 28px;
+    font-weight: bold;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+}
+
+.card.red {
+    color: #dc2626;
+}
+
+#target {
+    margin-top: 20px;
+}
+
+input {
+    width: 90%;
+    padding: 10px;
+    font-size: 18px;
+    margin-top: 10px;
+    border-radius: 6px;
+    border: none;
+    outline: none;
+}
+
+button {
+    margin-top: 12px;
+    padding: 10px 20px;
+    font-size: 16px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    background: #38bdf8;
+    color: #020617;
+    font-weight: bold;
+}
+
+button:hover {
+    background: #0ea5e9;
+}
+
+#message {
+    margin-top: 12px;
+    min-height: 24px;
+    font-size: 18px;
+}
+
+.rules {
+    font-size: 14px;
+    color: #94a3b8;
+    margin-top: 10px;
+}
+</style>
+</head>
+
+<body>
+<div id="game">
+    <h1>🎴 Target Card Math</h1>
+
+    <div class="cards" id="hand"></div>
+
+    <div id="target">
+        <h2>Target Card</h2>
+        <div class="cards" style="justify-content:center">
+            <div class="card" id="targetCard"></div>
+        </div>
+    </div>
+
+    <input id="expression" placeholder="Example: (3+5)*4-6" autofocus />
+    <br>
+    <button onclick="checkAnswer()">Submit</button>
+
+    <div id="message"></div>
+
+    <div class="rules">
+        Use ALL 5 cards exactly once. Allowed operations: + − × ÷ and parentheses.
+    </div>
+</div>
+
+<script>
+const suits = ["♠", "♥", "♦", "♣"];
+
+function createDeck() {
+    let deck = [];
+    for (let suit of suits) {
+        for (let value = 1; value <= 13; value++) {
+            let display = value;
+            if (value === 1) display = "A";
+            if (value === 11) display = "J";
+            if (value === 12) display = "Q";
+            if (value === 13) display = "K";
+            deck.push({ value: value > 10 ? 10 : value, display, suit });
+        }
+    }
+    return deck;
+}
+
+function shuffle(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+}
+
+let deck = createDeck();
+shuffle(deck);
+
+let hand = deck.splice(0, 5);
+let target = deck.splice(0, 1)[0];
+
+const handDiv = document.getElementById("hand");
+const targetDiv = document.getElementById("targetCard");
+
+hand.forEach(card => {
+    const div = document.createElement("div");
+    div.className = "card " + (card.suit === "♥" || card.suit === "♦" ? "red" : "");
+    div.innerHTML = `${card.display}<br>${card.suit}`;
+    handDiv.appendChild(div);
+});
+
+targetDiv.className = "card " + (target.suit === "♥" || target.suit === "♦" ? "red" : "");
+targetDiv.innerHTML = `${target.display}<br>${target.suit}`;
+
+const numbers = hand.map(c => c.value);
+
+function checkAnswer() {
+    const expr = document.getElementById("expression").value;
+    const msg = document.getElementById("message");
+
+    try {
+        const usedNumbers = expr.match(/\d+/g)?.map(Number) || [];
+
+        const sortedUsed = usedNumbers.sort((a,b)=>a-b);
+        const sortedHand = [...numbers].sort((a,b)=>a-b);
+
+        if (JSON.stringify(sortedUsed) !== JSON.stringify(sortedHand)) {
+            msg.textContent = "❌ You must use ALL 5 cards exactly once.";
+            msg.style.color = "#f87171";
+            return;
+        }
+
+        const result = Function("return " + expr)();
+
+        if (Math.abs(result - target.value) < 0.0001) {
+            msg.textContent = "✅ Correct! Target reached!";
+            msg.style.color = "#4ade80";
+        } else {
+            msg.textContent = `❌ Result is ${result}, not ${target.value}`;
+            msg.style.color = "#f87171";
+        }
+    } catch {
+        msg.textContent = "⚠️ Invalid expression.";
+        msg.style.color = "#facc15";
+    }
+}
+</script>
+</body>
+</html>

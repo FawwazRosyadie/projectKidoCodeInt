@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Geometry Shape Builder</title>
+
+<style>
+    body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: #f4f6fb;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+    }
+
+    #game {
+        background: #fff;
+        padding: 20px;
+        border-radius: 12px;
+        width: 520px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        text-align: center;
+    }
+
+    h1 {
+        margin-top: 0;
+    }
+
+    canvas {
+        background: #f9fafc;
+        border: 2px solid #ddd;
+        border-radius: 8px;
+        margin-bottom: 10px;
+    }
+
+    input {
+        width: 80px;
+        padding: 8px;
+        font-size: 18px;
+        text-align: center;
+    }
+
+    button {
+        padding: 8px 16px;
+        font-size: 16px;
+        margin-left: 10px;
+        cursor: pointer;
+    }
+
+    #message {
+        margin-top: 10px;
+        font-weight: bold;
+        min-height: 24px;
+    }
+
+    .hint {
+        font-size: 14px;
+        color: #555;
+        margin-top: 5px;
+    }
+</style>
+</head>
+
+<body>
+
+<div id="game">
+    <h1>Shape Builder</h1>
+    <p>Build the target shape combination</p>
+
+    <canvas id="targetCanvas" width="460" height="120"></canvas>
+    <canvas id="playerCanvas" width="460" height="120"></canvas>
+
+    <div>
+        <input type="number" id="shapeInput" placeholder="0,3,4..." autofocus>
+        <button onclick="submitShape()">Add Shape</button>
+    </div>
+
+    <div class="hint">
+        0 = Circle | 3 = Triangle | 4 = Square | 5 = Pentagon | 6 = Hexagon | 8 = Octagon
+    </div>
+
+    <div id="message"></div>
+</div>
+
+<script>
+const targetShapes = [0, 3, 4, 6]; // circle, triangle, square, hexagon
+let playerShapes = [];
+
+const targetCanvas = document.getElementById("targetCanvas");
+const playerCanvas = document.getElementById("playerCanvas");
+const tCtx = targetCanvas.getContext("2d");
+const pCtx = playerCanvas.getContext("2d");
+
+function drawPolygon(ctx, sides, x, y, radius) {
+    ctx.beginPath();
+
+    if (sides === 0) {
+        ctx.arc(x, y, radius, 0, Math.PI * 2);
+    } else {
+        for (let i = 0; i < sides; i++) {
+            const angle = (Math.PI * 2 / sides) * i - Math.PI / 2;
+            const px = x + radius * Math.cos(angle);
+            const py = y + radius * Math.sin(angle);
+            i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+        }
+        ctx.closePath();
+    }
+
+    ctx.strokeStyle = "#333";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+}
+
+function drawShapeRow(ctx, shapes) {
+    ctx.clearRect(0, 0, 460, 120);
+    shapes.forEach((s, i) => {
+        drawPolygon(ctx, s, 70 + i * 100, 60, 35);
+    });
+}
+
+function submitShape() {
+    const input = document.getElementById("shapeInput");
+    const value = parseInt(input.value);
+
+    if (![0,3,4,5,6,8].includes(value)) {
+        document.getElementById("message").textContent = "Invalid shape number!";
+        return;
+    }
+
+    playerShapes.push(value);
+    drawShapeRow(pCtx, playerShapes);
+    input.value = "";
+
+    checkWin();
+}
+
+function checkWin() {
+    if (playerShapes.length > targetShapes.length) {
+        endGame(false);
+        return;
+    }
+
+    for (let i = 0; i < playerShapes.length; i++) {
+        if (playerShapes[i] !== targetShapes[i]) {
+            endGame(false);
+            return;
+        }
+    }
+
+    if (playerShapes.length === targetShapes.length) {
+        endGame(true);
+    }
+}
+
+function endGame(win) {
+    document.getElementById("message").textContent = 
+        win ? "✅ Shape combination complete!" : "❌ Wrong shape order!";
+    document.getElementById("shapeInput").disabled = true;
+}
+
+drawShapeRow(tCtx, targetShapes);
+</script>
+
+</body>
+</html>

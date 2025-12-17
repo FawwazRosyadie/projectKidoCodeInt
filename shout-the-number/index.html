@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Dice Math Challenge</title>
+
+<style>
+    body {
+        margin: 0;
+        font-family: "Segoe UI", sans-serif;
+        background: linear-gradient(135deg, #eef2f7, #d9e4f5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+    }
+
+    #game {
+        background: #fff;
+        padding: 30px;
+        border-radius: 16px;
+        width: 420px;
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    }
+
+    h1 {
+        margin-top: 0;
+        color: #2c3e50;
+    }
+
+    .dice {
+        font-size: 48px;
+        margin: 15px 0;
+    }
+
+    button {
+        padding: 12px 20px;
+        margin: 10px;
+        font-size: 16px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        background: #4f8cff;
+        color: #fff;
+    }
+
+    button:hover {
+        background: #3a6fdc;
+    }
+
+    input {
+        font-size: 18px;
+        padding: 8px;
+        width: 80px;
+        text-align: center;
+    }
+
+    .mode {
+        margin-bottom: 20px;
+    }
+
+    .message {
+        margin-top: 15px;
+        font-weight: bold;
+        min-height: 24px;
+    }
+
+    .target {
+        font-size: 20px;
+        color: #e74c3c;
+    }
+</style>
+</head>
+<body>
+
+<div id="game">
+    <h1>🎲 Dice Math Challenge</h1>
+
+    <div class="mode">
+        <button onclick="setMode('race')">Quick Dice Race</button>
+        <button onclick="setMode('target')">Target Challenge</button>
+    </div>
+
+    <div class="dice" id="diceDisplay">🎲 🎲</div>
+
+    <div id="controls">
+        <button onclick="rollDice()">Roll Dice</button>
+    </div>
+
+    <div id="answerArea"></div>
+
+    <div class="message" id="message"></div>
+</div>
+
+<script>
+let mode = "race";
+let dice = [];
+let targetNumber = 24;
+
+function setMode(m) {
+    mode = m;
+    document.getElementById("message").textContent = "";
+    document.getElementById("answerArea").innerHTML = "";
+
+    if (mode === "race") {
+        document.getElementById("diceDisplay").textContent = "🎲 🎲";
+    } else {
+        document.getElementById("diceDisplay").textContent = "🎲 🎲 🎲";
+    }
+}
+
+function rollDice() {
+    document.getElementById("message").textContent = "";
+
+    if (mode === "race") {
+        dice = [
+            randDie(),
+            randDie()
+        ];
+        document.getElementById("diceDisplay").textContent =
+            dice.join("   ");
+
+        document.getElementById("answerArea").innerHTML = `
+            <p>Shout the <b>SUM</b> or <b>PRODUCT</b>!</p>
+            <input id="answer" type="number" placeholder="Answer">
+            <br>
+            <button onclick="checkRace()">Submit</button>
+        `;
+    } else {
+        dice = [
+            randDie(),
+            randDie(),
+            randDie()
+        ];
+        document.getElementById("diceDisplay").textContent =
+            dice.join("   ");
+
+        document.getElementById("answerArea").innerHTML = `
+            <p class="target">Target: ${targetNumber}</p>
+            <p>Use + − × ÷ with all dice</p>
+            <input id="expression" placeholder="e.g. (3+5)*4">
+            <br>
+            <button onclick="checkTarget()">Check</button>
+        `;
+    }
+}
+
+function randDie() {
+    return Math.floor(Math.random() * 6) + 1;
+}
+
+function checkRace() {
+    const answer = Number(document.getElementById("answer").value);
+    const sum = dice[0] + dice[1];
+    const product = dice[0] * dice[1];
+
+    if (answer === sum || answer === product) {
+        document.getElementById("message").textContent =
+            "✅ Correct! Point awarded!";
+    } else {
+        document.getElementById("message").textContent =
+            `❌ Wrong! Sum = ${sum}, Product = ${product}`;
+    }
+}
+
+function checkTarget() {
+    const expr = document.getElementById("expression").value;
+
+    try {
+        const used = dice.every(d => expr.includes(d));
+        const result = eval(expr);
+
+        if (!used) {
+            document.getElementById("message").textContent =
+                "⚠ Use ALL dice values!";
+            return;
+        }
+
+        if (Math.abs(result - targetNumber) < 0.0001) {
+            document.getElementById("message").textContent =
+                "🎉 Correct! You hit the target!";
+        } else {
+            document.getElementById("message").textContent =
+                `❌ Result = ${result}`;
+        }
+    } catch {
+        document.getElementById("message").textContent =
+            "⚠ Invalid expression";
+    }
+}
+</script>
+
+</body>
+</html>
