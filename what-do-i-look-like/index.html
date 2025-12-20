@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>"What" do I look like</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background: #f4f7fb;
+        margin: 0;
+        padding: 0;
+        text-align: center;
+    }
+
+    .game-container {
+        max-width: 900px;
+        margin: 20px auto;
+        background: white;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    h1 {
+        margin-bottom: 10px;
+    }
+
+    .top-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+
+    .timer {
+        background: #ffeb3b;
+        padding: 10px 15px;
+        border-radius: 8px;
+        font-weight: bold;
+    }
+
+    .object-box {
+        border: 2px dashed #4caf50;
+        padding: 20px;
+        margin: 15px 0;
+        border-radius: 10px;
+        font-size: 22px;
+        font-weight: bold;
+    }
+
+    textarea {
+        width: 90%;
+        height: 60px;
+        margin-top: 10px;
+        padding: 10px;
+        font-size: 16px;
+        border-radius: 8px;
+        border: 1px solid #ccc;
+    }
+
+    button {
+        margin-top: 10px;
+        padding: 10px 18px;
+        font-size: 16px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        background: #4caf50;
+        color: white;
+    }
+
+    button:disabled {
+        background: #aaa;
+        cursor: not-allowed;
+    }
+
+    .descriptions {
+        margin-top: 15px;
+        text-align: left;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        max-height: 200px;
+        overflow-y: auto;
+    }
+
+    .popup {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.5);
+        justify-content: center;
+        align-items: center;
+    }
+
+    .popup-content {
+        background: white;
+        padding: 25px;
+        border-radius: 12px;
+        width: 300px;
+    }
+
+    input[type="file"] {
+        margin-top: 10px;
+    }
+</style>
+</head>
+
+<body>
+
+<div class="game-container">
+    <h1>"WHAT" do I look like???</h1>
+
+    <div class="top-bar">
+        <div>Level: <span id="level">1</span> | Object <span id="objectNum">1</span>/5</div>
+        <div class="timer">⏱️ <span id="time">60</span>s</div>
+    </div>
+
+    <div class="object-box" id="objectText">Object Name</div>
+
+    <textarea id="inputText" placeholder="Describe the object..."></textarea><br>
+    <button id="addBtn">Add Description</button>
+
+    <div class="descriptions" id="descriptionList"></div>
+
+    <br>
+    <button id="finishBtn">I’m Done Describing</button>
+</div>
+
+<!-- YES / NO POPUP -->
+<div class="popup" id="confirmPopup">
+    <div class="popup-content">
+        <p><strong>Is that all you want to describe?</strong></p>
+        <button onclick="confirmYes()">Yes</button>
+        <button onclick="confirmNo()">No</button>
+    </div>
+</div>
+
+<!-- IMAGE UPLOAD -->
+<div class="popup" id="uploadPopup">
+    <div class="popup-content">
+        <p><strong>Upload a picture of the object</strong></p>
+        <input type="file" accept="image/*"><br><br>
+        <button onclick="nextObject()">Continue</button>
+    </div>
+</div>
+
+<script>
+const objects = {
+    1: ["Apple", "Cat", "Tree", "Car", "Bird"],
+    2: ["Butterfly", "Cactus", "Magnet", "Frog", "Cloud"],
+    3: ["Chloroplast", "Ecosystem", "Volcano", "Electric Circuit", "Solar System"]
+};
+
+let level = 1;
+let objIndex = 0;
+let descriptions = [];
+let maxDescriptions = 15;
+let timeLeft = 60;
+let timer;
+
+const objectText = document.getElementById("objectText");
+const descriptionList = document.getElementById("descriptionList");
+const inputText = document.getElementById("inputText");
+const addBtn = document.getElementById("addBtn");
+
+function startTimer() {
+    clearInterval(timer);
+    timeLeft = 60;
+    document.getElementById("time").textContent = timeLeft;
+    timer = setInterval(() => {
+        timeLeft--;
+        document.getElementById("time").textContent = timeLeft;
+        if (timeLeft === 0) {
+            clearInterval(timer);
+            showConfirm();
+        }
+    }, 1000);
+}
+
+function loadObject() {
+    objectText.textContent = objects[level][objIndex];
+    document.getElementById("level").textContent = level;
+    document.getElementById("objectNum").textContent = objIndex + 1;
+    descriptions = [];
+    descriptionList.innerHTML = "";
+    inputText.value = "";
+    startTimer();
+}
+
+addBtn.onclick = () => {
+    if (descriptions.length >= maxDescriptions) {
+        alert("Maximum 15 descriptions reached!");
+        return;
+    }
+    if (inputText.value.trim() === "") return;
+
+    descriptions.push(inputText.value);
+    const p = document.createElement("p");
+    p.textContent = "• " + inputText.value;
+    descriptionList.appendChild(p);
+    inputText.value = "";
+};
+
+document.getElementById("finishBtn").onclick = showConfirm;
+
+function showConfirm() {
+    document.getElementById("confirmPopup").style.display = "flex";
+}
+
+function confirmYes() {
+    document.getElementById("confirmPopup").style.display = "none";
+    document.getElementById("uploadPopup").style.display = "flex";
+}
+
+function confirmNo() {
+    document.getElementById("confirmPopup").style.display = "none";
+}
+
+function nextObject() {
+    document.getElementById("uploadPopup").style.display = "none";
+    objIndex++;
+
+    if (objIndex === 5) {
+        level++;
+        objIndex = 0;
+        if (level > 3) {
+            alert("🎉 Congratulations! You finished all levels!");
+            location.reload();
+            return;
+        }
+        alert("Level Up! 🎯");
+    }
+    loadObject();
+}
+
+loadObject();
+</script>
+
+</body>
+</html>
