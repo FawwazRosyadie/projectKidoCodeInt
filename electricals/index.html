@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Electricity Adventure</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .game-container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 900px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .score-board {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f0f4ff;
+            border-radius: 10px;
+        }
+
+        .score-item {
+            text-align: center;
+        }
+
+        .score-label {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .score-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .game-area {
+            min-height: 400px;
+        }
+
+        .level-select {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .level-btn {
+            padding: 30px;
+            font-size: 1.2em;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: transform 0.3s;
+            font-weight: bold;
+        }
+
+        .level-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .component-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .component-card {
+            background: #f8f9ff;
+            border: 3px solid #ddd;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .component-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .component-card.selected {
+            border-color: #667eea;
+            background: #e8ecff;
+        }
+
+        .component-icon {
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
+
+        .circuit-builder {
+            background: #f8f9ff;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 20px 0;
+        }
+
+        .circuit-slots {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .circuit-slot {
+            width: 100px;
+            height: 100px;
+            border: 3px dashed #ccc;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5em;
+            background: white;
+        }
+
+        .circuit-slot.filled {
+            border-color: #667eea;
+            background: #e8ecff;
+        }
+
+        .material-test {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .material-card {
+            background: white;
+            border: 3px solid #ddd;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .material-card:hover {
+            transform: scale(1.05);
+        }
+
+        .material-card.correct {
+            border-color: #4caf50;
+            background: #e8f5e9;
+        }
+
+        .material-card.wrong {
+            border-color: #f44336;
+            background: #ffebee;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            font-size: 1.1em;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            margin: 5px;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+        }
+
+        .btn-success {
+            background: #4caf50;
+            color: white;
+        }
+
+        .feedback {
+            text-align: center;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+
+        .feedback.correct {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .feedback.wrong {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .question {
+            font-size: 1.3em;
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .option-btn {
+            padding: 20px;
+            font-size: 1.1em;
+            background: white;
+            border: 3px solid #ddd;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: left;
+        }
+
+        .option-btn:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .back-btn {
+            background: #999;
+            color: white;
+        }
+
+        .connector-line {
+            height: 3px;
+            background: #ffc107;
+            width: 40px;
+            margin: 0 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="header">
+            <h1>⚡ Electricity Adventure ⚡</h1>
+        </div>
+
+        <div class="score-board">
+            <div class="score-item">
+                <div class="score-label">Level</div>
+                <div class="score-value" id="level">1</div>
+            </div>
+            <div class="score-item">
+                <div class="score-label">Score</div>
+                <div class="score-value" id="score">0</div>
+            </div>
+            <div class="score-item">
+                <div class="score-label">Stars</div>
+                <div class="score-value" id="stars">⭐ 0</div>
+            </div>
+        </div>
+
+        <div class="game-area" id="gameArea"></div>
+    </div>
+
+    <script>
+        const gameState = {
+            currentLevel: 0,
+            score: 0,
+            stars: 0,
+            selectedComponents: []
+        };
+
+        const components = {
+            battery: { icon: '🔋', name: 'Battery', function: 'Gives electricity power' },
+            bulb: { icon: '💡', name: 'Bulb', function: 'Makes light' },
+            wire: { icon: '〰️', name: 'Wire', function: 'Carries electricity' },
+            switch: { icon: '🔘', name: 'Switch', function: 'Turns electricity on/off' }
+        };
+
+        const materials = {
+            conductor: ['Metal', 'Copper wire', 'Aluminum foil', 'Steel spoon'],
+            insulator: ['Plastic', 'Rubber', 'Wood', 'Glass']
+        };
+
+        function showLevelSelect() {
+            const gameArea = document.getElementById('gameArea');
+            gameArea.innerHTML = `
+                <h2 style="text-align: center; color: #667eea; margin-bottom: 20px;">Choose Your Challenge!</h2>
+                <div class="level-select">
+                    <button class="level-btn" onclick="startLevel1()">
+                        🔍 Level 1<br>Know the Parts
+                    </button>
+                    <button class="level-btn" onclick="startLevel2()">
+                        🔧 Level 2<br>Build a Circuit
+                    </button>
+                    <button class="level-btn" onclick="startLevel3()">
+                        ⚡ Level 3<br>Conductor or Insulator?
+                    </button>
+                    <button class="level-btn" onclick="startLevel4()">
+                        🌟 Level 4<br>Quiz Master
+                    </button>
+                </div>
+            `;
+        }
+
+        function startLevel1() {
+            gameState.currentLevel = 1;
+            updateDisplay();
+            const gameArea = document.getElementById('gameArea');
+            
+            const componentsArray = Object.entries(components);
+            const randomComponent = componentsArray[Math.floor(Math.random() * componentsArray.length)];
+            const correctAnswer = randomComponent[1].function;
+            
+            const allFunctions = componentsArray.map(c => c[1].function);
+            const wrongAnswers = allFunctions.filter(f => f !== correctAnswer);
+            const shuffledOptions = [correctAnswer, ...wrongAnswers.slice(0, 2)].sort(() => Math.random() - 0.5);
+            
+            gameArea.innerHTML = `
+                <h2 style="text-align: center; color: #667eea;">Level 1: Know the Parts</h2>
+                <div class="question">
+                    <div style="font-size: 4em; margin: 20px 0;">${randomComponent[1].icon}</div>
+                    What does the ${randomComponent[1].name} do?
+                </div>
+                <div class="options">
+                    ${shuffledOptions.map(option => `
+                        <button class="option-btn" onclick="checkAnswer('${option}', '${correctAnswer}', 1)">${option}</button>
+                    `).join('')}
+                </div>
+                <div style="text-align: center; margin-top: 20px;">
+                    <button class="btn back-btn" onclick="showLevelSelect()">Back to Menu</button>
+                </div>
+            `;
+        }
+
+        function startLevel2() {
+            gameState.currentLevel = 2;
+            gameState.selectedComponents = [];
+            updateDisplay();
+            const gameArea = document.getElementById('gameArea');
+            
+            gameArea.innerHTML = `
+                <h2 style="text-align: center; color: #667eea;">Level 2: Build a Circuit</h2>
+                <p style="text-align: center; font-size: 1.1em; margin: 10px 0;">
+                    Click the parts in the correct order to build a working circuit!
+                </p>
+                <div class="circuit-builder">
+                    <div class="circuit-slots" id="circuitSlots">
+                        <div class="circuit-slot" id="slot0"></div>
+                        <div class="connector-line"></div>
+                        <div class="circuit-slot" id="slot1"></div>
+                        <div class="connector-line"></div>
+                        <div class="circuit-slot" id="slot2"></div>
+                        <div class="connector-line"></div>
+                        <div class="circuit-slot" id="slot3"></div>
+                    </div>
+                </div>
+                <div class="component-grid">
+                    ${Object.entries(components).map(([key, comp]) => `
+                        <div class="component-card" onclick="selectComponent('${key}', '${comp.icon}', '${comp.name}')">
+                            <div class="component-icon">${comp.icon}</div>
+                            <div>${comp.name}</div>
+                        </div>
+                    `).join('')}
+                </div>
+                <div style="text-align: center; margin-top: 20px;">
+                    <button class="btn btn-primary" onclick="checkCircuit()">Check Circuit</button>
+                    <button class="btn back-btn" onclick="showLevelSelect()">Back to Menu</button>
+                </div>
+                <div id="feedback"></div>
+            `;
+        }
+
+        function selectComponent(key, icon, name) {
+            if (gameState.selectedComponents.length < 4) {
+                gameState.selectedComponents.push(key);
+                const slot = document.getElementById(`slot${gameState.selectedComponents.length - 1}`);
+                slot.innerHTML = icon;
+                slot.classList.add('filled');
+            }
+        }
+
+        function checkCircuit() {
+            const correct = ['battery', 'wire', 'switch', 'bulb'];
+            const isCorrect = JSON.stringify(gameState.selectedComponents) === JSON.stringify(correct);
+            
+            const feedback = document.getElementById('feedback');
+            if (isCorrect) {
+                feedback.innerHTML = '<div class="feedback correct">🎉 Amazing! You built a perfect circuit! The electricity flows from battery → wire → switch → bulb!</div>';
+                addScore(30);
+                setTimeout(() => showLevelSelect(), 2000);
+            } else {
+                feedback.innerHTML = '<div class="feedback wrong">❌ Try again! Remember: Battery → Wire → Switch → Bulb</div>';
+                gameState.selectedComponents = [];
+                for (let i = 0; i < 4; i++) {
+                    const slot = document.getElementById(`slot${i}`);
+                    slot.innerHTML = '';
+                    slot.classList.remove('filled');
+                }
+            }
+        }
+
+        function startLevel3() {
+            gameState.currentLevel = 3;
+            updateDisplay();
+            const gameArea = document.getElementById('gameArea');
+            
+            const allMaterials = [...materials.conductor, ...materials.insulator].sort(() => Math.random() - 0.5);
+            
+            gameArea.innerHTML = `
+                <h2 style="text-align: center; color: #667eea;">Level 3: Conductor or Insulator?</h2>
+                <p style="text-align: center; font-size: 1.1em; margin: 10px 0;">
+                    Which materials let electricity flow through? (Conductors)
+                </p>
+                <div class="material-test">
+                    ${allMaterials.map(material => `
+                        <div class="material-card" onclick="testMaterial('${material}')">
+                            <div style="font-size: 2em; margin-bottom: 10px;">🔬</div>
+                            <div>${material}</div>
+                        </div>
+                    `).join('')}
+                </div>
+                <div style="text-align: center; margin-top: 20px;">
+                    <button class="btn back-btn" onclick="showLevelSelect()">Back to Menu</button>
+                </div>
+            `;
+        }
+
+        function testMaterial(material) {
+            const isConductor = materials.conductor.includes(material);
+            const cards = document.querySelectorAll('.material-card');
+            
+            cards.forEach(card => {
+                if (card.textContent.includes(material)) {
+                    if (isConductor) {
+                        card.classList.add('correct');
+                        card.innerHTML = `<div style="font-size: 2em;">✅</div><div>${material}</div><div style="font-size: 0.9em; color: #2e7d32;">Conductor!</div>`;
+                        addScore(10);
+                    } else {
+                        card.classList.add('wrong');
+                        card.innerHTML = `<div style="font-size: 2em;">❌</div><div>${material}</div><div style="font-size: 0.9em; color: #c62828;">Insulator</div>`;
+                    }
+                }
+            });
+        }
+
+        function startLevel4() {
+            gameState.currentLevel = 4;
+            updateDisplay();
+            
+            const questions = [
+                {
+                    q: "What makes a bulb light up in a circuit?",
+                    options: ["Electricity flowing through it", "Magic", "Water"],
+                    correct: 0
+                },
+                {
+                    q: "What does a switch do?",
+                    options: ["Changes colors", "Turns electricity on or off", "Makes sounds"],
+                    correct: 1
+                },
+                {
+                    q: "Which material can electricity flow through?",
+                    options: ["Plastic ruler", "Wooden stick", "Metal spoon"],
+                    correct: 2
+                },
+                {
+                    q: "What gives power to the circuit?",
+                    options: ["Battery", "Wire", "Bulb"],
+                    correct: 0
+                }
+            ];
+            
+            const randomQ = questions[Math.floor(Math.random() * questions.length)];
+            
+            const gameArea = document.getElementById('gameArea');
+            gameArea.innerHTML = `
+                <h2 style="text-align: center; color: #667eea;">Level 4: Quiz Master</h2>
+                <div class="question">${randomQ.q}</div>
+                <div class="options">
+                    ${randomQ.options.map((option, index) => `
+                        <button class="option-btn" onclick="checkQuizAnswer(${index}, ${randomQ.correct})">${option}</button>
+                    `).join('')}
+                </div>
+                <div style="text-align: center; margin-top: 20px;">
+                    <button class="btn back-btn" onclick="showLevelSelect()">Back to Menu</button>
+                </div>
+            `;
+        }
+
+        function checkQuizAnswer(selected, correct) {
+            const gameArea = document.getElementById('gameArea');
+            if (selected === correct) {
+                gameArea.innerHTML += '<div class="feedback correct">🌟 Correct! You are an electricity expert!</div>';
+                addScore(25);
+                setTimeout(() => startLevel4(), 2000);
+            } else {
+                gameArea.innerHTML += '<div class="feedback wrong">❌ Not quite! Try another question.</div>';
+                setTimeout(() => startLevel4(), 2000);
+            }
+        }
+
+        function checkAnswer(selected, correct, level) {
+            const gameArea = document.getElementById('gameArea');
+            if (selected === correct) {
+                gameArea.innerHTML += '<div class="feedback correct">🎉 Correct! Great job!</div>';
+                addScore(20);
+                setTimeout(() => level === 1 ? startLevel1() : startLevel2(), 1500);
+            } else {
+                gameArea.innerHTML += '<div class="feedback wrong">❌ Try again! Think about what that part does.</div>';
+                setTimeout(() => level === 1 ? startLevel1() : startLevel2(), 1500);
+            }
+        }
+
+        function addScore(points) {
+            gameState.score += points;
+            if (gameState.score >= 50 && gameState.stars === 0) gameState.stars = 1;
+            if (gameState.score >= 100 && gameState.stars === 1) gameState.stars = 2;
+            if (gameState.score >= 150 && gameState.stars === 2) gameState.stars = 3;
+            updateDisplay();
+        }
+
+        function updateDisplay() {
+            document.getElementById('level').textContent = gameState.currentLevel;
+            document.getElementById('score').textContent = gameState.score;
+            document.getElementById('stars').textContent = '⭐ '.repeat(gameState.stars) + gameState.stars;
+        }
+
+        showLevelSelect();
+    </script>
+</body>
+</html>
