@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Animal Lifecycle Adventure</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .game-container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 800px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            color: #764ba2;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 20px;
+            font-size: 0.9em;
+        }
+
+        .score-board {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+            border-radius: 10px;
+        }
+
+        .score-item {
+            text-align: center;
+        }
+
+        .score-label {
+            font-size: 0.8em;
+            color: #2d3436;
+        }
+
+        .score-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #d63031;
+        }
+
+        .game-area {
+            display: none;
+        }
+
+        .game-area.active {
+            display: block;
+        }
+
+        .start-screen {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .animal-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 30px 0;
+        }
+
+        .animal-btn {
+            padding: 20px;
+            font-size: 1.2em;
+            background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            font-weight: bold;
+        }
+
+        .animal-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .lifecycle-container {
+            margin: 20px 0;
+        }
+
+        .lifecycle-title {
+            text-align: center;
+            color: #2d3436;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+        }
+
+        .stages-row {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .stage-slot {
+            width: 120px;
+            height: 120px;
+            border: 3px dashed #dfe6e9;
+            border-radius: 15px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: #f8f9fa;
+            position: relative;
+        }
+
+        .stage-slot.filled {
+            border-color: #00b894;
+            background: #d4f1e8;
+        }
+
+        .stage-number {
+            position: absolute;
+            top: 5px;
+            left: 10px;
+            background: #6c5ce7;
+            color: white;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+
+        .stage-emoji {
+            font-size: 3em;
+        }
+
+        .stage-label {
+            font-size: 0.7em;
+            color: #2d3436;
+            margin-top: 5px;
+            font-weight: bold;
+        }
+
+        .arrow {
+            font-size: 2em;
+            color: #6c5ce7;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .option-card {
+            padding: 15px;
+            background: white;
+            border: 3px solid #dfe6e9;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .option-card:hover {
+            transform: translateY(-5px);
+            border-color: #74b9ff;
+        }
+
+        .option-card.correct {
+            border-color: #00b894;
+            background: #d4f1e8;
+        }
+
+        .option-card.wrong {
+            border-color: #d63031;
+            background: #ffe0e0;
+        }
+
+        .option-emoji {
+            font-size: 2.5em;
+            margin-bottom: 5px;
+        }
+
+        .option-text {
+            font-size: 0.9em;
+            font-weight: bold;
+            color: #2d3436;
+        }
+
+        .feedback {
+            text-align: center;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-size: 1.1em;
+            font-weight: bold;
+            display: none;
+        }
+
+        .feedback.show {
+            display: block;
+        }
+
+        .feedback.correct {
+            background: #d4f1e8;
+            color: #00b894;
+        }
+
+        .feedback.wrong {
+            background: #ffe0e0;
+            color: #d63031;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            font-size: 1.1em;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: transform 0.2s;
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #fd79a8 0%, #e84393 100%);
+            color: white;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #55efc4 0%, #00b894 100%);
+            color: white;
+        }
+
+        .center {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .end-screen {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .final-score {
+            font-size: 3em;
+            color: #d63031;
+            margin: 20px 0;
+        }
+
+        .message {
+            font-size: 1.3em;
+            color: #2d3436;
+            margin: 20px 0;
+        }
+
+        @media (max-width: 600px) {
+            .stages-row {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .arrow {
+                transform: rotate(90deg);
+            }
+            
+            .options-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>🐸 Animal Lifecycle Adventure 🦋</h1>
+        <p class="subtitle">Learn about how animals grow and reproduce!</p>
+
+        <div class="score-board">
+            <div class="score-item">
+                <div class="score-label">Score</div>
+                <div class="score-value" id="score">0</div>
+            </div>
+            <div class="score-item">
+                <div class="score-label">Level</div>
+                <div class="score-value" id="level">1</div>
+            </div>
+        </div>
+
+        <!-- Start Screen -->
+        <div class="game-area active" id="startScreen">
+            <div class="start-screen">
+                <h2>Choose an Animal to Learn About!</h2>
+                <div class="animal-buttons">
+                    <button class="animal-btn" onclick="startGame('frog')">🐸 Frog</button>
+                    <button class="animal-btn" onclick="startGame('butterfly')">🦋 Butterfly</button>
+                    <button class="animal-btn" onclick="startGame('chicken')">🐔 Chicken</button>
+                    <button class="animal-btn" onclick="startGame('cat')">🐱 Cat</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Screen -->
+        <div class="game-area" id="gameScreen">
+            <div class="lifecycle-container">
+                <h3 class="lifecycle-title" id="animalTitle"></h3>
+                <div class="stages-row" id="stagesRow"></div>
+            </div>
+
+            <div class="feedback" id="feedback"></div>
+
+            <div id="questionArea">
+                <h3 style="text-align: center; color: #2d3436; margin-bottom: 15px;">What comes next?</h3>
+                <div class="options-grid" id="optionsGrid"></div>
+            </div>
+
+            <div class="center">
+                <button class="btn btn-primary" onclick="backToMenu()" style="display: none;" id="backBtn">Back to Menu</button>
+            </div>
+        </div>
+
+        <!-- End Screen -->
+        <div class="game-area" id="endScreen">
+            <div class="end-screen">
+                <h2>🎉 Amazing Work! 🎉</h2>
+                <div class="final-score" id="finalScore"></div>
+                <p class="message" id="endMessage"></p>
+                <button class="btn btn-success" onclick="resetGame()">Play Again</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const animals = {
+            frog: {
+                name: 'Frog',
+                emoji: '🐸',
+                stages: [
+                    { emoji: '🥚', label: 'Eggs', name: 'Eggs in water' },
+                    { emoji: '🐟', label: 'Tadpole', name: 'Tadpole' },
+                    { emoji: '🦎', label: 'Tadpole with legs', name: 'Tadpole with legs' },
+                    { emoji: '🐸', label: 'Adult Frog', name: 'Adult Frog' }
+                ],
+                facts: 'Frogs lay eggs in water. These eggs hatch into tadpoles that live in water and breathe through gills!'
+            },
+            butterfly: {
+                name: 'Butterfly',
+                emoji: '🦋',
+                stages: [
+                    { emoji: '🥚', label: 'Egg', name: 'Egg on leaf' },
+                    { emoji: '🐛', label: 'Caterpillar', name: 'Caterpillar' },
+                    { emoji: '🫘', label: 'Pupa', name: 'Pupa (chrysalis)' },
+                    { emoji: '🦋', label: 'Butterfly', name: 'Adult Butterfly' }
+                ],
+                facts: 'Butterflies go through complete metamorphosis! The caterpillar eats lots of leaves to grow big and strong.'
+            },
+            chicken: {
+                name: 'Chicken',
+                emoji: '🐔',
+                stages: [
+                    { emoji: '🥚', label: 'Egg', name: 'Egg' },
+                    { emoji: '🐣', label: 'Hatching', name: 'Chick hatching' },
+                    { emoji: '🐥', label: 'Chick', name: 'Baby chick' },
+                    { emoji: '🐔', label: 'Adult', name: 'Adult Chicken' }
+                ],
+                facts: 'Mother hens sit on their eggs to keep them warm for about 21 days before they hatch!'
+            },
+            cat: {
+                name: 'Cat',
+                emoji: '🐱',
+                stages: [
+                    { emoji: '🤰', label: 'Mother', name: 'Pregnant mother' },
+                    { emoji: '👶', label: 'Birth', name: 'Kitten born' },
+                    { emoji: '🐈', label: 'Kitten', name: 'Growing kitten' },
+                    { emoji: '🐱', label: 'Adult', name: 'Adult Cat' }
+                ],
+                facts: 'Cats are mammals! Baby kittens drink milk from their mother and are born with their eyes closed.'
+            }
+        };
+
+        let currentAnimal = null;
+        let currentStage = 0;
+        let score = 0;
+        let level = 1;
+
+        function startGame(animalType) {
+            currentAnimal = animals[animalType];
+            currentStage = 0;
+            document.getElementById('startScreen').classList.remove('active');
+            document.getElementById('gameScreen').classList.add('active');
+            document.getElementById('animalTitle').textContent = `${currentAnimal.emoji} ${currentAnimal.name} Lifecycle`;
+            updateStages();
+            showQuestion();
+        }
+
+        function updateStages() {
+            const stagesRow = document.getElementById('stagesRow');
+            stagesRow.innerHTML = '';
+
+            for (let i = 0; i < currentAnimal.stages.length; i++) {
+                if (i > 0) {
+                    const arrow = document.createElement('div');
+                    arrow.className = 'arrow';
+                    arrow.textContent = '→';
+                    stagesRow.appendChild(arrow);
+                }
+
+                const slot = document.createElement('div');
+                slot.className = 'stage-slot';
+                if (i < currentStage) {
+                    slot.classList.add('filled');
+                }
+
+                const number = document.createElement('div');
+                number.className = 'stage-number';
+                number.textContent = i + 1;
+                slot.appendChild(number);
+
+                if (i < currentStage) {
+                    const emoji = document.createElement('div');
+                    emoji.className = 'stage-emoji';
+                    emoji.textContent = currentAnimal.stages[i].emoji;
+                    slot.appendChild(emoji);
+
+                    const label = document.createElement('div');
+                    label.className = 'stage-label';
+                    label.textContent = currentAnimal.stages[i].label;
+                    slot.appendChild(label);
+                }
+
+                stagesRow.appendChild(slot);
+            }
+        }
+
+        function showQuestion() {
+            if (currentStage >= currentAnimal.stages.length) {
+                completeLevel();
+                return;
+            }
+
+            const optionsGrid = document.getElementById('optionsGrid');
+            optionsGrid.innerHTML = '';
+
+            const correctAnswer = currentAnimal.stages[currentStage];
+            const otherAnimals = Object.values(animals).filter(a => a !== currentAnimal);
+            
+            const wrongOptions = [];
+            otherAnimals.forEach(animal => {
+                if (currentStage < animal.stages.length) {
+                    wrongOptions.push(animal.stages[currentStage]);
+                }
+            });
+
+            const options = [correctAnswer, ...wrongOptions.slice(0, 3)];
+            shuffleArray(options);
+
+            options.forEach(option => {
+                const card = document.createElement('div');
+                card.className = 'option-card';
+                card.innerHTML = `
+                    <div class="option-emoji">${option.emoji}</div>
+                    <div class="option-text">${option.name}</div>
+                `;
+                card.onclick = () => selectAnswer(card, option === correctAnswer);
+                optionsGrid.appendChild(card);
+            });
+        }
+
+        function selectAnswer(card, isCorrect) {
+            const allCards = document.querySelectorAll('.option-card');
+            allCards.forEach(c => c.style.pointerEvents = 'none');
+
+            const feedback = document.getElementById('feedback');
+            feedback.className = 'feedback show';
+
+            if (isCorrect) {
+                card.classList.add('correct');
+                feedback.classList.add('correct');
+                feedback.textContent = '🎉 Correct! Well done!';
+                score += 10;
+                document.getElementById('score').textContent = score;
+                currentStage++;
+
+                setTimeout(() => {
+                    feedback.classList.remove('show');
+                    updateStages();
+                    showQuestion();
+                    allCards.forEach(c => c.style.pointerEvents = 'auto');
+                }, 1500);
+            } else {
+                card.classList.add('wrong');
+                feedback.classList.add('wrong');
+                feedback.textContent = '❌ Try again! Think about the lifecycle.';
+
+                setTimeout(() => {
+                    feedback.classList.remove('show');
+                    card.classList.remove('wrong');
+                    allCards.forEach(c => c.style.pointerEvents = 'auto');
+                }, 1500);
+            }
+        }
+
+        function completeLevel() {
+            document.getElementById('questionArea').style.display = 'none';
+            const feedback = document.getElementById('feedback');
+            feedback.className = 'feedback show correct';
+            feedback.innerHTML = `
+                <div style="font-size: 2em; margin-bottom: 10px;">🎊 Lifecycle Complete! 🎊</div>
+                <div>${currentAnimal.facts}</div>
+            `;
+            
+            document.getElementById('backBtn').style.display = 'inline-block';
+            level++;
+            document.getElementById('level').textContent = level;
+
+            if (level > 4) {
+                setTimeout(showEndScreen, 3000);
+            }
+        }
+
+        function backToMenu() {
+            document.getElementById('gameScreen').classList.remove('active');
+            document.getElementById('startScreen').classList.add('active');
+            document.getElementById('questionArea').style.display = 'block';
+            document.getElementById('backBtn').style.display = 'none';
+            document.getElementById('feedback').classList.remove('show');
+        }
+
+        function showEndScreen() {
+            document.getElementById('gameScreen').classList.remove('active');
+            document.getElementById('endScreen').classList.add('active');
+            document.getElementById('finalScore').textContent = `Score: ${score}`;
+            
+            let message = '';
+            if (score >= 120) {
+                message = '🌟 Outstanding! You\'re an animal expert!';
+            } else if (score >= 80) {
+                message = '👏 Great job! You know a lot about animals!';
+            } else {
+                message = '🎈 Good effort! Keep learning about animals!';
+            }
+            document.getElementById('endMessage').textContent = message;
+        }
+
+        function resetGame() {
+            score = 0;
+            level = 1;
+            document.getElementById('score').textContent = score;
+            document.getElementById('level').textContent = level;
+            document.getElementById('endScreen').classList.remove('active');
+            document.getElementById('startScreen').classList.add('active');
+        }
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+    </script>
+</body>
+</html>

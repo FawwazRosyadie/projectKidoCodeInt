@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Human Growth Adventure</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .game-container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 900px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            text-align: center;
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 20px;
+            font-size: 1.1em;
+        }
+
+        .score-board {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border-radius: 10px;
+            color: white;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+
+        .game-area {
+            display: none;
+        }
+
+        .game-area.active {
+            display: block;
+        }
+
+        .start-screen {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .start-btn, .next-btn, .restart-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.3em;
+            border-radius: 50px;
+            cursor: pointer;
+            margin: 10px;
+            transition: transform 0.2s;
+        }
+
+        .start-btn:hover, .next-btn:hover, .restart-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .stages-container {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .stage-card {
+            background: #f0f0f0;
+            border: 3px dashed #ccc;
+            border-radius: 15px;
+            padding: 20px;
+            width: 150px;
+            min-height: 200px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .stage-card.filled {
+            border: 3px solid #4CAF50;
+            background: #e8f5e9;
+        }
+
+        .stage-card .stage-number {
+            font-size: 2em;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .stage-card .stage-name {
+            font-weight: bold;
+            margin-top: 10px;
+            color: #333;
+        }
+
+        .options-container {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin: 30px 0;
+        }
+
+        .option-card {
+            background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%);
+            border-radius: 15px;
+            padding: 20px;
+            width: 140px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 3px solid transparent;
+        }
+
+        .option-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .option-card.selected {
+            border: 3px solid #4CAF50;
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+        }
+
+        .option-card.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .emoji {
+            font-size: 4em;
+            margin: 10px 0;
+        }
+
+        .feedback {
+            text-align: center;
+            padding: 20px;
+            font-size: 1.5em;
+            font-weight: bold;
+            border-radius: 10px;
+            margin: 20px 0;
+            display: none;
+        }
+
+        .feedback.show {
+            display: block;
+        }
+
+        .feedback.correct {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .feedback.incorrect {
+            background: #f44336;
+            color: white;
+        }
+
+        .result-screen {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .result-screen h2 {
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 20px;
+        }
+
+        .stars {
+            font-size: 4em;
+            margin: 20px 0;
+        }
+
+        .instruction {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 5px solid #ffc107;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>🌱 Human Growth Adventure 🌱</h1>
+        <p class="subtitle">Learn about how humans grow from baby to old!</p>
+
+        <div class="score-board">
+            <div>Level: <span id="level">1</span></div>
+            <div>Score: <span id="score">0</span></div>
+            <div>Lives: <span id="lives">❤️❤️❤️</span></div>
+        </div>
+
+        <!-- Start Screen -->
+        <div class="game-area active" id="startScreen">
+            <div class="start-screen">
+                <div class="emoji">👶➡️🧒➡️👦➡️👨➡️👴</div>
+                <h2>Welcome to Human Growth Adventure!</h2>
+                <p style="margin: 20px 0; font-size: 1.1em;">Learn about the amazing journey of human life from birth to old age!</p>
+                <button class="start-btn" onclick="startGame()">Start Learning!</button>
+            </div>
+        </div>
+
+        <!-- Game Screen -->
+        <div class="game-area" id="gameScreen">
+            <div class="instruction">
+                <strong>📝 Instructions:</strong> Arrange the human growth stages in the correct order from youngest to oldest!
+            </div>
+
+            <div class="stages-container" id="stagesContainer"></div>
+            
+            <div class="options-container" id="optionsContainer"></div>
+
+            <div class="feedback" id="feedback"></div>
+
+            <div style="text-align: center;">
+                <button class="next-btn" id="checkBtn" onclick="checkAnswer()">Check Answer</button>
+            </div>
+        </div>
+
+        <!-- Result Screen -->
+        <div class="game-area" id="resultScreen">
+            <div class="result-screen">
+                <h2 id="resultTitle">Amazing Job!</h2>
+                <div class="stars" id="resultStars">⭐⭐⭐</div>
+                <p style="font-size: 1.3em; margin: 20px 0;" id="resultMessage">You've completed all levels!</p>
+                <p style="font-size: 1.5em; color: #667eea;">Final Score: <span id="finalScore">0</span></p>
+                <button class="restart-btn" onclick="restartGame()">Play Again</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const stages = [
+            { name: 'Baby', emoji: '👶', order: 1, description: 'Newborn to 1 year' },
+            { name: 'Child', emoji: '🧒', order: 2, description: '2 to 12 years' },
+            { name: 'Teenager', emoji: '👦', order: 3, description: '13 to 19 years' },
+            { name: 'Adult', emoji: '👨', order: 4, description: '20 to 60 years' },
+            { name: 'Elderly', emoji: '👴', order: 5, description: '60+ years' }
+        ];
+
+        let gameState = {
+            level: 1,
+            score: 0,
+            lives: 3,
+            selectedStages: [],
+            currentOrder: []
+        };
+
+        function startGame() {
+            gameState = { level: 1, score: 0, lives: 3, selectedStages: [], currentOrder: [] };
+            updateScoreBoard();
+            showScreen('gameScreen');
+            setupLevel();
+        }
+
+        function setupLevel() {
+            gameState.selectedStages = [];
+            gameState.currentOrder = [];
+            
+            const numStages = Math.min(3 + gameState.level - 1, 5);
+            const levelStages = stages.slice(0, numStages);
+            
+            displayStages(levelStages);
+            displayOptions(levelStages);
+            
+            document.getElementById('feedback').classList.remove('show');
+        }
+
+        function displayStages(levelStages) {
+            const container = document.getElementById('stagesContainer');
+            container.innerHTML = '';
+            
+            levelStages.forEach((stage, index) => {
+                const card = document.createElement('div');
+                card.className = 'stage-card';
+                card.id = `stage-${index}`;
+                card.innerHTML = `
+                    <div class="stage-number">${index + 1}</div>
+                    <div class="emoji" id="stage-emoji-${index}">❓</div>
+                    <div class="stage-name" id="stage-name-${index}">?</div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function displayOptions(levelStages) {
+            const container = document.getElementById('optionsContainer');
+            container.innerHTML = '';
+            
+            const shuffled = [...levelStages].sort(() => Math.random() - 0.5);
+            
+            shuffled.forEach((stage, index) => {
+                const card = document.createElement('div');
+                card.className = 'option-card';
+                card.id = `option-${index}`;
+                card.onclick = () => selectOption(stage, index);
+                card.innerHTML = `
+                    <div class="emoji">${stage.emoji}</div>
+                    <div style="font-weight: bold;">${stage.name}</div>
+                    <div style="font-size: 0.8em; margin-top: 5px;">${stage.description}</div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function selectOption(stage, optionIndex) {
+            const optionCard = document.getElementById(`option-${optionIndex}`);
+            
+            if (optionCard.classList.contains('disabled')) return;
+            
+            const currentSlot = gameState.currentOrder.length;
+            
+            if (currentSlot >= stages.slice(0, Math.min(3 + gameState.level - 1, 5)).length) return;
+            
+            gameState.currentOrder.push(stage);
+            gameState.selectedStages.push(optionIndex);
+            
+            const stageCard = document.getElementById(`stage-${currentSlot}`);
+            document.getElementById(`stage-emoji-${currentSlot}`).textContent = stage.emoji;
+            document.getElementById(`stage-name-${currentSlot}`).textContent = stage.name;
+            stageCard.classList.add('filled');
+            
+            optionCard.classList.add('selected', 'disabled');
+        }
+
+        function checkAnswer() {
+            const numStages = Math.min(3 + gameState.level - 1, 5);
+            
+            if (gameState.currentOrder.length !== numStages) {
+                showFeedback('Please select all stages!', 'incorrect');
+                return;
+            }
+            
+            let correct = true;
+            for (let i = 0; i < gameState.currentOrder.length; i++) {
+                if (gameState.currentOrder[i].order !== i + 1) {
+                    correct = false;
+                    break;
+                }
+            }
+            
+            if (correct) {
+                gameState.score += 100 * gameState.level;
+                showFeedback('🎉 Correct! Great job!', 'correct');
+                
+                setTimeout(() => {
+                    if (gameState.level < 3) {
+                        gameState.level++;
+                        updateScoreBoard();
+                        setupLevel();
+                    } else {
+                        showResults();
+                    }
+                }, 2000);
+            } else {
+                gameState.lives--;
+                updateScoreBoard();
+                
+                if (gameState.lives <= 0) {
+                    showFeedback('Game Over! Try again!', 'incorrect');
+                    setTimeout(() => showResults(), 2000);
+                } else {
+                    showFeedback('❌ Not quite right. Try again!', 'incorrect');
+                    setTimeout(() => {
+                        setupLevel();
+                    }, 2000);
+                }
+            }
+        }
+
+        function showFeedback(message, type) {
+            const feedback = document.getElementById('feedback');
+            feedback.textContent = message;
+            feedback.className = `feedback show ${type}`;
+        }
+
+        function updateScoreBoard() {
+            document.getElementById('level').textContent = gameState.level;
+            document.getElementById('score').textContent = gameState.score;
+            document.getElementById('lives').textContent = '❤️'.repeat(gameState.lives);
+        }
+
+        function showResults() {
+            const stars = gameState.score >= 300 ? '⭐⭐⭐' : gameState.score >= 200 ? '⭐⭐' : '⭐';
+            const title = gameState.score >= 300 ? 'Perfect Score!' : gameState.score >= 200 ? 'Great Job!' : 'Good Try!';
+            const message = gameState.score >= 300 ? 
+                'You are a Human Growth Expert! 🏆' : 
+                gameState.score >= 200 ? 
+                'You understand human growth well! 👍' : 
+                'Keep learning and try again! 📚';
+            
+            document.getElementById('resultTitle').textContent = title;
+            document.getElementById('resultStars').textContent = stars;
+            document.getElementById('resultMessage').textContent = message;
+            document.getElementById('finalScore').textContent = gameState.score;
+            
+            showScreen('resultScreen');
+        }
+
+        function restartGame() {
+            startGame();
+        }
+
+        function showScreen(screenId) {
+            document.querySelectorAll('.game-area').forEach(area => {
+                area.classList.remove('active');
+            });
+            document.getElementById(screenId).classList.add('active');
+        }
+    </script>
+</body>
+</html>

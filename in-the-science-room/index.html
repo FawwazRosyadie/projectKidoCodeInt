@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Science Room Rules Game</title>
+<style>
+    body {
+        font-family: "Comic Sans MS", Arial, sans-serif;
+        background: linear-gradient(#dff6ff, #ffffff);
+        text-align: center;
+        padding: 20px;
+    }
+
+    h1 {
+        color: #0b5ed7;
+    }
+
+    .game-box {
+        background: #ffffff;
+        max-width: 500px;
+        margin: auto;
+        padding: 25px;
+        border-radius: 15px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+
+    .scenario {
+        font-size: 20px;
+        margin: 20px 0;
+    }
+
+    button {
+        font-size: 18px;
+        padding: 12px 20px;
+        margin: 10px;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+    }
+
+    .safe {
+        background-color: #28a745;
+        color: white;
+    }
+
+    .not-safe {
+        background-color: #dc3545;
+        color: white;
+    }
+
+    .next {
+        background-color: #0b5ed7;
+        color: white;
+    }
+
+    .feedback {
+        font-size: 18px;
+        margin: 15px 0;
+        min-height: 40px;
+    }
+
+    .score {
+        font-size: 16px;
+        margin-top: 10px;
+    }
+</style>
+</head>
+<body>
+
+<h1>🧪 Science Room Rules Game</h1>
+<p>Choose if the action is <strong>SAFE</strong> or <strong>NOT SAFE</strong></p>
+
+<div class="game-box">
+    <div class="scenario" id="scenarioText"></div>
+
+    <button class="safe" onclick="checkAnswer(true)">✅ SAFE</button>
+    <button class="not-safe" onclick="checkAnswer(false)">❌ NOT SAFE</button>
+
+    <div class="feedback" id="feedback"></div>
+
+    <button class="next" onclick="nextQuestion()">➡ Next</button>
+
+    <div class="score" id="scoreText"></div>
+</div>
+
+<script>
+    const questions = [
+        {
+            text: "Ali is running in the science room.",
+            correct: false,
+            explanation: "Do not run in the science room."
+        },
+        {
+            text: "Siti wears safety goggles during an experiment.",
+            correct: true,
+            explanation: "Good job! Goggles protect your eyes."
+        },
+        {
+            text: "Aiman eats snacks in the science room.",
+            correct: false,
+            explanation: "Do not eat or drink in the science room."
+        },
+        {
+            text: "The pupils clean the table after an experiment.",
+            correct: true,
+            explanation: "Keeping the science room clean is good."
+        },
+        {
+            text: "Farah touches chemicals without asking the teacher.",
+            correct: false,
+            explanation: "Always ask the teacher before touching things."
+        }
+    ];
+
+    let current = 0;
+    let score = 0;
+
+    function loadQuestion() {
+        document.getElementById("scenarioText").textContent = questions[current].text;
+        document.getElementById("feedback").textContent = "";
+        document.getElementById("scoreText").textContent = "Score: " + score + " / " + questions.length;
+    }
+
+    function checkAnswer(answer) {
+        const q = questions[current];
+        if (answer === q.correct) {
+            document.getElementById("feedback").textContent = "✅ Correct! " + q.explanation;
+            score++;
+        } else {
+            document.getElementById("feedback").textContent = "❌ Not correct. " + q.explanation;
+        }
+        document.getElementById("scoreText").textContent = "Score: " + score + " / " + questions.length;
+    }
+
+    function nextQuestion() {
+        current++;
+        if (current >= questions.length) {
+            document.getElementById("scenarioText").textContent = "🎉 Game Over!";
+            document.getElementById("feedback").textContent =
+                "You scored " + score + " out of " + questions.length + ". Great job!";
+        } else {
+            loadQuestion();
+        }
+    }
+
+    loadQuestion();
+</script>
+
+</body>
+</html>

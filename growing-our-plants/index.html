@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plant Growth Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            background: linear-gradient(to bottom, #87CEEB 0%, #98D8E8 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .game-container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 800px;
+            width: 100%;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        h1 {
+            color: #2d5016;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .game-area {
+            background: linear-gradient(to bottom, #87CEEB 0%, #8B7355 70%);
+            border-radius: 15px;
+            padding: 30px;
+            min-height: 400px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sun {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            background: #FFD700;
+            border-radius: 50%;
+            box-shadow: 0 0 20px #FFA500;
+            opacity: 0.3;
+            transition: opacity 0.5s;
+        }
+
+        .sun.active {
+            opacity: 1;
+        }
+
+        .cloud {
+            position: absolute;
+            background: white;
+            border-radius: 50px;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+
+        .cloud.active {
+            opacity: 0.8;
+        }
+
+        .cloud1 {
+            width: 80px;
+            height: 30px;
+            top: 40px;
+            left: 50px;
+        }
+
+        .cloud2 {
+            width: 60px;
+            height: 25px;
+            top: 60px;
+            left: 150px;
+        }
+
+        .soil {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 100px;
+            background: #8B7355;
+            border-radius: 0 0 15px 15px;
+        }
+
+        .plant-container {
+            position: absolute;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            height: 300px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: center;
+        }
+
+        .plant {
+            transition: all 0.8s ease;
+            opacity: 0;
+            transform: scale(0);
+        }
+
+        .plant.show {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .seed {
+            width: 20px;
+            height: 25px;
+            background: #8B4513;
+            border-radius: 50%;
+            margin-bottom: -10px;
+        }
+
+        .sprout {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .sprout-stem {
+            width: 4px;
+            height: 40px;
+            background: #90EE90;
+        }
+
+        .sprout-leaf {
+            width: 15px;
+            height: 20px;
+            background: #32CD32;
+            border-radius: 50% 0;
+            margin-top: -10px;
+        }
+
+        .seedling {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .seedling-stem {
+            width: 6px;
+            height: 80px;
+            background: #228B22;
+        }
+
+        .seedling-leaves {
+            display: flex;
+            gap: 10px;
+            margin-top: -15px;
+        }
+
+        .leaf {
+            width: 25px;
+            height: 35px;
+            background: #228B22;
+            border-radius: 50% 0;
+        }
+
+        .mature-plant {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .mature-stem {
+            width: 8px;
+            height: 120px;
+            background: #2d5016;
+        }
+
+        .mature-leaves {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+            margin-top: -20px;
+            width: 120px;
+        }
+
+        .mature-leaf {
+            width: 30px;
+            height: 40px;
+            background: #228B22;
+            border-radius: 50% 0;
+        }
+
+        .flower {
+            width: 40px;
+            height: 40px;
+            background: #FF69B4;
+            border-radius: 50%;
+            margin-top: -10px;
+            position: relative;
+        }
+
+        .flower::before {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: #FFD700;
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .control-btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .control-btn:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+
+        .control-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .control-btn.active {
+            background: #2196F3;
+        }
+
+        .icon {
+            font-size: 1.5em;
+        }
+
+        .message {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+            text-align: center;
+            font-size: 1.1em;
+            color: #856404;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .reset-btn {
+            background: #ff9800;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 15px;
+            width: 100%;
+            transition: all 0.3s;
+        }
+
+        .reset-btn:hover {
+            background: #f57c00;
+        }
+
+        .progress {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #f0f0f0;
+            border-radius: 10px;
+        }
+
+        .progress-item {
+            text-align: center;
+            flex: 1;
+        }
+
+        .progress-icon {
+            font-size: 1.5em;
+            margin-bottom: 5px;
+        }
+
+        .progress-label {
+            font-size: 0.8em;
+            color: #666;
+        }
+
+        .checkmark {
+            color: #4CAF50;
+            display: none;
+        }
+
+        .checkmark.show {
+            display: inline;
+        }
+
+        @media (max-width: 600px) {
+            .controls {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>🌱 Plant Growth Game 🌱</h1>
+        <p class="subtitle">Help the seed grow into a beautiful plant!</p>
+        
+        <div class="progress">
+            <div class="progress-item">
+                <div class="progress-icon">💧 <span class="checkmark" id="check-water">✓</span></div>
+                <div class="progress-label">Water</div>
+            </div>
+            <div class="progress-item">
+                <div class="progress-icon">☀️ <span class="checkmark" id="check-sun">✓</span></div>
+                <div class="progress-label">Sunlight</div>
+            </div>
+            <div class="progress-item">
+                <div class="progress-icon">💨 <span class="checkmark" id="check-air">✓</span></div>
+                <div class="progress-label">Air</div>
+            </div>
+        </div>
+
+        <div class="game-area">
+            <div class="sun" id="sun"></div>
+            <div class="cloud cloud1" id="cloud1"></div>
+            <div class="cloud cloud2" id="cloud2"></div>
+            
+            <div class="plant-container">
+                <div class="plant seed show" id="stage0"></div>
+                <div class="plant sprout" id="stage1">
+                    <div class="sprout-leaf"></div>
+                    <div class="sprout-stem"></div>
+                </div>
+                <div class="plant seedling" id="stage2">
+                    <div class="seedling-leaves">
+                        <div class="leaf"></div>
+                        <div class="leaf" style="transform: scaleX(-1);"></div>
+                    </div>
+                    <div class="seedling-stem"></div>
+                </div>
+                <div class="plant mature-plant" id="stage3">
+                    <div class="flower"></div>
+                    <div class="mature-leaves">
+                        <div class="mature-leaf"></div>
+                        <div class="mature-leaf" style="transform: scaleX(-1);"></div>
+                        <div class="mature-leaf"></div>
+                        <div class="mature-leaf" style="transform: scaleX(-1);"></div>
+                    </div>
+                    <div class="mature-stem"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="control-btn" id="waterBtn">
+                <span class="icon">💧</span>
+                <span>Add Water</span>
+            </button>
+            <button class="control-btn" id="sunBtn">
+                <span class="icon">☀️</span>
+                <span>Add Sunlight</span>
+            </button>
+            <button class="control-btn" id="airBtn">
+                <span class="icon">💨</span>
+                <span>Add Air</span>
+            </button>
+        </div>
+
+        <div class="message" id="message">
+            Click the buttons to give the seed what it needs to grow! 🌱
+        </div>
+
+        <button class="reset-btn" id="resetBtn">🔄 Start New Plant</button>
+    </div>
+
+    <script>
+        const gameState = {
+            stage: 0,
+            hasWater: false,
+            hasSun: false,
+            hasAir: false
+        };
+
+        const messages = [
+            "Click the buttons to give the seed what it needs to grow! 🌱",
+            "Great! Keep adding what plants need: water, sunlight, and air! 💧☀️💨",
+            "Wonderful! Your plant is growing bigger! Keep going! 🌿",
+            "Amazing! Your plant has grown into a beautiful flower! 🌸 Plants need water, sunlight, and air to grow healthy and strong!"
+        ];
+
+        const waterBtn = document.getElementById('waterBtn');
+        const sunBtn = document.getElementById('sunBtn');
+        const airBtn = document.getElementById('airBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const messageEl = document.getElementById('message');
+        const sun = document.getElementById('sun');
+        const cloud1 = document.getElementById('cloud1');
+        const cloud2 = document.getElementById('cloud2');
+
+        function updatePlant() {
+            for (let i = 0; i <= 3; i++) {
+                const stage = document.getElementById(`stage${i}`);
+                if (i === gameState.stage) {
+                    stage.classList.add('show');
+                } else {
+                    stage.classList.remove('show');
+                }
+            }
+        }
+
+        function updateMessage() {
+            messageEl.textContent = messages[gameState.stage];
+        }
+
+        function checkProgress() {
+            document.getElementById('check-water').classList.toggle('show', gameState.hasWater);
+            document.getElementById('check-sun').classList.toggle('show', gameState.hasSun);
+            document.getElementById('check-air').classList.toggle('show', gameState.hasAir);
+
+            waterBtn.classList.toggle('active', gameState.hasWater);
+            sunBtn.classList.toggle('active', gameState.hasSun);
+            airBtn.classList.toggle('active', gameState.hasAir);
+
+            if (gameState.hasWater && gameState.hasSun && gameState.hasAir && gameState.stage < 3) {
+                setTimeout(() => {
+                    gameState.stage++;
+                    gameState.hasWater = false;
+                    gameState.hasSun = false;
+                    gameState.hasAir = false;
+                    updatePlant();
+                    updateMessage();
+                    checkProgress();
+                }, 500);
+            }
+        }
+
+        waterBtn.addEventListener('click', () => {
+            if (gameState.stage < 3) {
+                gameState.hasWater = true;
+                cloud1.classList.add('active');
+                cloud2.classList.add('active');
+                setTimeout(() => {
+                    cloud1.classList.remove('active');
+                    cloud2.classList.remove('active');
+                }, 1000);
+                checkProgress();
+            }
+        });
+
+        sunBtn.addEventListener('click', () => {
+            if (gameState.stage < 3) {
+                gameState.hasSun = true;
+                sun.classList.add('active');
+                checkProgress();
+            }
+        });
+
+        airBtn.addEventListener('click', () => {
+            if (gameState.stage < 3) {
+                gameState.hasAir = true;
+                checkProgress();
+            }
+        });
+
+        resetBtn.addEventListener('click', () => {
+            gameState.stage = 0;
+            gameState.hasWater = false;
+            gameState.hasSun = false;
+            gameState.hasAir = false;
+            sun.classList.remove('active');
+            updatePlant();
+            updateMessage();
+            checkProgress();
+        });
+
+        updatePlant();
+        updateMessage();
+    </script>
+</body>
+</html>
