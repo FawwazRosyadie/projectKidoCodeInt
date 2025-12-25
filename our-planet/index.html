@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Earth Science Explorer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            background: linear-gradient(to bottom, #87CEEB 0%, #98D8E8 100%);
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: #2C3E50;
+            margin-bottom: 30px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            color: #3498DB;
+        }
+
+        .tabs {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            padding: 15px 25px;
+            font-size: 1.1em;
+            font-weight: bold;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            background: linear-gradient(to bottom, #3498DB, #2980B9);
+            color: white;
+            transition: all 0.3s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        }
+
+        .tab-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0,0,0,0.3);
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(to bottom, #E74C3C, #C0392B);
+        }
+
+        .game-section {
+            display: none;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+        }
+
+        .game-section.active {
+            display: block;
+        }
+
+        .game-title {
+            font-size: 2em;
+            color: #2C3E50;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        /* Water Cycle Game */
+        .water-cycle-canvas {
+            width: 100%;
+            height: 500px;
+            background: linear-gradient(to bottom, #87CEEB 0%, #98D8E8 50%, #8B7355 50%, #654321 100%);
+            position: relative;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 3px solid #2C3E50;
+        }
+
+        .sun {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            width: 80px;
+            height: 80px;
+            background: radial-gradient(circle, #FFD700, #FFA500);
+            border-radius: 50%;
+            box-shadow: 0 0 30px #FFD700;
+        }
+
+        .ocean {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 120px;
+            background: linear-gradient(to bottom, #1E90FF, #000080);
+            border-top: 3px solid #0066CC;
+        }
+
+        .wave {
+            position: absolute;
+            bottom: 115px;
+            width: 100%;
+            height: 20px;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 20"><path d="M0,10 Q150,0 300,10 T600,10 T900,10 T1200,10" fill="none" stroke="%231E90FF" stroke-width="3"/></svg>');
+            animation: wave 3s linear infinite;
+        }
+
+        @keyframes wave {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-300px); }
+        }
+
+        .mountain {
+            position: absolute;
+            bottom: 120px;
+            left: 20%;
+            width: 0;
+            height: 0;
+            border-left: 100px solid transparent;
+            border-right: 100px solid transparent;
+            border-bottom: 150px solid #8B4513;
+        }
+
+        .mountain::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -50px;
+            width: 0;
+            height: 0;
+            border-left: 50px solid transparent;
+            border-right: 50px solid transparent;
+            border-bottom: 75px solid #FFFFFF;
+        }
+
+        .cloud {
+            position: absolute;
+            background: #FFFFFF;
+            border-radius: 100px;
+            opacity: 0.9;
+            animation: float 20s infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateX(0); }
+            50% { transform: translateX(50px); }
+        }
+
+        .water-drop {
+            position: absolute;
+            width: 10px;
+            height: 15px;
+            background: #1E90FF;
+            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+            animation: fall 2s linear;
+        }
+
+        @keyframes fall {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(300px); opacity: 0; }
+        }
+
+        .vapor {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: rgba(173, 216, 230, 0.6);
+            border-radius: 50%;
+            animation: rise 3s linear;
+        }
+
+        @keyframes rise {
+            0% { transform: translateY(0) scale(0.5); opacity: 1; }
+            100% { transform: translateY(-250px) scale(1.5); opacity: 0; }
+        }
+
+        .info-box {
+            margin-top: 20px;
+            padding: 20px;
+            background: #E8F4F8;
+            border-radius: 10px;
+            border-left: 5px solid #3498DB;
+        }
+
+        .info-box h3 {
+            color: #2C3E50;
+            margin-bottom: 10px;
+        }
+
+        .info-box p {
+            color: #34495E;
+            line-height: 1.6;
+        }
+
+        /* Water Sources Game */
+        .sources-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .source-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: white;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        }
+
+        .source-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 12px rgba(0,0,0,0.3);
+        }
+
+        .source-card.revealed {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+
+        .source-icon {
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
+
+        .source-name {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .source-desc {
+            font-size: 0.9em;
+            display: none;
+        }
+
+        .source-card.revealed .source-desc {
+            display: block;
+        }
+
+        /* Water Flow Game */
+        .flow-container {
+            position: relative;
+            width: 100%;
+            height: 400px;
+            background: linear-gradient(to bottom, #87CEEB 0%, #E8F5E9 100%);
+            border-radius: 10px;
+            overflow: hidden;
+            border: 3px solid #2C3E50;
+        }
+
+        .flow-path {
+            position: absolute;
+            width: 60px;
+            background: #1E90FF;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .flow-path:hover {
+            background: #00BFFF;
+        }
+
+        .flow-path.correct {
+            background: #27AE60;
+        }
+
+        .flow-arrow {
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+        }
+
+        /* Wind Rocket Game */
+        .rocket-container {
+            text-align: center;
+            padding: 30px;
+        }
+
+        .rocket-design {
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            gap: 20px;
+            margin: 30px 0;
+            min-height: 300px;
+        }
+
+        .rocket-part {
+            cursor: pointer;
+            padding: 15px;
+            background: #ECF0F1;
+            border-radius: 10px;
+            border: 3px dashed #95A5A6;
+            transition: all 0.3s;
+        }
+
+        .rocket-part:hover {
+            background: #BDC3C7;
+            transform: scale(1.05);
+        }
+
+        .rocket-part.selected {
+            background: #3498DB;
+            border: 3px solid #2980B9;
+            color: white;
+        }
+
+        .rocket-display {
+            position: relative;
+            width: 120px;
+            height: 300px;
+            margin: 0 auto;
+        }
+
+        .rocket-piece {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            transition: all 0.5s;
+        }
+
+        .launch-btn {
+            padding: 15px 40px;
+            font-size: 1.3em;
+            font-weight: bold;
+            background: linear-gradient(to right, #E74C3C, #C0392B);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-top: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        }
+
+        .launch-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0,0,0,0.3);
+        }
+
+        .launch-btn:disabled {
+            background: #95A5A6;
+            cursor: not-allowed;
+        }
+
+        .score-board {
+            text-align: center;
+            font-size: 1.5em;
+            color: #2C3E50;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+
+        @keyframes rocket-launch {
+            0% { transform: translateX(-50%) translateY(0) rotate(0deg); }
+            100% { transform: translateX(-50%) translateY(-500px) rotate(5deg); }
+        }
+
+        .launching {
+            animation: rocket-launch 2s ease-in;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌍 Earth Science Explorer 🌊</h1>
+            <p>Learn about water and air through fun activities!</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="showTab('water-cycle')">Water Cycle</button>
+            <button class="tab-btn" onclick="showTab('water-sources')">Water Sources</button>
+            <button class="tab-btn" onclick="showTab('water-flow')">Water Flow</button>
+            <button class="tab-btn" onclick="showTab('wind-rocket')">Wind Rocket</button>
+        </div>
+
+        <!-- Water Cycle Activity -->
+        <div id="water-cycle" class="game-section active">
+            <h2 class="game-title">💧 The Water Cycle Journey</h2>
+            <p style="text-align: center; margin-bottom: 20px;">Click on the ocean to see water evaporate and the clouds to make it rain!</p>
+            
+            <div class="water-cycle-canvas" id="cycleCanvas">
+                <div class="sun"></div>
+                <div class="cloud" style="top: 80px; left: 30%; width: 120px; height: 60px;"></div>
+                <div class="cloud" style="top: 120px; left: 60%; width: 100px; height: 50px;"></div>
+                <div class="mountain"></div>
+                <div class="ocean" id="ocean"></div>
+                <div class="wave"></div>
+            </div>
+
+            <div class="info-box">
+                <h3>🌊 How the Water Cycle Works:</h3>
+                <p><strong>1. Evaporation:</strong> The sun heats water in oceans, rivers, and lakes. The water turns into vapor (gas) and rises into the air.</p>
+                <p><strong>2. Condensation:</strong> Water vapor cools down and forms tiny droplets that make clouds.</p>
+                <p><strong>3. Precipitation:</strong> When clouds get heavy, water falls back to Earth as rain.</p>
+                <p><strong>4. Collection:</strong> Rain flows into rivers, lakes, and oceans, and the cycle starts again!</p>
+            </div>
+        </div>
+
+        <!-- Water Sources Activity -->
+        <div id="water-sources" class="game-section">
+            <h2 class="game-title">🏞️ Natural Water Sources</h2>
+            <p style="text-align: center; margin-bottom: 20px;">Click on each card to discover natural sources of water!</p>
+            
+            <div class="sources-grid">
+                <div class="source-card" onclick="revealSource(this)">
+                    <div class="source-icon">🌊</div>
+                    <div class="source-name">Ocean</div>
+                    <div class="source-desc">The largest water source on Earth! Oceans contain salt water and cover most of our planet.</div>
+                </div>
+                <div class="source-card" onclick="revealSource(this)">
+                    <div class="source-icon">🏞️</div>
+                    <div class="source-name">River</div>
+                    <div class="source-desc">Flowing fresh water that moves from mountains to the sea. Rivers provide water for drinking and farming.</div>
+                </div>
+                <div class="source-card" onclick="revealSource(this)">
+                    <div class="source-icon">🏔️</div>
+                    <div class="source-name">Lake</div>
+                    <div class="source-desc">Large bodies of fresh water surrounded by land. Many animals and plants live in and around lakes.</div>
+                </div>
+                <div class="source-card" onclick="revealSource(this)">
+                    <div class="source-icon">💧</div>
+                    <div class="source-name">Stream</div>
+                    <div class="source-desc">Small flowing water that runs through forests and hills. Streams join together to form rivers.</div>
+                </div>
+                <div class="source-card" onclick="revealSource(this)">
+                    <div class="source-icon">🌧️</div>
+                    <div class="source-name">Rain</div>
+                    <div class="source-desc">Water that falls from clouds in the sky. Rain fills rivers, lakes, and gives water to plants.</div>
+                </div>
+                <div class="source-card" onclick="revealSource(this)">
+                    <div class="source-icon">⛰️</div>
+                    <div class="source-name">Spring</div>
+                    <div class="source-desc">Water that flows from underground to the surface. Springs are natural sources of fresh, clean water.</div>
+                </div>
+            </div>
+
+            <div class="info-box" style="margin-top: 30px;">
+                <h3>💡 Did You Know?</h3>
+                <p>Water always flows from high places to low places because of gravity. This is the natural direction of water flow!</p>
+            </div>
+        </div>
+
+        <!-- Water Flow Activity -->
+        <div id="water-flow" class="game-section">
+            <h2 class="game-title">⬇️ Water Flow Direction</h2>
+            <p style="text-align: center; margin-bottom: 20px;">Click the paths to show how water flows downward from the mountain to the sea!</p>
+            
+            <div class="score-board">Score: <span id="flowScore">0</span>/4</div>
+            
+            <div class="flow-container" id="flowCanvas">
+                <div style="position: absolute; top: 20px; left: 50%; transform: translateX(-50%); font-size: 2em;">⛰️</div>
+                <div style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); font-size: 2em;">🌊</div>
+            </div>
+
+            <div class="info-box">
+                <h3>🌊 Natural Water Flow:</h3>
+                <p>Water always flows <strong>downward</strong> from high places to low places. This is because of gravity pulling the water down. Rain falls on mountains, flows down into streams, then into rivers, and finally reaches the ocean!</p>
+            </div>
+        </div>
+
+        <!-- Wind Rocket Activity -->
+        <div id="wind-rocket" class="game-section">
+            <h2 class="game-title">🚀 Design Your Wind Rocket</h2>
+            <p style="text-align: center; margin-bottom: 20px;">Moving air is called WIND. Build a rocket that wind can push through the air!</p>
+            
+            <div class="rocket-container">
+                <div class="rocket-design">
+                    <div class="rocket-part" onclick="selectPart('nose', this)">
+                        <div style="font-size: 3em;">📐</div>
+                        <div>Nose Cone</div>
+                        <div style="font-size: 0.8em;">(Cuts through air)</div>
+                    </div>
+                    <div class="rocket-part" onclick="selectPart('body', this)">
+                        <div style="font-size: 3em;">🧱</div>
+                        <div>Body</div>
+                        <div style="font-size: 0.8em;">(Main structure)</div>
+                    </div>
+                    <div class="rocket-part" onclick="selectPart('fins', this)">
+                        <div style="font-size: 3em;">🔺</div>
+                        <div>Fins</div>
+                        <div style="font-size: 0.8em;">(Keep it stable)</div>
+                    </div>
+                </div>
+
+                <div class="rocket-display" id="rocketDisplay"></div>
+
+                <button class="launch-btn" id="launchBtn" onclick="launchRocket()" disabled>🚀 Launch Rocket!</button>
+                
+                <div id="windMessage" style="margin-top: 20px; font-size: 1.2em; color: #2C3E50; font-weight: bold;"></div>
+            </div>
+
+            <div class="info-box">
+                <h3>💨 About Moving Air (Wind):</h3>
+                <p><strong>Air is all around us!</strong> When air moves, we call it WIND. Wind can be gentle like a breeze or strong like a storm.</p>
+                <p><strong>Wind Rockets:</strong> A wind rocket is a light object with a pointed nose and fins. The wind pushes it through the air! The nose cone helps it cut through the air smoothly, and the fins help it fly straight.</p>
+                <p><strong>How wind helps:</strong> Moving air (wind) pushes against objects. We can use wind energy to fly kites, turn windmills, and launch rockets!</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tab switching
+        function showTab(tabName) {
+            const sections = document.querySelectorAll('.game-section');
+            const btns = document.querySelectorAll('.tab-btn');
+            
+            sections.forEach(section => section.classList.remove('active'));
+            btns.forEach(btn => btn.classList.remove('active'));
+            
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // Water Cycle Animation
+        const ocean = document.getElementById('ocean');
+        const canvas = document.getElementById('cycleCanvas');
+        const clouds = document.querySelectorAll('.cloud');
+
+        ocean.addEventListener('click', function(e) {
+            const rect = ocean.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            for(let i = 0; i < 5; i++) {
+                setTimeout(() => {
+                    createVapor(x, rect.top + y);
+                }, i * 200);
+            }
+        });
+
+        clouds.forEach(cloud => {
+            cloud.addEventListener('click', function(e) {
+                const rect = cloud.getBoundingClientRect();
+                for(let i = 0; i < 8; i++) {
+                    setTimeout(() => {
+                        createRain(rect.left + Math.random() * rect.width, rect.bottom);
+                    }, i * 150);
+                }
+            });
+        });
+
+        function createVapor(x, y) {
+            const vapor = document.createElement('div');
+            vapor.className = 'vapor';
+            vapor.style.left = x + 'px';
+            vapor.style.top = y + 'px';
+            canvas.appendChild(vapor);
+            
+            setTimeout(() => vapor.remove(), 3000);
+        }
+
+        function createRain(x, y) {
+            const drop = document.createElement('div');
+            drop.className = 'water-drop';
+            drop.style.left = x + 'px';
+            drop.style.top = (y - canvas.getBoundingClientRect().top) + 'px';
+            canvas.appendChild(drop);
+            
+            setTimeout(() => drop.remove(), 2000);
+        }
+
+        // Water Sources
+        function revealSource(card) {
+            card.classList.add('revealed');
+        }
+
+        // Water Flow Game
+        const flowCanvas = document.getElementById('flowCanvas');
+        let flowScore = 0;
+        const flowPaths = [
+            { top: 80, left: 45, height: 80, correct: false },
+            { top: 150, left: 40, height: 70, correct: false },
+            { top: 210, left: 43, height: 80, correct: false },
+            { top: 280, left: 45, height: 70, correct: false }
+        ];
+
+        flowPaths.forEach((path, index) => {
+            const pathEl = document.createElement('div');
+            pathEl.className = 'flow-path';
+            pathEl.style.top = path.top + 'px';
+            pathEl.style.left = path.left + '%';
+            pathEl.style.height = path.height + 'px';
+            
+            const arrow = document.createElement('div');
+            arrow.className = 'flow-arrow';
+            arrow.style.bottom = '-15px';
+            arrow.style.left = '15px';
+            arrow.style.borderTop = '15px solid #1E90FF';
+            pathEl.appendChild(arrow);
+            
+            pathEl.addEventListener('click', function() {
+                if(!path.correct) {
+                    path.correct = true;
+                    this.classList.add('correct');
+                    this.querySelector('.flow-arrow').style.borderTop = '15px solid #27AE60';
+                    flowScore++;
+                    document.getElementById('flowScore').textContent = flowScore;
+                    
+                    if(flowScore === 4) {
+                        setTimeout(() => {
+                            alert('🎉 Great job! You showed how water flows downward from mountain to ocean!');
+                        }, 500);
+                    }
+                }
+            });
+            
+            flowCanvas.appendChild(pathEl);
+        });
+
+        // Wind Rocket Game
+        const rocketParts = { nose: false, body: false, fins: false };
+        const rocketDisplay = document.getElementById('rocketDisplay');
+
+        function selectPart(part, element) {
+            document.querySelectorAll('.rocket-part').forEach(el => {
+                if(el.textContent.includes(part === 'nose' ? 'Nose' : part === 'body' ? 'Body' : 'Fins')) {
+                    el.classList.remove('selected');
+                }
+            });
+            
+            element.classList.add('selected');
+            rocketParts[part] = true;
+            updateRocket();
+        }
+
+        function updateRocket() {
+            rocketDisplay.innerHTML = '';
+            
+            if(rocketParts.nose) {
+                const nose = document.createElement('div');
+                nose.className = 'rocket-piece';
+                nose.style.top = '0px';
+                nose.style.fontSize = '3em';
+                nose.textContent = '🔺';
+                rocketDisplay.appendChild(nose);
+            }
+            
+            if(rocketParts.body) {
+                const body = document.createElement('div');
+                body.className = 'rocket-piece';
+                body.style.top = '60px';
+                body.style.fontSize = '4em';
+                body.textContent = '🟦';
+                rocketDisplay.appendChild(body);
+            }
+            
+            if(rocketParts.fins) {
+                const fins = document.createElement('div');
+                fins.className = 'rocket-piece';
+                fins.style.top = '180px';
+                fins.style.fontSize = '3em';
+                fins.textContent = '⬇️';
+                rocketDisplay.appendChild(fins);
+            }
+            
+            const launchBtn = document.getElementById('launchBtn');
+            if(rocketParts.nose && rocketParts.body && rocketParts.fins) {
+                launchBtn.disabled = false;
+            } else {
+                launchBtn.disabled = true;
+            }
+        }
+
+        function launchRocket() {
+            const pieces = rocketDisplay.querySelectorAll('.rocket-piece');
+            pieces.forEach(piece => {
+                piece.classList.add('launching');
+            });
+            
+            document.getElementById('windMessage').innerHTML = '💨 WHOOSH! The wind is pushing your rocket up into the sky! 🚀';
+            
+            setTimeout(() => {
+                pieces.forEach(piece => {
+                    piece.classList.remove('launching');
+                });
+                document.getElementById('windMessage').innerHTML = '🎉 Amazing! Your rocket flew perfectly! Moving air (wind) gave it the power to fly!';
+                
+                setTimeout(() => {
+                    rocketDisplay.innerHTML = '';
+                    Object.keys(rocketParts).forEach(key => rocketParts[key] = false);
+                    document.querySelectorAll('.rocket-part').forEach(el => el.classList.remove('selected'));
+                    document.getElementById('launchBtn').disabled = true;
+                    document.getElementById('windMessage').innerHTML = '';
+                }, 3000);
+            }, 2000);
+        }
+    </script>
+</body>
+</html>
