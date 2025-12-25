@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Junior Engineer: Tech Builder</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .game-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            max-width: 900px;
+            width: 100%;
+            padding: 30px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .game-modes {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+
+        .mode-btn {
+            flex: 1;
+            min-width: 150px;
+            padding: 15px;
+            border: 3px solid #667eea;
+            background: white;
+            border-radius: 15px;
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #667eea;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .mode-btn:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-3px);
+        }
+
+        .mode-btn.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .game-area {
+            display: none;
+        }
+
+        .game-area.active {
+            display: block;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f0f0f0;
+            border-radius: 15px;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .stat-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .components-panel {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 15px;
+        }
+
+        .component {
+            padding: 15px;
+            background: white;
+            border: 3px solid #ddd;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .component:hover {
+            transform: scale(1.05);
+            border-color: #667eea;
+        }
+
+        .component.selected {
+            border-color: #4CAF50;
+            background: #e8f5e9;
+        }
+
+        .component-icon {
+            font-size: 2.5em;
+            margin-bottom: 5px;
+        }
+
+        .component-name {
+            font-size: 0.9em;
+            color: #333;
+            font-weight: bold;
+        }
+
+        .workspace {
+            min-height: 300px;
+            background: #fff;
+            border: 3px dashed #667eea;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .manual {
+            background: #fff9c4;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            border: 3px solid #fbc02d;
+        }
+
+        .manual h3 {
+            color: #f57f17;
+            margin-bottom: 10px;
+        }
+
+        .manual-steps {
+            list-style-position: inside;
+            color: #333;
+        }
+
+        .manual-steps li {
+            margin-bottom: 8px;
+            padding-left: 10px;
+        }
+
+        .built-item {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            padding: 15px;
+            background: #e3f2fd;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            border: 2px solid #2196F3;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #ff9800;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #e68900;
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background: #f44336;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #da190b;
+            transform: translateY(-2px);
+        }
+
+        .storage-box {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 10px;
+            padding: 20px;
+            background: #f5f5f5;
+            border-radius: 15px;
+            min-height: 150px;
+        }
+
+        .stored-item {
+            padding: 10px;
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 2em;
+        }
+
+        .quiz-question {
+            background: #e1f5fe;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            border: 3px solid #03a9f4;
+        }
+
+        .quiz-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .quiz-option {
+            padding: 15px;
+            background: white;
+            border: 3px solid #ddd;
+            border-radius: 10px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .quiz-option:hover {
+            border-color: #03a9f4;
+            transform: scale(1.05);
+        }
+
+        .quiz-option.correct {
+            border-color: #4CAF50;
+            background: #e8f5e9;
+        }
+
+        .quiz-option.wrong {
+            border-color: #f44336;
+            background: #ffebee;
+        }
+
+        .feedback {
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+
+        .feedback.success {
+            background: #c8e6c9;
+            color: #2e7d32;
+        }
+
+        .feedback.error {
+            background: #ffcdd2;
+            color: #c62828;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .celebrate {
+            animation: bounce 0.5s ease-in-out 3;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="header">
+            <h1>🔧 Junior Engineer: Tech Builder 🔩</h1>
+            <p>Build, Learn, and Create with Technology!</p>
+        </div>
+
+        <div class="game-modes">
+            <button class="mode-btn active" onclick="switchMode('identify')">🔍 Identify Parts</button>
+            <button class="mode-btn" onclick="switchMode('build')">🔨 Build</button>
+            <button class="mode-btn" onclick="switchMode('disassemble')">🔧 Disassemble</button>
+            <button class="mode-btn" onclick="switchMode('storage')">📦 Storage</button>
+        </div>
+
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-label">Score</div>
+                <div class="stat-value" id="score">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Built Items</div>
+                <div class="stat-value" id="built-count">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Level</div>
+                <div class="stat-value" id="level">1</div>
+            </div>
+        </div>
+
+        <!-- Identify Mode -->
+        <div id="identify-mode" class="game-area active">
+            <div class="manual">
+                <h3>📖 Component Manual</h3>
+                <p>Learn to identify technology components! Click the correct answer.</p>
+            </div>
+            <div id="quiz-container"></div>
+        </div>
+
+        <!-- Build Mode -->
+        <div id="build-mode" class="game-area">
+            <div class="manual">
+                <h3>📖 Building Instructions</h3>
+                <ul class="manual-steps">
+                    <li>Select components from below</li>
+                    <li>Choose at least 3 parts to build something</li>
+                    <li>Click "Assemble" to build your creation!</li>
+                </ul>
+            </div>
+            <div class="workspace" id="workspace">
+                <p style="color: #999;">Select components to start building...</p>
+            </div>
+            <div class="components-panel" id="components"></div>
+            <div class="action-buttons">
+                <button class="btn btn-primary" onclick="assembleItem()">🔨 Assemble</button>
+                <button class="btn btn-secondary" onclick="clearSelection()">🔄 Clear</button>
+            </div>
+            <div id="build-feedback"></div>
+        </div>
+
+        <!-- Disassemble Mode -->
+        <div id="disassemble-mode" class="game-area">
+            <div class="manual">
+                <h3>📖 Disassembly Guide</h3>
+                <p>Take apart items you've built and learn how they work!</p>
+            </div>
+            <div id="built-items"></div>
+        </div>
+
+        <!-- Storage Mode -->
+        <div id="storage-mode" class="game-area">
+            <div class="manual">
+                <h3>📖 Storage Organization</h3>
+                <p>Keep your components organized! Store and retrieve items.</p>
+            </div>
+            <h3 style="margin-bottom: 10px;">🗄️ Component Storage</h3>
+            <div class="storage-box" id="storage"></div>
+        </div>
+    </div>
+
+    <script>
+        const components = [
+            { id: 1, name: 'Gear', icon: '⚙️' },
+            { id: 2, name: 'Wheel', icon: '🛞' },
+            { id: 3, name: 'Battery', icon: '🔋' },
+            { id: 4, name: 'Motor', icon: '⚡' },
+            { id: 5, name: 'Screw', icon: '🔩' },
+            { id: 6, name: 'LED', icon: '💡' },
+            { id: 7, name: 'Switch', icon: '🔘' },
+            { id: 8, name: 'Wire', icon: '〰️' }
+        ];
+
+        const quizData = [
+            { question: 'What component provides power?', answer: 'Battery', options: ['Battery', 'Gear', 'Wheel', 'Screw'], icon: '🔋' },
+            { question: 'What helps things rotate?', answer: 'Gear', options: ['Battery', 'Gear', 'LED', 'Switch'], icon: '⚙️' },
+            { question: 'What produces light?', answer: 'LED', options: ['Motor', 'Wire', 'LED', 'Screw'], icon: '💡' },
+            { question: 'What connects electrical parts?', answer: 'Wire', options: ['Wire', 'Wheel', 'Gear', 'Screw'], icon: '〰️' },
+            { question: 'What makes things spin fast?', answer: 'Motor', options: ['Battery', 'Motor', 'Switch', 'LED'], icon: '⚡' }
+        ];
+
+        let gameState = {
+            score: 0,
+            builtCount: 0,
+            level: 1,
+            selectedComponents: [],
+            builtItems: [],
+            storage: [],
+            currentQuiz: 0
+        };
+
+        function init() {
+            renderComponents();
+            renderQuiz();
+            updateStats();
+        }
+
+        function switchMode(mode) {
+            document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            document.querySelectorAll('.game-area').forEach(area => area.classList.remove('active'));
+            document.getElementById(`${mode}-mode`).classList.add('active');
+
+            if (mode === 'disassemble') renderBuiltItems();
+            if (mode === 'storage') renderStorage();
+        }
+
+        function renderComponents() {
+            const container = document.getElementById('components');
+            container.innerHTML = components.map(comp => `
+                <div class="component" onclick="selectComponent(${comp.id})">
+                    <div class="component-icon">${comp.icon}</div>
+                    <div class="component-name">${comp.name}</div>
+                </div>
+            `).join('');
+        }
+
+        function selectComponent(id) {
+            const comp = components.find(c => c.id === id);
+            const index = gameState.selectedComponents.findIndex(c => c.id === id);
+            
+            if (index > -1) {
+                gameState.selectedComponents.splice(index, 1);
+            } else {
+                gameState.selectedComponents.push(comp);
+            }
+            
+            updateWorkspace();
+            updateComponentsDisplay();
+        }
+
+        function updateComponentsDisplay() {
+            document.querySelectorAll('.component').forEach((el, i) => {
+                const comp = components[i];
+                const isSelected = gameState.selectedComponents.find(c => c.id === comp.id);
+                el.classList.toggle('selected', !!isSelected);
+            });
+        }
+
+        function updateWorkspace() {
+            const workspace = document.getElementById('workspace');
+            if (gameState.selectedComponents.length === 0) {
+                workspace.innerHTML = '<p style="color: #999;">Select components to start building...</p>';
+            } else {
+                workspace.innerHTML = `
+                    <div style="display: flex; gap: 15px; flex-wrap: wrap; justify-content: center;">
+                        ${gameState.selectedComponents.map(c => `
+                            <div style="font-size: 3em;">${c.icon}</div>
+                        `).join('')}
+                    </div>
+                    <p style="margin-top: 15px; color: #666;">Selected: ${gameState.selectedComponents.map(c => c.name).join(', ')}</p>
+                `;
+            }
+        }
+
+        function assembleItem() {
+            const feedback = document.getElementById('build-feedback');
+            
+            if (gameState.selectedComponents.length < 3) {
+                feedback.innerHTML = '<div class="feedback error">⚠️ You need at least 3 components to build something!</div>';
+                setTimeout(() => feedback.innerHTML = '', 2000);
+                return;
+            }
+
+            const item = {
+                id: Date.now(),
+                components: [...gameState.selectedComponents],
+                name: generateItemName(gameState.selectedComponents)
+            };
+
+            gameState.builtItems.push(item);
+            gameState.builtCount++;
+            gameState.score += 50;
+            gameState.level = Math.floor(gameState.builtCount / 3) + 1;
+
+            feedback.innerHTML = `<div class="feedback success celebrate">🎉 Great job! You built: ${item.name}!</div>`;
+            setTimeout(() => feedback.innerHTML = '', 3000);
+
+            clearSelection();
+            updateStats();
+        }
+
+        function generateItemName(comps) {
+            const names = comps.map(c => c.name);
+            if (names.includes('Battery') && names.includes('LED')) return 'Flashlight';
+            if (names.includes('Motor') && names.includes('Wheel')) return 'Car';
+            if (names.includes('Gear') && names.includes('Motor')) return 'Machine';
+            if (names.includes('Switch') && names.includes('LED')) return 'Lamp';
+            return 'Creative Gadget';
+        }
+
+        function clearSelection() {
+            gameState.selectedComponents = [];
+            updateWorkspace();
+            updateComponentsDisplay();
+        }
+
+        function renderBuiltItems() {
+            const container = document.getElementById('built-items');
+            if (gameState.builtItems.length === 0) {
+                container.innerHTML = '<p style="color: #999; text-align: center; padding: 40px;">No items built yet! Go to Build mode to create something.</p>';
+                return;
+            }
+
+            container.innerHTML = gameState.builtItems.map(item => `
+                <div class="built-item">
+                    <div style="flex: 1;">
+                        <div style="font-size: 1.3em; font-weight: bold; margin-bottom: 5px;">${item.name}</div>
+                        <div style="font-size: 1.5em;">${item.components.map(c => c.icon).join(' ')}</div>
+                        <div style="font-size: 0.9em; color: #666;">Parts: ${item.components.map(c => c.name).join(', ')}</div>
+                    </div>
+                    <button class="btn btn-danger" onclick="disassemble(${item.id})">🔧 Disassemble</button>
+                </div>
+            `).join('');
+        }
+
+        function disassemble(itemId) {
+            const item = gameState.builtItems.find(i => i.id === itemId);
+            if (!item) return;
+
+            gameState.storage.push(...item.components);
+            gameState.builtItems = gameState.builtItems.filter(i => i.id !== itemId);
+            gameState.score += 25;
+
+            renderBuiltItems();
+            updateStats();
+        }
+
+        function renderStorage() {
+            const container = document.getElementById('storage');
+            if (gameState.storage.length === 0) {
+                container.innerHTML = '<p style="color: #999; grid-column: 1/-1; text-align: center; padding: 40px;">Storage is empty! Disassemble items to store components.</p>';
+                return;
+            }
+
+            container.innerHTML = gameState.storage.map((comp, i) => `
+                <div class="stored-item" title="${comp.name}">${comp.icon}</div>
+            `).join('');
+        }
+
+        function renderQuiz() {
+            const quiz = quizData[gameState.currentQuiz % quizData.length];
+            const container = document.getElementById('quiz-container');
+            
+            container.innerHTML = `
+                <div class="quiz-question">
+                    <div style="font-size: 3em; text-align: center; margin-bottom: 15px;">${quiz.icon}</div>
+                    <h3 style="text-align: center; margin-bottom: 20px;">${quiz.question}</h3>
+                    <div class="quiz-options">
+                        ${quiz.options.map(opt => `
+                            <div class="quiz-option" onclick="checkAnswer('${opt}', '${quiz.answer}')">
+                                ${opt}
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                <div id="quiz-feedback"></div>
+            `;
+        }
+
+        function checkAnswer(selected, correct) {
+            const options = document.querySelectorAll('.quiz-option');
+            const feedback = document.getElementById('quiz-feedback');
+            
+            options.forEach(opt => {
+                opt.style.pointerEvents = 'none';
+                if (opt.textContent.trim() === correct) {
+                    opt.classList.add('correct');
+                } else if (opt.textContent.trim() === selected && selected !== correct) {
+                    opt.classList.add('wrong');
+                }
+            });
+
+            if (selected === correct) {
+                gameState.score += 30;
+                feedback.innerHTML = '<div class="feedback success">✅ Correct! Great job, Junior Engineer!</div>';
+            } else {
+                feedback.innerHTML = `<div class="feedback error">❌ Not quite! The correct answer is ${correct}.</div>`;
+            }
+
+            updateStats();
+
+            setTimeout(() => {
+                gameState.currentQuiz++;
+                renderQuiz();
+            }, 2500);
+        }
+
+        function updateStats() {
+            document.getElementById('score').textContent = gameState.score;
+            document.getElementById('built-count').textContent = gameState.builtCount;
+            document.getElementById('level').textContent = gameState.level;
+        }
+
+        init();
+    </script>
+</body>
+</html>
