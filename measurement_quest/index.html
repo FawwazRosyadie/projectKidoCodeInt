@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Measurement Quest - Form 1 Science</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .game-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 900px;
+            width: 100%;
+            padding: 40px;
+            position: relative;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .progress-bar {
+            background: #e0e0e0;
+            height: 30px;
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+
+        .progress-fill {
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            height: 100%;
+            width: 0%;
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .level-info {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .level-info h2 {
+            color: #764ba2;
+            margin-bottom: 5px;
+        }
+
+        .question-area {
+            margin: 30px 0;
+        }
+
+        .question {
+            font-size: 1.3em;
+            color: #333;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .tool-card {
+            background: #f9f9f9;
+            border: 3px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .tool-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .tool-card.selected {
+            border-color: #667eea;
+            background: #e8eaff;
+        }
+
+        .tool-card.correct {
+            border-color: #4caf50;
+            background: #e8f5e9;
+        }
+
+        .tool-card.incorrect {
+            border-color: #f44336;
+            background: #ffebee;
+        }
+
+        .tool-icon {
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
+
+        .tool-name {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .measurement-area {
+            background: #f5f5f5;
+            padding: 30px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .object-display {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .object-icon {
+            font-size: 5em;
+            margin: 20px 0;
+        }
+
+        .measuring-tool {
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .ruler {
+            background: linear-gradient(to right, #ffd700 0%, #ffed4e 100%);
+            height: 60px;
+            border-radius: 5px;
+            position: relative;
+            margin: 20px 0;
+        }
+
+        .ruler-markings {
+            display: flex;
+            justify-content: space-between;
+            padding: 0 10px;
+            height: 100%;
+            align-items: flex-end;
+        }
+
+        .ruler-mark {
+            width: 2px;
+            background: #333;
+            height: 20px;
+        }
+
+        .ruler-mark.major {
+            height: 30px;
+        }
+
+        .ruler-number {
+            position: absolute;
+            bottom: 5px;
+            font-size: 0.8em;
+            font-weight: bold;
+        }
+
+        .scale {
+            background: #e0e0e0;
+            border: 3px solid #666;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .scale-display {
+            background: #000;
+            color: #0f0;
+            font-size: 2em;
+            font-family: 'Courier New', monospace;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+
+        .measuring-cylinder {
+            width: 150px;
+            height: 300px;
+            background: linear-gradient(to bottom, rgba(100, 200, 255, 0.3), rgba(100, 200, 255, 0.6));
+            border: 3px solid #333;
+            border-radius: 0 0 10px 10px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .cylinder-markings {
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 100%;
+        }
+
+        .cylinder-mark {
+            position: absolute;
+            width: 100%;
+            border-bottom: 2px solid #333;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 5px;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+
+        .input-group {
+            margin: 20px 0;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1.1em;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.1em;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .feedback {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 10px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .feedback.correct {
+            background: #e8f5e9;
+            color: #2e7d32;
+            border: 2px solid #4caf50;
+        }
+
+        .feedback.incorrect {
+            background: #ffebee;
+            color: #c62828;
+            border: 2px solid #f44336;
+        }
+
+        .completion-screen {
+            text-align: center;
+            padding: 40px 0;
+        }
+
+        .completion-screen h2 {
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 20px;
+        }
+
+        .trophy {
+            font-size: 8em;
+            animation: bounce 1s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .score-display {
+            font-size: 1.5em;
+            color: #333;
+            margin: 20px 0;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="header">
+            <h1>🔬 Measurement Quest</h1>
+            <p>Learn Scientific Investigation & Measurements</p>
+        </div>
+
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressBar">Level 1/6</div>
+        </div>
+
+        <div class="level-info">
+            <h2 id="levelTitle">Level 1: Home Measurement Tools</h2>
+            <p id="levelDescription">Select all the tools you can use to measure things at home</p>
+        </div>
+
+        <div id="gameArea" class="question-area">
+            <!-- Game content will be dynamically loaded here -->
+        </div>
+
+        <div class="feedback hidden" id="feedback"></div>
+
+        <div style="text-align: center; margin-top: 30px;">
+            <button class="btn" id="actionBtn" onclick="checkAnswer()">Submit Answer</button>
+        </div>
+    </div>
+
+    <script>
+        const gameState = {
+            currentLevel: 1,
+            score: 0,
+            maxScore: 0,
+            selectedTools: [],
+            measurements: {}
+        };
+
+        const levels = {
+            1: {
+                title: "Level 1: Home Measurement Tools",
+                description: "Select all the tools you can use to measure things at home",
+                type: "select-tools",
+                location: "home",
+                correctAnswers: ["ruler", "measuring-tape", "kitchen-scale", "measuring-cup"]
+            },
+            2: {
+                title: "Level 2: Laboratory Measurement Tools",
+                description: "Select the tools commonly used in a science laboratory",
+                type: "select-tools",
+                location: "lab",
+                correctAnswers: ["triple-beam-balance", "measuring-cylinder", "vernier-caliper", "thermometer"]
+            },
+            3: {
+                title: "Level 3: Match Tools to Measurements",
+                description: "Match the correct tool to measure each quantity",
+                type: "match-tools",
+                tasks: [
+                    { quantity: "Length of a pencil", correct: "ruler", unit: "cm" },
+                    { quantity: "Mass of an apple", correct: "kitchen-scale", unit: "g" },
+                    { quantity: "Volume of water", correct: "measuring-cylinder", unit: "mL" }
+                ]
+            },
+            4: {
+                title: "Level 4: Reading Measurements - Length",
+                description: "Use the ruler to measure the length of the pencil",
+                type: "measure-length",
+                object: "✏️ Pencil",
+                correctAnswer: 12.5,
+                unit: "cm",
+                tolerance: 0.5
+            },
+            5: {
+                title: "Level 5: Reading Measurements - Mass & Volume",
+                description: "Record the mass and volume measurements",
+                type: "measure-multiple",
+                measurements: [
+                    { type: "mass", object: "🍎 Apple", value: 150, unit: "g", tolerance: 5 },
+                    { type: "volume", object: "💧 Water", value: 250, unit: "mL", tolerance: 10 }
+                ]
+            },
+            6: {
+                title: "Level 6: Real-World Simulation",
+                description: "Measure the dimensions of a textbook and calculate its volume",
+                type: "final-simulation",
+                object: "📕 Science Textbook",
+                measurements: {
+                    length: { value: 25, unit: "cm", tolerance: 1 },
+                    width: { value: 18, unit: "cm", tolerance: 1 },
+                    height: { value: 2, unit: "cm", tolerance: 0.5 }
+                }
+            }
+        };
+
+        function startLevel(level) {
+            gameState.currentLevel = level;
+            gameState.selectedTools = [];
+            gameState.measurements = {};
+            
+            const levelData = levels[level];
+            document.getElementById('levelTitle').textContent = levelData.title;
+            document.getElementById('levelDescription').textContent = levelData.description;
+            document.getElementById('feedback').classList.add('hidden');
+            
+            updateProgressBar();
+            renderLevel(levelData);
+        }
+
+        function updateProgressBar() {
+            const progress = (gameState.currentLevel / 6) * 100;
+            const progressBar = document.getElementById('progressBar');
+            progressBar.style.width = progress + '%';
+            progressBar.textContent = `Level ${gameState.currentLevel}/6`;
+        }
+
+        function renderLevel(levelData) {
+            const gameArea = document.getElementById('gameArea');
+            
+            if (levelData.type === 'select-tools') {
+                renderSelectTools(gameArea, levelData);
+            } else if (levelData.type === 'match-tools') {
+                renderMatchTools(gameArea, levelData);
+            } else if (levelData.type === 'measure-length') {
+                renderMeasureLength(gameArea, levelData);
+            } else if (levelData.type === 'measure-multiple') {
+                renderMeasureMultiple(gameArea, levelData);
+            } else if (levelData.type === 'final-simulation') {
+                renderFinalSimulation(gameArea, levelData);
+            }
+        }
+
+        function renderSelectTools(container, levelData) {
+            const tools = levelData.location === 'home' ? [
+                { id: 'ruler', icon: '📏', name: 'Ruler' },
+                { id: 'measuring-tape', icon: '📐', name: 'Measuring Tape' },
+                { id: 'kitchen-scale', icon: '⚖️', name: 'Kitchen Scale' },
+                { id: 'measuring-cup', icon: '🥛', name: 'Measuring Cup' },
+                { id: 'phone', icon: '📱', name: 'Phone' },
+                { id: 'spoon', icon: '🥄', name: 'Spoon' }
+            ] : [
+                { id: 'triple-beam-balance', icon: '⚖️', name: 'Triple Beam Balance' },
+                { id: 'measuring-cylinder', icon: '🧪', name: 'Measuring Cylinder' },
+                { id: 'vernier-caliper', icon: '📏', name: 'Vernier Caliper' },
+                { id: 'thermometer', icon: '🌡️', name: 'Thermometer' },
+                { id: 'microscope', icon: '🔬', name: 'Microscope' },
+                { id: 'bunsen-burner', icon: '🔥', name: 'Bunsen Burner' }
+            ];
+
+            container.innerHTML = `
+                <div class="question">Select all the correct measurement tools (${levelData.correctAnswers.length} tools)</div>
+                <div class="tools-grid" id="toolsGrid"></div>
+            `;
+
+            const grid = document.getElementById('toolsGrid');
+            tools.forEach(tool => {
+                const card = document.createElement('div');
+                card.className = 'tool-card';
+                card.innerHTML = `
+                    <div class="tool-icon">${tool.icon}</div>
+                    <div class="tool-name">${tool.name}</div>
+                `;
+                card.onclick = () => toggleToolSelection(tool.id, card);
+                grid.appendChild(card);
+            });
+        }
+
+        function toggleToolSelection(toolId, card) {
+            const index = gameState.selectedTools.indexOf(toolId);
+            if (index > -1) {
+                gameState.selectedTools.splice(index, 1);
+                card.classList.remove('selected');
+            } else {
+                gameState.selectedTools.push(toolId);
+                card.classList.add('selected');
+            }
+        }
+
+        function renderMatchTools(container, levelData) {
+            container.innerHTML = `
+                <div class="question">Match each quantity with the correct measurement tool</div>
+                <div id="matchingTasks"></div>
+            `;
+
+            const tasksContainer = document.getElementById('matchingTasks');
+            levelData.tasks.forEach((task, index) => {
+                const taskDiv = document.createElement('div');
+                taskDiv.className = 'input-group';
+                taskDiv.innerHTML = `
+                    <label>${task.quantity}</label>
+                    <select id="match-${index}" class="measurement-select" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1.1em;">
+                        <option value="">Choose a tool...</option>
+                        <option value="ruler">Ruler</option>
+                        <option value="kitchen-scale">Kitchen Scale</option>
+                        <option value="measuring-cylinder">Measuring Cylinder</option>
+                        <option value="triple-beam-balance">Triple Beam Balance</option>
+                        <option value="measuring-tape">Measuring Tape</option>
+                    </select>
+                `;
+                tasksContainer.appendChild(taskDiv);
+            });
+        }
+
+        function renderMeasureLength(container, levelData) {
+            container.innerHTML = `
+                <div class="object-display">
+                    <div class="object-icon">${levelData.object}</div>
+                </div>
+                <div class="measurement-area">
+                    <div class="measuring-tool">
+                        <h3 style="text-align: center; margin-bottom: 20px;">Ruler (cm)</h3>
+                        <div class="ruler">
+                            <div class="ruler-markings">
+                                ${Array.from({length: 21}, (_, i) => `
+                                    <div>
+                                        <div class="ruler-mark ${i % 5 === 0 ? 'major' : ''}"></div>
+                                        ${i % 5 === 0 ? `<div class="ruler-number" style="left: ${i * 5}%;">${i}</div>` : ''}
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                        <div style="text-align: center; margin-top: 10px; color: #666;">
+                            The pencil extends from 0 cm to 12.5 cm
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Enter the length (in cm):</label>
+                        <input type="number" id="lengthInput" step="0.1" placeholder="e.g., 12.5">
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderMeasureMultiple(container, levelData) {
+            container.innerHTML = `
+                <div class="measurement-area">
+                    ${levelData.measurements.map((m, index) => `
+                        <div class="measuring-tool" style="margin-bottom: 30px;">
+                            <div class="object-display">
+                                <div class="object-icon">${m.object}</div>
+                            </div>
+                            ${m.type === 'mass' ? `
+                                <div class="scale">
+                                    <h3>Electronic Scale</h3>
+                                    <div class="scale-display">${m.value} ${m.unit}</div>
+                                </div>
+                            ` : `
+                                <div style="text-align: center;">
+                                    <h3>Measuring Cylinder</h3>
+                                    <div class="measuring-cylinder">
+                                        ${Array.from({length: 6}, (_, i) => `
+                                            <div class="cylinder-mark" style="bottom: ${i * 20}%;">
+                                                <span>${(5 - i) * 50}</span>
+                                            </div>
+                                        `).join('')}
+                                        <div style="position: absolute; bottom: ${(m.value / 250) * 100}%; width: 100%; height: 3px; background: red;"></div>
+                                    </div>
+                                    <div style="margin-top: 10px; color: #666;">
+                                        Read the measurement at the red line
+                                    </div>
+                                </div>
+                            `}
+                            <div class="input-group">
+                                <label>Enter the ${m.type} (in ${m.unit}):</label>
+                                <input type="number" id="measure-${index}" step="${m.type === 'mass' ? 1 : 5}" placeholder="e.g., ${m.value}">
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function renderFinalSimulation(container, levelData) {
+            container.innerHTML = `
+                <div class="object-display">
+                    <div class="object-icon" style="font-size: 6em;">${levelData.object}</div>
+                </div>
+                <div class="measurement-area">
+                    <h3 style="text-align: center; margin-bottom: 20px;">Measure all three dimensions using your ruler</h3>
+                    <div class="input-group">
+                        <label>Length (cm):</label>
+                        <input type="number" id="length" step="0.5" placeholder="e.g., 25">
+                    </div>
+                    <div class="input-group">
+                        <label>Width (cm):</label>
+                        <input type="number" id="width" step="0.5" placeholder="e.g., 18">
+                    </div>
+                    <div class="input-group">
+                        <label>Height/Thickness (cm):</label>
+                        <input type="number" id="height" step="0.5" placeholder="e.g., 2">
+                    </div>
+                    <div class="input-group">
+                        <label>Calculate the Volume (length × width × height) in cm³:</label>
+                        <input type="number" id="volume" step="1" placeholder="Calculate the volume">
+                    </div>
+                </div>
+            `;
+        }
+
+        function checkAnswer() {
+            const levelData = levels[gameState.currentLevel];
+            let correct = false;
+            let message = '';
+
+            if (levelData.type === 'select-tools') {
+                correct = checkSelectTools(levelData);
+                message = correct ? 
+                    '✅ Excellent! You correctly identified all the measurement tools!' : 
+                    '❌ Not quite right. Review which tools are used for measuring.';
+            } else if (levelData.type === 'match-tools') {
+                correct = checkMatchTools(levelData);
+                message = correct ? 
+                    '✅ Perfect matching! You understand which tools measure which quantities!' : 
+                    '❌ Some matches are incorrect. Think about what each tool measures.';
+            } else if (levelData.type === 'measure-length') {
+                correct = checkMeasureLength(levelData);
+                message = correct ? 
+                    '✅ Great job reading the ruler! Your measurement is accurate!' : 
+                    '❌ Check your reading again. Look carefully at the ruler markings.';
+            } else if (levelData.type === 'measure-multiple') {
+                correct = checkMeasureMultiple(levelData);
+                message = correct ? 
+                    '✅ Excellent! You accurately read both instruments!' : 
+                    '❌ One or more measurements are incorrect. Read the scales carefully.';
+            } else if (levelData.type === 'final-simulation') {
+                correct = checkFinalSimulation(levelData);
+                message = correct ? 
+                    '✅ Outstanding! You\'ve mastered measurements and calculations!' : 
+                    '❌ Check your measurements and calculation. Remember: Volume = length × width × height';
+            }
+
+            showFeedback(correct, message);
+
+            if (correct) {
+                gameState.score++;
+                if (gameState.currentLevel < 6) {
+                    setTimeout(() => {
+                        startLevel(gameState.currentLevel + 1);
+                    }, 2000);
+                } else {
+                    setTimeout(showCompletion, 2000);
+                }
+            }
+        }
+
+        function checkSelectTools(levelData) {
+            if (gameState.selectedTools.length !== levelData.correctAnswers.length) {
+                return false;
+            }
+            return levelData.correctAnswers.every(tool => gameState.selectedTools.includes(tool));
+        }
+
+        function checkMatchTools(levelData) {
+            return levelData.tasks.every((task, index) => {
+                const select = document.getElementById(`match-${index}`);
+                return select && select.value === task.correct;
+            });
+        }
+
+        function checkMeasureLength(levelData) {
+            const input = document.getElementById('lengthInput');
+            if (!input || !input.value) return false;
+            const value = parseFloat(input.value);
+            return Math.abs(value - levelData.correctAnswer) <= levelData.tolerance;
+        }
+
+        function checkMeasureMultiple(levelData) {
+            return levelData.measurements.every((m, index) => {
+                const input = document.getElementById(`measure-${index}`);
+                if (!input || !input.value) return false;
+                const value = parseFloat(input.value);
+                return Math.abs(value - m.value) <= m.tolerance;
+            });
+        }
+
+        function checkFinalSimulation(levelData) {
+            const length = parseFloat(document.getElementById('length')?.value);
+            const width = parseFloat(document.getElementById('width')?.value);
+            const height = parseFloat(document.getElementById('height')?.value);
+            const volume = parseFloat(document.getElementById('volume')?.value);
+
+            if (!length || !width || !height || !volume) return false;
+
+            const lengthOk = Math.abs(length - levelData.measurements.length.value) <= levelData.measurements.length.tolerance;
+            const widthOk = Math.abs(width - levelData.measurements.width.value) <= levelData.measurements.width.tolerance;
+            const heightOk = Math.abs(height - levelData.measurements.height.value) <= levelData.measurements.height.tolerance;
+            
+            const expectedVolume = levelData.measurements.length.value * levelData.measurements.width.value * levelData.measurements.height.value;
+            const volumeOk = Math.abs(volume - expectedVolume) <= 50;
+
+            return lengthOk && widthOk && heightOk && volumeOk;
+        }
+
+        function showFeedback(correct, message) {
+            const feedback = document.getElementById('feedback');
+            feedback.className = 'feedback ' + (correct ? 'correct' : 'incorrect');
+            feedback.textContent = message;
+            feedback.classList.remove('hidden');
+        }
+
+        function showCompletion() {
+            const gameArea = document.getElementById('gameArea');
+            gameArea.innerHTML = `
+                <div class="completion-screen">
+                    <div class="trophy">🏆</div>
+                    <h2>Congratulations!</h2>
+                    <p class="score-display">You've completed all 6 levels!</p>
+                    <p style="color: #666; margin: 20px 0;">You've mastered the basics of scientific measurement including:</p>
+                    <ul style="text-align: left; display: inline-block; color: #333;">
+                        <li>Identifying measurement tools at home and in the lab</li>
+                        <li>Matching tools to physical quantities</li>
+                        <li>Reading measurements from various instruments</li>
+                        <li>Measuring length, mass, and volume</li>
+                        <li>Calculating volume from dimensions</li>
+                    </ul>
+                </div>
+            `;
+            document.getElementById('actionBtn').textContent = 'Play Again';
+            document.getElementById('actionBtn').onclick = () => {
+                gameState.currentLevel = 1;
+                gameState.score = 0;
+                document.getElementById('actionBtn').textContent = 'Submit Answer';
+                document.getElementById('actionBtn').onclick = checkAnswer;
+                startLevel(1);
+            };
+            document.getElementById('feedback').classList.add('hidden');
+        }
+
+        // Start the game
+        startLevel(1);
+    </script>
+</body>
+</html>
