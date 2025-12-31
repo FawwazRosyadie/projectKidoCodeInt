@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Balance Bot - Homeostasis Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .game-container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 800px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            text-align: center;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            gap: 15px;
+        }
+
+        .stat-box {
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 10px;
+            flex: 1;
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .robot-area {
+            background: linear-gradient(180deg, #e0e7ff 0%, #c7d2fe 100%);
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            margin-bottom: 20px;
+            position: relative;
+            min-height: 250px;
+        }
+
+        .robot {
+            font-size: 80px;
+            margin: 20px 0;
+            transition: transform 0.3s;
+        }
+
+        .robot.happy { transform: scale(1.1); }
+        .robot.sad { transform: scale(0.9); filter: grayscale(0.5); }
+
+        .status-bars {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .bar-container {
+            background: white;
+            border-radius: 10px;
+            padding: 10px;
+        }
+
+        .bar-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .bar {
+            height: 20px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .bar-fill {
+            height: 100%;
+            transition: width 0.5s, background-color 0.3s;
+            border-radius: 10px;
+        }
+
+        .temp-bar { background: linear-gradient(90deg, #3b82f6, #ef4444); }
+        .water-bar { background: linear-gradient(90deg, #06b6d4, #3b82f6); }
+        .energy-bar { background: linear-gradient(90deg, #fbbf24, #f59e0b); }
+        .oxygen-bar { background: linear-gradient(90deg, #10b981, #059669); }
+
+        .challenge-area {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            min-height: 100px;
+        }
+
+        .challenge-title {
+            font-weight: bold;
+            color: #856404;
+            margin-bottom: 10px;
+        }
+
+        .challenge-text {
+            color: #856404;
+            margin-bottom: 15px;
+        }
+
+        .actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+        }
+
+        .action-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .action-btn:active {
+            transform: translateY(0);
+        }
+
+        .action-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .feedback {
+            background: #d4edda;
+            border: 2px solid #28a745;
+            color: #155724;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .feedback.show {
+            display: block;
+            animation: slideIn 0.3s;
+        }
+
+        .feedback.error {
+            background: #f8d7da;
+            border-color: #dc3545;
+            color: #721c24;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .info-box {
+            background: #e7f3ff;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            color: #0d47a1;
+        }
+
+        .game-over {
+            text-align: center;
+            padding: 30px;
+        }
+
+        .game-over h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+
+        .restart-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>🤖 Balance Bot</h1>
+        <p class="subtitle">Help the robot maintain its internal balance!</p>
+
+        <div class="stats">
+            <div class="stat-box">
+                <div class="stat-label">Balance Score</div>
+                <div class="stat-value" id="score">0</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Time Survived</div>
+                <div class="stat-value" id="time">0s</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Challenges</div>
+                <div class="stat-value" id="challenges">0</div>
+            </div>
+        </div>
+
+        <div class="robot-area">
+            <div class="robot" id="robot">🤖</div>
+            
+            <div class="status-bars">
+                <div class="bar-container">
+                    <div class="bar-label">
+                        <span>🌡️ Temperature</span>
+                        <span id="temp-value">50%</span>
+                    </div>
+                    <div class="bar">
+                        <div class="bar-fill temp-bar" id="temp-bar" style="width: 50%"></div>
+                    </div>
+                </div>
+
+                <div class="bar-container">
+                    <div class="bar-label">
+                        <span>💧 Water Level</span>
+                        <span id="water-value">50%</span>
+                    </div>
+                    <div class="bar">
+                        <div class="bar-fill water-bar" id="water-bar" style="width: 50%"></div>
+                    </div>
+                </div>
+
+                <div class="bar-container">
+                    <div class="bar-label">
+                        <span>⚡ Energy</span>
+                        <span id="energy-value">50%</span>
+                    </div>
+                    <div class="bar">
+                        <div class="bar-fill energy-bar" id="energy-bar" style="width: 50%"></div>
+                    </div>
+                </div>
+
+                <div class="bar-container">
+                    <div class="bar-label">
+                        <span>🫁 Oxygen</span>
+                        <span id="oxygen-value">50%</span>
+                    </div>
+                    <div class="bar">
+                        <div class="bar-fill oxygen-bar" id="oxygen-bar" style="width: 50%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="challenge-area" id="challenge-area">
+            <div class="challenge-title">🎮 Current Situation</div>
+            <div class="challenge-text" id="challenge-text">
+                Balance Bot is in a stable environment. Monitor its systems and respond to changes!
+            </div>
+            <div class="actions" id="actions"></div>
+            <div class="feedback" id="feedback"></div>
+        </div>
+
+        <div class="info-box">
+            <strong>🧠 How Homeostasis Works:</strong> Living things constantly monitor and adjust their internal conditions to stay healthy. Your body does this automatically - regulating temperature, water balance, energy, and oxygen levels. Help Balance Bot do the same by choosing the right responses to each challenge!
+        </div>
+    </div>
+
+    <script>
+        const game = {
+            temperature: 50,
+            water: 50,
+            energy: 50,
+            oxygen: 50,
+            score: 0,
+            time: 0,
+            challenges: 0,
+            gameOver: false,
+            currentChallenge: null
+        };
+
+        const challenges = [
+            {
+                text: "☀️ Balance Bot is in a hot environment! Temperature rising!",
+                effect: { temperature: 15 },
+                responses: [
+                    { text: "🌬️ Activate Cooling", correct: true, effect: { temperature: -20 }, feedback: "Good! Cooling systems help maintain normal temperature, like sweating in humans!" },
+                    { text: "🔥 Generate Heat", correct: false, effect: { temperature: 10 }, feedback: "Wrong! That makes it worse. Living things cool down when hot, not heat up more!" },
+                    { text: "💤 Do Nothing", correct: false, effect: {}, feedback: "Inaction is dangerous! The body must respond to changes to survive." }
+                ]
+            },
+            {
+                text: "🥵 Balance Bot is dehydrated! Water levels dropping!",
+                effect: { water: -20 },
+                responses: [
+                    { text: "💧 Drink Water", correct: true, effect: { water: 25 }, feedback: "Perfect! Just like humans drink when thirsty, maintaining water balance is crucial!" },
+                    { text: "🏃 Exercise More", correct: false, effect: { water: -10, energy: -5 }, feedback: "That makes dehydration worse! Exercise causes water loss through sweating." },
+                    { text: "⏳ Wait", correct: false, effect: { water: -5 }, feedback: "Waiting without action leads to more dehydration. The body signals thirst for a reason!" }
+                ]
+            },
+            {
+                text: "❄️ Cold environment detected! Temperature dropping fast!",
+                effect: { temperature: -15 },
+                responses: [
+                    { text: "🔥 Generate Heat", correct: true, effect: { temperature: 20, energy: -5 }, feedback: "Excellent! Like shivering in humans, generating heat maintains body temperature!" },
+                    { text: "🌬️ Activate Cooling", correct: false, effect: { temperature: -10 }, feedback: "Wrong choice! You need to warm up, not cool down more!" },
+                    { text: "🧊 Embrace Cold", correct: false, effect: { temperature: -10 }, feedback: "Dangerous! Living things must regulate temperature to survive." }
+                ]
+            },
+            {
+                text: "😮‍💨 Balance Bot is running low on oxygen!",
+                effect: { oxygen: -20 },
+                responses: [
+                    { text: "🫁 Deep Breathing", correct: true, effect: { oxygen: 25 }, feedback: "Perfect! Increasing breathing rate gets more oxygen, just like when you exercise!" },
+                    { text: "🛑 Hold Breath", correct: false, effect: { oxygen: -15 }, feedback: "That's the opposite of what's needed! The body needs more oxygen, not less!" },
+                    { text: "😴 Rest Only", correct: false, effect: { oxygen: 5 }, feedback: "Resting helps, but active breathing is needed to restore oxygen levels quickly!" }
+                ]
+            },
+            {
+                text: "⚡ Energy levels are critically low!",
+                effect: { energy: -20 },
+                responses: [
+                    { text: "🍎 Consume Food", correct: true, effect: { energy: 30 }, feedback: "Great! Food provides energy, just like eating when hungry restores your energy!" },
+                    { text: "🏃 More Activity", correct: false, effect: { energy: -15 }, feedback: "That uses more energy! You need to refuel first!" },
+                    { text: "☕ Drink Water", correct: false, effect: { water: 10, energy: 5 }, feedback: "Water helps, but food is needed for significant energy restoration!" }
+                ]
+            },
+            {
+                text: "🌡️ Systems overheating from too much activity!",
+                effect: { temperature: 20, water: -10 },
+                responses: [
+                    { text: "💧 Drink & Cool", correct: true, effect: { temperature: -15, water: 15 }, feedback: "Smart! Combined response like sweating and drinking maintains multiple balances!" },
+                    { text: "🔥 Keep Going", correct: false, effect: { temperature: 10, energy: -10 }, feedback: "Ignoring warning signs is dangerous! Homeostasis requires timely responses!" },
+                    { text: "🧊 Extreme Cooling", correct: false, effect: { temperature: -25 }, feedback: "Too extreme! Balance means gentle adjustments, not wild swings!" }
+                ]
+            }
+        ];
+
+        function init() {
+            updateDisplay();
+            startTimer();
+            generateChallenge();
+        }
+
+        function startTimer() {
+            setInterval(() => {
+                if (!game.gameOver) {
+                    game.time++;
+                    document.getElementById('time').textContent = game.time + 's';
+                    
+                    // Natural degradation (homeostasis challenge)
+                    game.temperature += (Math.random() - 0.5) * 2;
+                    game.water -= 0.5;
+                    game.energy -= 0.3;
+                    game.oxygen -= 0.4;
+                    
+                    updateDisplay();
+                    checkGameOver();
+                }
+            }, 1000);
+        }
+
+        function generateChallenge() {
+            if (game.gameOver) return;
+            
+            const challenge = challenges[Math.floor(Math.random() * challenges.length)];
+            game.currentChallenge = challenge;
+            game.challenges++;
+            
+            document.getElementById('challenge-text').textContent = challenge.text;
+            document.getElementById('challenges').textContent = game.challenges;
+            
+            // Apply challenge effects
+            applyEffect(challenge.effect);
+            
+            // Create action buttons
+            const actionsDiv = document.getElementById('actions');
+            actionsDiv.innerHTML = '';
+            
+            challenge.responses.forEach((response, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'action-btn';
+                btn.textContent = response.text;
+                btn.onclick = () => handleResponse(response);
+                actionsDiv.appendChild(btn);
+            });
+            
+            updateDisplay();
+        }
+
+        function handleResponse(response) {
+            const feedbackDiv = document.getElementById('feedback');
+            feedbackDiv.textContent = response.feedback;
+            feedbackDiv.className = 'feedback show ' + (response.correct ? '' : 'error');
+            
+            applyEffect(response.effect);
+            
+            if (response.correct) {
+                game.score += 10;
+                document.getElementById('score').textContent = game.score;
+            }
+            
+            // Disable buttons temporarily
+            const buttons = document.querySelectorAll('.action-btn');
+            buttons.forEach(btn => btn.disabled = true);
+            
+            updateDisplay();
+            checkGameOver();
+            
+            setTimeout(() => {
+                feedbackDiv.className = 'feedback';
+                if (!game.gameOver) {
+                    generateChallenge();
+                }
+            }, 3000);
+        }
+
+        function applyEffect(effect) {
+            if (effect.temperature) game.temperature += effect.temperature;
+            if (effect.water) game.water += effect.water;
+            if (effect.energy) game.energy += effect.energy;
+            if (effect.oxygen) game.oxygen += effect.oxygen;
+            
+            // Clamp values
+            game.temperature = Math.max(0, Math.min(100, game.temperature));
+            game.water = Math.max(0, Math.min(100, game.water));
+            game.energy = Math.max(0, Math.min(100, game.energy));
+            game.oxygen = Math.max(0, Math.min(100, game.oxygen));
+        }
+
+        function updateDisplay() {
+            // Update bars
+            updateBar('temp', game.temperature);
+            updateBar('water', game.water);
+            updateBar('energy', game.energy);
+            updateBar('oxygen', game.oxygen);
+            
+            // Update robot appearance
+            const robot = document.getElementById('robot');
+            const avgHealth = (game.temperature + game.water + game.energy + game.oxygen) / 4;
+            
+            if (avgHealth > 40 && avgHealth < 60 && 
+                game.temperature > 30 && game.temperature < 70) {
+                robot.className = 'robot happy';
+                robot.textContent = '🤖';
+            } else if (avgHealth < 30) {
+                robot.className = 'robot sad';
+                robot.textContent = '😵';
+            } else {
+                robot.className = 'robot';
+                robot.textContent = '😟';
+            }
+        }
+
+        function updateBar(name, value) {
+            const bar = document.getElementById(name + '-bar');
+            const valueLabel = document.getElementById(name + '-value');
+            bar.style.width = value + '%';
+            valueLabel.textContent = Math.round(value) + '%';
+        }
+
+        function checkGameOver() {
+            if (game.temperature <= 0 || game.temperature >= 100 ||
+                game.water <= 0 || game.energy <= 0 || game.oxygen <= 0) {
+                game.gameOver = true;
+                showGameOver();
+            }
+        }
+
+        function showGameOver() {
+            const container = document.querySelector('.game-container');
+            container.innerHTML = `
+                <div class="game-over">
+                    <h2>⚠️ System Failure!</h2>
+                    <div class="robot" style="font-size: 100px;">😵</div>
+                    <p style="margin: 20px 0; font-size: 18px;">
+                        Balance Bot couldn't maintain homeostasis!
+                    </p>
+                    <div class="stats" style="max-width: 500px; margin: 20px auto;">
+                        <div class="stat-box">
+                            <div class="stat-label">Final Score</div>
+                            <div class="stat-value">${game.score}</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Time Survived</div>
+                            <div class="stat-value">${game.time}s</div>
+                        </div>
+                    </div>
+                    <p style="margin: 20px 0; color: #666;">
+                        Remember: Living things must constantly respond to changes<br>
+                        to maintain stable internal conditions!
+                    </p>
+                    <button class="restart-btn" onclick="location.reload()">
+                        🔄 Try Again
+                    </button>
+                </div>
+            `;
+        }
+
+        init();
+    </script>
+</body>
+</html>
