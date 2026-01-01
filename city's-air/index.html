@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Air Quality City</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(to bottom, #87CEEB, #E0F6FF);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .game-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            max-width: 900px;
+            width: 100%;
+            padding: 30px;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 20px;
+            font-size: 0.9em;
+        }
+        
+        .air-display {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            color: white;
+        }
+        
+        .air-composition {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .gas-card {
+            background: rgba(255,255,255,0.2);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+        
+        .gas-name {
+            font-weight: bold;
+            font-size: 1.1em;
+            margin-bottom: 5px;
+        }
+        
+        .gas-amount {
+            font-size: 1.5em;
+            color: #ffeb3b;
+        }
+        
+        .city-view {
+            background: linear-gradient(to bottom, #87CEEB 0%, #90EE90 100%);
+            height: 200px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-around;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .pollution-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(128, 128, 128, 0);
+            transition: background 0.5s;
+            pointer-events: none;
+        }
+        
+        .item {
+            font-size: 3em;
+            cursor: pointer;
+            transition: transform 0.2s;
+            position: relative;
+            z-index: 10;
+        }
+        
+        .item:hover {
+            transform: scale(1.2);
+        }
+        
+        .fire-animation {
+            animation: flicker 0.5s infinite;
+        }
+        
+        @keyframes flicker {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .control-btn {
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .add-tree {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+        }
+        
+        .add-factory {
+            background: linear-gradient(135deg, #ee0979 0%, #ff6a00 100%);
+            color: white;
+        }
+        
+        .add-fire {
+            background: linear-gradient(135deg, #f83600 0%, #f9d423 100%);
+            color: white;
+        }
+        
+        .control-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        
+        .control-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .status-bar {
+            background: #ecf0f1;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+        
+        .status-label {
+            font-weight: bold;
+            color: #34495e;
+        }
+        
+        .status-value {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+        
+        .good { background: #2ecc71; color: white; }
+        .moderate { background: #f39c12; color: white; }
+        .poor { background: #e74c3c; color: white; }
+        
+        .info-panel {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+            font-size: 0.9em;
+            line-height: 1.6;
+        }
+        
+        .info-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #856404;
+        }
+        
+        .message {
+            background: #d1ecf1;
+            border-left: 4px solid #17a2b8;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            color: #0c5460;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>🌍 Air Quality City</h1>
+        <div class="subtitle">Manage your city's air quality and learn about air!</div>
+        
+        <div class="air-display">
+            <div style="font-size: 1.2em; font-weight: bold; margin-bottom: 10px;">Air Composition in Your City</div>
+            <div class="air-composition">
+                <div class="gas-card">
+                    <div class="gas-name">Nitrogen (N₂)</div>
+                    <div class="gas-amount" id="nitrogen">78%</div>
+                </div>
+                <div class="gas-card">
+                    <div class="gas-name">Oxygen (O₂)</div>
+                    <div class="gas-amount" id="oxygen">21%</div>
+                </div>
+                <div class="gas-card">
+                    <div class="gas-name">CO₂ & Others</div>
+                    <div class="gas-amount" id="co2">1%</div>
+                </div>
+                <div class="gas-card">
+                    <div class="gas-name">Pollutants</div>
+                    <div class="gas-amount" id="pollutants">0%</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="status-bar">
+            <div class="status-item">
+                <span class="status-label">Air Quality:</span>
+                <span class="status-value good" id="airQuality">Excellent</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">Oxygen Level:</span>
+                <span class="status-value good" id="oxygenStatus">Healthy</span>
+            </div>
+        </div>
+        
+        <div class="message" id="message">
+            Click the buttons below to add trees, factories, or fires to your city. Watch how they affect the air!
+        </div>
+        
+        <div class="city-view" id="cityView">
+            <div class="pollution-overlay" id="pollutionOverlay"></div>
+        </div>
+        
+        <div class="controls">
+            <button class="control-btn add-tree" onclick="addItem('tree')">
+                🌳 Add Tree<br><small>Produces O₂</small>
+            </button>
+            <button class="control-btn add-factory" onclick="addItem('factory')">
+                🏭 Add Factory<br><small>Produces pollution</small>
+            </button>
+            <button class="control-btn add-fire" onclick="addItem('fire')">
+                🔥 Light Fire<br><small>Burns oxygen</small>
+            </button>
+        </div>
+        
+        <div class="info-panel">
+            <div class="info-title">💡 What You're Learning:</div>
+            <strong>Air Composition:</strong> Normal air is 78% nitrogen, 21% oxygen, and 1% other gases including CO₂.<br>
+            <strong>Combustion:</strong> Fires need oxygen to burn and produce CO₂ and pollutants.<br>
+            <strong>Air Pollution:</strong> Factories and fires release pollutants that reduce air quality. Trees help by producing oxygen!
+        </div>
+    </div>
+    
+    <script>
+        const state = {
+            trees: 0,
+            factories: 0,
+            fires: 0,
+            nitrogen: 78,
+            oxygen: 21,
+            co2: 1,
+            pollutants: 0
+        };
+        
+        const messages = {
+            addTree: "🌳 Great choice! Trees absorb CO₂ and produce oxygen through photosynthesis.",
+            addFactory: "🏭 Factory added! It produces goods but also releases pollutants into the air.",
+            addFire: "🔥 Fire lit! Combustion is happening - the fire consumes oxygen and produces CO₂.",
+            highPollution: "⚠️ Warning! High pollution levels! Add more trees to clean the air.",
+            lowOxygen: "⚠️ Oxygen levels are dropping! Fires consume oxygen during combustion.",
+            goodBalance: "✅ Excellent! Your city has a good balance of oxygen and low pollution."
+        };
+        
+        function addItem(type) {
+            const cityView = document.getElementById('cityView');
+            const item = document.createElement('div');
+            item.className = 'item';
+            
+            if (type === 'tree') {
+                item.textContent = '🌳';
+                item.onclick = () => removeItem(item, type);
+                state.trees++;
+                state.oxygen = Math.min(25, state.oxygen + 0.5);
+                state.pollutants = Math.max(0, state.pollutants - 0.5);
+                showMessage(messages.addTree);
+            } else if (type === 'factory') {
+                item.textContent = '🏭';
+                item.onclick = () => removeItem(item, type);
+                state.factories++;
+                state.pollutants += 1;
+                state.oxygen = Math.max(15, state.oxygen - 0.3);
+                showMessage(messages.addFactory);
+            } else if (type === 'fire') {
+                item.textContent = '🔥';
+                item.classList.add('fire-animation');
+                item.onclick = () => removeItem(item, type);
+                state.fires++;
+                state.oxygen = Math.max(15, state.oxygen - 0.8);
+                state.co2 += 0.5;
+                state.pollutants += 0.5;
+                showMessage(messages.addFire);
+            }
+            
+            cityView.appendChild(item);
+            updateDisplay();
+        }
+        
+        function removeItem(element, type) {
+            element.remove();
+            
+            if (type === 'tree') {
+                state.trees--;
+                state.oxygen = Math.max(15, state.oxygen - 0.5);
+                state.pollutants += 0.5;
+            } else if (type === 'factory') {
+                state.factories--;
+                state.pollutants = Math.max(0, state.pollutants - 1);
+                state.oxygen = Math.min(25, state.oxygen + 0.3);
+            } else if (type === 'fire') {
+                state.fires--;
+                state.oxygen = Math.min(25, state.oxygen + 0.8);
+                state.co2 = Math.max(0.5, state.co2 - 0.5);
+                state.pollutants = Math.max(0, state.pollutants - 0.5);
+            }
+            
+            updateDisplay();
+        }
+        
+        function updateDisplay() {
+            // Update gas percentages
+            const total = state.nitrogen + state.oxygen + state.co2 + state.pollutants;
+            document.getElementById('nitrogen').textContent = Math.round((state.nitrogen / total) * 100) + '%';
+            document.getElementById('oxygen').textContent = Math.round((state.oxygen / total) * 100) + '%';
+            document.getElementById('co2').textContent = Math.round((state.co2 / total) * 100) + '%';
+            document.getElementById('pollutants').textContent = Math.round((state.pollutants / total) * 100) + '%';
+            
+            // Update air quality
+            const airQualityEl = document.getElementById('airQuality');
+            if (state.pollutants < 2) {
+                airQualityEl.textContent = 'Excellent';
+                airQualityEl.className = 'status-value good';
+            } else if (state.pollutants < 5) {
+                airQualityEl.textContent = 'Moderate';
+                airQualityEl.className = 'status-value moderate';
+                showMessage(messages.highPollution);
+            } else {
+                airQualityEl.textContent = 'Poor';
+                airQualityEl.className = 'status-value poor';
+                showMessage(messages.highPollution);
+            }
+            
+            // Update oxygen status
+            const oxygenStatusEl = document.getElementById('oxygenStatus');
+            if (state.oxygen >= 20) {
+                oxygenStatusEl.textContent = 'Healthy';
+                oxygenStatusEl.className = 'status-value good';
+            } else if (state.oxygen >= 18) {
+                oxygenStatusEl.textContent = 'Low';
+                oxygenStatusEl.className = 'status-value moderate';
+                showMessage(messages.lowOxygen);
+            } else {
+                oxygenStatusEl.textContent = 'Critical';
+                oxygenStatusEl.className = 'status-value poor';
+                showMessage(messages.lowOxygen);
+            }
+            
+            // Update pollution overlay
+            const pollutionOverlay = document.getElementById('pollutionOverlay');
+            const pollutionOpacity = Math.min(0.6, state.pollutants / 10);
+            pollutionOverlay.style.background = `rgba(128, 128, 128, ${pollutionOpacity})`;
+            
+            // Check for good balance
+            if (state.pollutants < 2 && state.oxygen >= 20 && (state.trees + state.factories + state.fires) > 3) {
+                showMessage(messages.goodBalance);
+            }
+        }
+        
+        function showMessage(msg) {
+            const messageEl = document.getElementById('message');
+            messageEl.textContent = msg;
+            messageEl.style.animation = 'none';
+            setTimeout(() => {
+                messageEl.style.animation = 'pulse 0.5s';
+            }, 10);
+        }
+        
+        // Initialize
+        updateDisplay();
+    </script>
+</body>
+</html>
