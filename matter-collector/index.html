@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matter Collector Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        #gameContainer {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            width: 90%;
+            max-width: 800px;
+            padding: 20px;
+            position: relative;
+        }
+
+        #header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            color: #667eea;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        #scoreBoard {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f0f4ff;
+            border-radius: 10px;
+        }
+
+        .scoreItem {
+            text-align: center;
+        }
+
+        .scoreLabel {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+        }
+
+        .scoreValue {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        #gameArea {
+            position: relative;
+            height: 400px;
+            background: linear-gradient(to bottom, #87ceeb 0%, #98d8e8 100%);
+            border-radius: 15px;
+            overflow: hidden;
+            border: 3px solid #667eea;
+        }
+
+        #scientist {
+            position: absolute;
+            bottom: 20px;
+            width: 60px;
+            height: 60px;
+            background: #ff6b6b;
+            border-radius: 50%;
+            transition: left 0.1s;
+            z-index: 10;
+        }
+
+        #scientist::before {
+            content: '🧪';
+            font-size: 30px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .matterItem {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            animation: fall linear;
+        }
+
+        .matterItem:hover {
+            transform: scale(1.1);
+        }
+
+        @keyframes fall {
+            from {
+                top: -60px;
+            }
+            to {
+                top: 100%;
+            }
+        }
+
+        .solid {
+            background: #ffd93d;
+            border: 3px solid #ffb800;
+        }
+
+        .liquid {
+            background: #6bcfff;
+            border: 3px solid #2196f3;
+        }
+
+        .gas {
+            background: #c8e6c9;
+            border: 3px solid #4caf50;
+            opacity: 0.8;
+        }
+
+        #containers {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+            gap: 10px;
+        }
+
+        .container {
+            flex: 1;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            border: 3px solid;
+            background: white;
+        }
+
+        .container.solid {
+            border-color: #ffb800;
+        }
+
+        .container.liquid {
+            border-color: #2196f3;
+        }
+
+        .container.gas {
+            border-color: #4caf50;
+        }
+
+        .containerTitle {
+            font-weight: bold;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .containerCount {
+            font-size: 32px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .containerExample {
+            font-size: 11px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        #instructions {
+            text-align: center;
+            margin-top: 15px;
+            padding: 15px;
+            background: #fff3cd;
+            border-radius: 10px;
+            border: 2px solid #ffc107;
+        }
+
+        #gameOver {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            z-index: 100;
+        }
+
+        #gameOver h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 32px;
+        }
+
+        #gameOver button {
+            padding: 15px 40px;
+            font-size: 18px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        #gameOver button:hover {
+            background: #5568d3;
+        }
+
+        .feedback {
+            position: absolute;
+            font-size: 20px;
+            font-weight: bold;
+            animation: fadeUp 1s forwards;
+            pointer-events: none;
+            z-index: 50;
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+        }
+
+        .correct {
+            color: #4caf50;
+        }
+
+        .wrong {
+            color: #f44336;
+        }
+
+        #pauseBtn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        #pauseBtn:hover {
+            background: #5568d3;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <button id="pauseBtn">Pause</button>
+        
+        <div id="header">
+            <h1>🧪 Matter Collector 🧪</h1>
+            <p>Help the scientist collect matter samples!</p>
+        </div>
+
+        <div id="scoreBoard">
+            <div class="scoreItem">
+                <div class="scoreLabel">Score</div>
+                <div class="scoreValue" id="score">0</div>
+            </div>
+            <div class="scoreItem">
+                <div class="scoreLabel">Time</div>
+                <div class="scoreValue" id="timer">60</div>
+            </div>
+            <div class="scoreItem">
+                <div class="scoreLabel">Level</div>
+                <div class="scoreValue" id="level">1</div>
+            </div>
+        </div>
+
+        <div id="gameArea">
+            <div id="scientist"></div>
+        </div>
+
+        <div id="containers">
+            <div class="container solid">
+                <div class="containerTitle">SOLIDS</div>
+                <div class="containerCount" id="solidCount">0</div>
+                <div class="containerExample">Fixed shape & volume</div>
+            </div>
+            <div class="container liquid">
+                <div class="containerTitle">LIQUIDS</div>
+                <div class="containerCount" id="liquidCount">0</div>
+                <div class="containerExample">Fixed volume, takes container shape</div>
+            </div>
+            <div class="container gas">
+                <div class="containerTitle">GASES</div>
+                <div class="containerCount" id="gasCount">0</div>
+                <div class="containerExample">No fixed shape or volume</div>
+            </div>
+        </div>
+
+        <div id="instructions">
+            <strong>How to Play:</strong> Use arrow keys or mouse to move the scientist. Collect falling matter samples by touching them! Each type of matter behaves differently in nature.
+        </div>
+
+        <div id="gameOver">
+            <h2>🎉 Experiment Complete! 🎉</h2>
+            <p id="finalScore"></p>
+            <p id="matterSummary"></p>
+            <button onclick="restartGame()">Start New Experiment</button>
+        </div>
+    </div>
+
+    <script>
+        const gameArea = document.getElementById('gameArea');
+        const scientist = document.getElementById('scientist');
+        const scoreDisplay = document.getElementById('score');
+        const timerDisplay = document.getElementById('timer');
+        const levelDisplay = document.getElementById('level');
+        const gameOverScreen = document.getElementById('gameOver');
+        const pauseBtn = document.getElementById('pauseBtn');
+
+        let scientistPos = gameArea.offsetWidth / 2 - 30;
+        let score = 0;
+        let timeLeft = 60;
+        let level = 1;
+        let gameActive = true;
+        let gamePaused = false;
+        let matterCounts = { solid: 0, liquid: 0, gas: 0 };
+        let spawnInterval;
+        let timerInterval;
+
+        const matterTypes = [
+            { type: 'solid', emoji: '🧊', name: 'Ice', speed: 3 },
+            { type: 'solid', emoji: '🪨', name: 'Rock', speed: 3 },
+            { type: 'solid', emoji: '📦', name: 'Wood', speed: 3 },
+            { type: 'liquid', emoji: '💧', name: 'Water', speed: 4 },
+            { type: 'liquid', emoji: '🥤', name: 'Juice', speed: 4 },
+            { type: 'liquid', emoji: '🍯', name: 'Honey', speed: 2.5 },
+            { type: 'gas', emoji: '💨', name: 'Air', speed: 5 },
+            { type: 'gas', emoji: '☁️', name: 'Steam', speed: 5 },
+            { type: 'gas', emoji: '🎈', name: 'Helium', speed: 4.5 }
+        ];
+
+        scientist.style.left = scientistPos + 'px';
+
+        function moveScientist(direction) {
+            if (!gameActive || gamePaused) return;
+            
+            if (direction === 'left' && scientistPos > 0) {
+                scientistPos -= 20;
+            } else if (direction === 'right' && scientistPos < gameArea.offsetWidth - 60) {
+                scientistPos += 20;
+            }
+            scientist.style.left = scientistPos + 'px';
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') moveScientist('left');
+            if (e.key === 'ArrowRight') moveScientist('right');
+        });
+
+        gameArea.addEventListener('mousemove', (e) => {
+            if (!gameActive || gamePaused) return;
+            const rect = gameArea.getBoundingClientRect();
+            scientistPos = Math.max(0, Math.min(e.clientX - rect.left - 30, gameArea.offsetWidth - 60));
+            scientist.style.left = scientistPos + 'px';
+        });
+
+        function spawnMatter() {
+            if (!gameActive || gamePaused) return;
+
+            const matter = matterTypes[Math.floor(Math.random() * matterTypes.length)];
+            const matterElement = document.createElement('div');
+            matterElement.className = `matterItem ${matter.type}`;
+            matterElement.textContent = matter.emoji;
+            matterElement.dataset.type = matter.type;
+            matterElement.dataset.name = matter.name;
+            
+            const randomX = Math.random() * (gameArea.offsetWidth - 50);
+            matterElement.style.left = randomX + 'px';
+            
+            const fallDuration = (6 / matter.speed) * (1 - (level - 1) * 0.1);
+            matterElement.style.animationDuration = fallDuration + 's';
+            
+            gameArea.appendChild(matterElement);
+
+            const fallInterval = setInterval(() => {
+                if (gamePaused) return;
+                
+                const matterRect = matterElement.getBoundingClientRect();
+                const scientistRect = scientist.getBoundingClientRect();
+
+                if (matterRect.bottom >= scientistPos &&
+                    matterRect.top <= scientistRect.bottom &&
+                    matterRect.right >= scientistRect.left &&
+                    matterRect.left <= scientistRect.right) {
+                    
+                    collectMatter(matterElement, matter);
+                    clearInterval(fallInterval);
+                }
+
+                if (matterRect.top > gameArea.offsetHeight) {
+                    matterElement.remove();
+                    clearInterval(fallInterval);
+                }
+            }, 20);
+        }
+
+        function collectMatter(element, matter) {
+            if (!element || !element.parentNode) return;
+            
+            // Get position before removing
+            const rect = element.getBoundingClientRect();
+            const gameRect = gameArea.getBoundingClientRect();
+            const feedbackX = rect.left - gameRect.left + 35;
+            const feedbackY = rect.top - gameRect.top + 35;
+            
+            // Remove the element
+            element.remove();
+            
+            // Calculate and add points
+            const points = 10 * level;
+            score += points;
+            scoreDisplay.textContent = score;
+            
+            // Increment the specific matter type counter
+            if (matter.type === 'solid') {
+                matterCounts.solid++;
+                document.getElementById('solidCount').textContent = matterCounts.solid;
+            } else if (matter.type === 'liquid') {
+                matterCounts.liquid++;
+                document.getElementById('liquidCount').textContent = matterCounts.liquid;
+            } else if (matter.type === 'gas') {
+                matterCounts.gas++;
+                document.getElementById('gasCount').textContent = matterCounts.gas;
+            }
+            
+            // Show feedback animation
+            showFeedback(feedbackX, feedbackY, `+${points}`, 'correct');
+
+            // Check for level up
+            if (score > 0 && score % 100 === 0) {
+                level++;
+                levelDisplay.textContent = level;
+                timeLeft += 10;
+                timerDisplay.textContent = timeLeft;
+                showFeedback(gameArea.offsetWidth / 2 - 50, 150, `Level Up! +10s`, 'correct');
+            }
+        }
+
+        function showFeedback(x, y, text, className) {
+            const feedback = document.createElement('div');
+            feedback.className = `feedback ${className}`;
+            feedback.textContent = text;
+            feedback.style.left = x + 'px';
+            feedback.style.top = y + 'px';
+            gameArea.appendChild(feedback);
+            
+            setTimeout(() => feedback.remove(), 1000);
+        }
+
+        function updateDisplay() {
+            scoreDisplay.textContent = score;
+            document.getElementById('solidCount').textContent = matterCounts.solid;
+            document.getElementById('liquidCount').textContent = matterCounts.liquid;
+            document.getElementById('gasCount').textContent = matterCounts.gas;
+        }
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                if (gamePaused) return;
+                
+                timeLeft--;
+                timerDisplay.textContent = timeLeft;
+                
+                if (timeLeft <= 0) {
+                    endGame();
+                }
+            }, 1000);
+        }
+
+        function endGame() {
+            gameActive = false;
+            clearInterval(spawnInterval);
+            clearInterval(timerInterval);
+            
+            document.getElementById('finalScore').textContent = `Final Score: ${score} points`;
+            
+            const total = matterCounts.solid + matterCounts.liquid + matterCounts.gas;
+            document.getElementById('matterSummary').innerHTML = `
+                You collected ${total} matter samples:<br>
+                🧊 ${matterCounts.solid} Solids | 💧 ${matterCounts.liquid} Liquids | 💨 ${matterCounts.gas} Gases
+            `;
+            
+            gameOverScreen.style.display = 'block';
+        }
+
+        function restartGame() {
+            score = 0;
+            timeLeft = 60;
+            level = 1;
+            matterCounts = { solid: 0, liquid: 0, gas: 0 };
+            gameActive = true;
+            gamePaused = false;
+            
+            document.querySelectorAll('.matterItem').forEach(el => el.remove());
+            document.querySelectorAll('.feedback').forEach(el => el.remove());
+            
+            updateDisplay();
+            timerDisplay.textContent = timeLeft;
+            levelDisplay.textContent = level;
+            gameOverScreen.style.display = 'none';
+            pauseBtn.textContent = 'Pause';
+            
+            startGame();
+        }
+
+        pauseBtn.addEventListener('click', () => {
+            gamePaused = !gamePaused;
+            pauseBtn.textContent = gamePaused ? 'Resume' : 'Pause';
+        });
+
+        function startGame() {
+            const baseSpawnRate = 1500;
+            spawnInterval = setInterval(() => {
+                if (!gamePaused) {
+                    spawnMatter();
+                }
+            }, Math.max(500, baseSpawnRate - (level - 1) * 100));
+            
+            startTimer();
+        }
+
+        startGame();
+    </script>
+</body>
+</html>
