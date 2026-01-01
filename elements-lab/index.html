@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Element Lab</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .game-container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 900px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            text-align: center;
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 20px;
+            font-size: 1.1em;
+        }
+
+        .score-board {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 25px;
+            padding: 15px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border-radius: 10px;
+            color: white;
+        }
+
+        .score-item {
+            text-align: center;
+        }
+
+        .score-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .score-value {
+            font-size: 1.8em;
+            font-weight: bold;
+        }
+
+        .lab-area {
+            background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            min-height: 200px;
+        }
+
+        .mixing-zone {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .element-slot {
+            width: 100px;
+            height: 100px;
+            border: 3px dashed #667eea;
+            border-radius: 15px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .element-slot:hover {
+            transform: scale(1.05);
+            border-color: #764ba2;
+        }
+
+        .element-slot.filled {
+            border-style: solid;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .element-symbol {
+            font-size: 2em;
+            font-weight: bold;
+        }
+
+        .element-name {
+            font-size: 0.8em;
+            margin-top: 5px;
+        }
+
+        .plus-sign {
+            font-size: 3em;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .mix-button {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 25px;
+            font-size: 1.2em;
+            font-weight: bold;
+            cursor: pointer;
+            display: block;
+            margin: 0 auto;
+            transition: all 0.3s;
+        }
+
+        .mix-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(245, 87, 108, 0.4);
+        }
+
+        .mix-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .result-area {
+            text-align: center;
+            margin-top: 20px;
+            min-height: 80px;
+            padding: 15px;
+            background: white;
+            border-radius: 10px;
+        }
+
+        .result-message {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .result-info {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .periodic-table {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .element-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 8px;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+
+        .element-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .element-card.selected {
+            border-color: #f5576c;
+            box-shadow: 0 0 20px rgba(245, 87, 108, 0.6);
+        }
+
+        .element-card.metal {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .element-card.non-metal {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .element-card.metalloid {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+
+        .card-symbol {
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        .card-name {
+            font-size: 0.7em;
+            margin-top: 3px;
+        }
+
+        .card-type {
+            font-size: 0.6em;
+            margin-top: 2px;
+            opacity: 0.8;
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .legend-box {
+            width: 30px;
+            height: 20px;
+            border-radius: 5px;
+        }
+
+        .clear-button {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 1em;
+            margin: 10px auto;
+            display: block;
+            transition: all 0.3s;
+        }
+
+        .clear-button:hover {
+            background: #c0392b;
+        }
+
+        @keyframes success {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .success-animation {
+            animation: success 0.5s ease-in-out;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>🧪 Element Lab</h1>
+        <p class="subtitle">Mix elements to create compounds and discover chemistry!</p>
+
+        <div class="score-board">
+            <div class="score-item">
+                <div class="score-label">Compounds Created</div>
+                <div class="score-value" id="compounds">0</div>
+            </div>
+            <div class="score-item">
+                <div class="score-label">Discoveries</div>
+                <div class="score-value" id="discoveries">0</div>
+            </div>
+            <div class="score-item">
+                <div class="score-label">Attempts</div>
+                <div class="score-value" id="attempts">0</div>
+            </div>
+        </div>
+
+        <div class="lab-area">
+            <div class="mixing-zone">
+                <div class="element-slot" id="slot1">
+                    <div class="element-symbol">?</div>
+                    <div class="element-name">Select Element</div>
+                </div>
+                <div class="plus-sign">+</div>
+                <div class="element-slot" id="slot2">
+                    <div class="element-symbol">?</div>
+                    <div class="element-name">Select Element</div>
+                </div>
+            </div>
+
+            <button class="mix-button" id="mixBtn" disabled>Mix Elements!</button>
+            <button class="clear-button" id="clearBtn">Clear Selection</button>
+
+            <div class="result-area" id="resultArea"></div>
+        </div>
+
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-box" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);"></div>
+                <span>Metal</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-box" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);"></div>
+                <span>Non-Metal</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-box" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);"></div>
+                <span>Metalloid</span>
+            </div>
+        </div>
+
+        <div class="periodic-table" id="periodicTable"></div>
+    </div>
+
+    <script>
+        const elements = [
+            { symbol: 'H', name: 'Hydrogen', type: 'non-metal' },
+            { symbol: 'C', name: 'Carbon', type: 'non-metal' },
+            { symbol: 'N', name: 'Nitrogen', type: 'non-metal' },
+            { symbol: 'O', name: 'Oxygen', type: 'non-metal' },
+            { symbol: 'Na', name: 'Sodium', type: 'metal' },
+            { symbol: 'Mg', name: 'Magnesium', type: 'metal' },
+            { symbol: 'Al', name: 'Aluminium', type: 'metal' },
+            { symbol: 'Si', name: 'Silicon', type: 'metalloid' },
+            { symbol: 'P', name: 'Phosphorus', type: 'non-metal' },
+            { symbol: 'S', name: 'Sulfur', type: 'non-metal' },
+            { symbol: 'Cl', name: 'Chlorine', type: 'non-metal' },
+            { symbol: 'K', name: 'Potassium', type: 'metal' },
+            { symbol: 'Ca', name: 'Calcium', type: 'metal' },
+            { symbol: 'Fe', name: 'Iron', type: 'metal' },
+            { symbol: 'Cu', name: 'Copper', type: 'metal' },
+            { symbol: 'Zn', name: 'Zinc', type: 'metal' }
+        ];
+
+        const compounds = {
+            'H-O': { name: 'Water', formula: 'H₂O', info: 'A pure compound made of hydrogen and oxygen. Essential for life!' },
+            'Na-Cl': { name: 'Salt', formula: 'NaCl', info: 'Sodium chloride - a compound used in cooking. Made from a metal and non-metal!' },
+            'C-O': { name: 'Carbon Dioxide', formula: 'CO₂', info: 'A compound that plants use for photosynthesis. Made from two non-metals!' },
+            'H-Cl': { name: 'Hydrochloric Acid', formula: 'HCl', info: 'An acidic compound found in your stomach!' },
+            'Ca-O': { name: 'Calcium Oxide', formula: 'CaO', info: 'Quicklime - used in construction. A metal oxide compound!' },
+            'Fe-O': { name: 'Iron Oxide', formula: 'Fe₂O₃', info: 'Rust! This compound forms when iron reacts with oxygen.' },
+            'Mg-O': { name: 'Magnesium Oxide', formula: 'MgO', info: 'A white powder used in medicine and fireworks!' },
+            'K-Cl': { name: 'Potassium Chloride', formula: 'KCl', info: 'A salt substitute compound used in food!' },
+            'N-H': { name: 'Ammonia', formula: 'NH₃', info: 'A compound used in fertilizers and cleaning products!' },
+            'S-O': { name: 'Sulfur Dioxide', formula: 'SO₂', info: 'A compound produced by volcanoes!' }
+        };
+
+        let slot1Element = null;
+        let slot2Element = null;
+        let score = { compounds: 0, discoveries: 0, attempts: 0 };
+        let discovered = new Set();
+
+        function init() {
+            const table = document.getElementById('periodicTable');
+            elements.forEach(el => {
+                const card = document.createElement('div');
+                card.className = `element-card ${el.type}`;
+                card.innerHTML = `
+                    <div class="card-symbol">${el.symbol}</div>
+                    <div class="card-name">${el.name}</div>
+                    <div class="card-type">${el.type}</div>
+                `;
+                card.onclick = () => selectElement(el, card);
+                table.appendChild(card);
+            });
+
+            document.getElementById('mixBtn').onclick = mixElements;
+            document.getElementById('clearBtn').onclick = clearSelection;
+        }
+
+        function selectElement(element, card) {
+            if (!slot1Element) {
+                slot1Element = element;
+                updateSlot('slot1', element);
+                card.classList.add('selected');
+            } else if (!slot2Element && element.symbol !== slot1Element.symbol) {
+                slot2Element = element;
+                updateSlot('slot2', element);
+                card.classList.add('selected');
+                document.getElementById('mixBtn').disabled = false;
+            }
+        }
+
+        function updateSlot(slotId, element) {
+            const slot = document.getElementById(slotId);
+            slot.classList.add('filled');
+            slot.innerHTML = `
+                <div class="element-symbol">${element.symbol}</div>
+                <div class="element-name">${element.name}</div>
+            `;
+        }
+
+        function clearSelection() {
+            slot1Element = null;
+            slot2Element = null;
+            document.getElementById('slot1').className = 'element-slot';
+            document.getElementById('slot1').innerHTML = '<div class="element-symbol">?</div><div class="element-name">Select Element</div>';
+            document.getElementById('slot2').className = 'element-slot';
+            document.getElementById('slot2').innerHTML = '<div class="element-symbol">?</div><div class="element-name">Select Element</div>';
+            document.getElementById('mixBtn').disabled = true;
+            document.querySelectorAll('.element-card').forEach(c => c.classList.remove('selected'));
+            document.getElementById('resultArea').innerHTML = '';
+        }
+
+        function mixElements() {
+            if (!slot1Element || !slot2Element) return;
+
+            score.attempts++;
+            document.getElementById('attempts').textContent = score.attempts;
+
+            const key1 = `${slot1Element.symbol}-${slot2Element.symbol}`;
+            const key2 = `${slot2Element.symbol}-${slot1Element.symbol}`;
+            const compound = compounds[key1] || compounds[key2];
+
+            const resultArea = document.getElementById('resultArea');
+            
+            if (compound) {
+                score.compounds++;
+                document.getElementById('compounds').textContent = score.compounds;
+                
+                const compoundKey = compound.formula;
+                if (!discovered.has(compoundKey)) {
+                    discovered.add(compoundKey);
+                    score.discoveries++;
+                    document.getElementById('discoveries').textContent = score.discoveries;
+                    
+                    resultArea.className = 'result-area success-animation';
+                    resultArea.style.background = 'linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%)';
+                    resultArea.innerHTML = `
+                        <div class="result-message">🎉 New Discovery!</div>
+                        <div class="result-info">
+                            <strong>${compound.name} (${compound.formula})</strong><br>
+                            ${compound.info}<br>
+                            <em>This is a COMPOUND - two or more elements chemically bonded!</em>
+                        </div>
+                    `;
+                } else {
+                    resultArea.className = 'result-area';
+                    resultArea.style.background = 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)';
+                    resultArea.innerHTML = `
+                        <div class="result-message">✓ Created ${compound.name}!</div>
+                        <div class="result-info">
+                            Formula: ${compound.formula}<br>
+                            <em>Already discovered - try mixing other elements!</em>
+                        </div>
+                    `;
+                }
+            } else {
+                resultArea.className = 'result-area';
+                resultArea.style.background = 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)';
+                
+                const type1 = slot1Element.type;
+                const type2 = slot2Element.type;
+                
+                resultArea.innerHTML = `
+                    <div class="result-message">Interesting Mix!</div>
+                    <div class="result-info">
+                        You mixed ${slot1Element.name} (${type1}) with ${slot2Element.name} (${type2}).<br>
+                        This creates a MIXTURE - elements together but not bonded!<br>
+                        <em>Try different combinations to discover compounds!</em>
+                    </div>
+                `;
+            }
+
+            setTimeout(clearSelection, 3000);
+        }
+
+        init();
+    </script>
+</body>
+</html>
