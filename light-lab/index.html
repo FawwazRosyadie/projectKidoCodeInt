@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Light Lab Adventure</title>
+<style>
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: radial-gradient(#111, #000);
+    color: white;
+    overflow: hidden;
+}
+
+#ui {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: rgba(0,0,0,0.6);
+    padding: 10px;
+    border-radius: 10px;
+}
+
+button {
+    margin: 4px;
+    padding: 6px 10px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    background: #222;
+    color: white;
+}
+
+button:hover {
+    background: #444;
+}
+
+canvas {
+    display: block;
+}
+</style>
+</head>
+<body>
+
+<div id="ui">
+    <b>Light Lab Tools</b><br>
+    <button onclick="setTool('mirror')">🪞 Mirror</button>
+    <button onclick="setTool('glass')">🧊 Glass</button>
+    <button onclick="setTool('prism')">🔺 Prism</button>
+    <button onclick="setTool('fog')">🌫 Fog</button><br>
+    <button onclick="addLight('red')">🔴 Red</button>
+    <button onclick="addLight('green')">🟢 Green</button>
+    <button onclick="addLight('blue')">🔵 Blue</button>
+    <button onclick="resetLab()">♻ Reset</button>
+</div>
+
+<canvas id="lab"></canvas>
+
+<script>
+const canvas = document.getElementById("lab");
+const ctx = canvas.getContext("2d");
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+let tool = null;
+let objects = [];
+let lights = [];
+
+function setTool(t) {
+    tool = t;
+}
+
+function resetLab() {
+    objects = [];
+    lights = [];
+}
+
+canvas.addEventListener("click", e => {
+    const x = e.clientX;
+    const y = e.clientY;
+
+    if (tool) {
+        objects.push({ type: tool, x, y });
+    }
+});
+
+function addLight(color) {
+    lights.push({
+        x: 50,
+        y: canvas.height / 2,
+        dx: 4,
+        dy: 0,
+        color
+    });
+}
+
+function drawObjects() {
+    objects.forEach(o => {
+        if (o.type === "mirror") {
+            ctx.strokeStyle = "silver";
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.moveTo(o.x - 40, o.y + 40);
+            ctx.lineTo(o.x + 40, o.y - 40);
+            ctx.stroke();
+        }
+        if (o.type === "glass") {
+            ctx.fillStyle = "rgba(150,200,255,0.3)";
+            ctx.fillRect(o.x - 30, o.y - 30, 60, 60);
+        }
+        if (o.type === "prism") {
+            ctx.fillStyle = "rgba(255,255,255,0.2)";
+            ctx.beginPath();
+            ctx.moveTo(o.x, o.y - 40);
+            ctx.lineTo(o.x - 40, o.y + 40);
+            ctx.lineTo(o.x + 40, o.y + 40);
+            ctx.closePath();
+            ctx.fill();
+        }
+        if (o.type === "fog") {
+            ctx.fillStyle = "rgba(200,200,200,0.2)";
+            ctx.beginPath();
+            ctx.arc(o.x, o.y, 50, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    });
+}
+
+function updateLights() {
+    lights.forEach(l => {
+        l.x += l.dx;
+        l.y += l.dy;
+
+        objects.forEach(o => {
+            const dist = Math.hypot(l.x - o.x, l.y - o.y);
+
+            // Reflection
+            if (o.type === "mirror" && dist < 40) {
+                l.dx *= -1;
+            }
+
+            // Refraction
+            if (o.type === "glass" && dist < 30) {
+                l.dy += 0.05;
+            }
+
+            // Dispersion
+            if (o.type === "prism" && dist < 40 && l.color === "white") {
+                lights.push({ ...l, color: "red", dy: -1 });
+                lights.push({ ...l, color: "green", dy: 0 });
+                lights.push({ ...l, color: "blue", dy: 1 });
+                l.color = "transparent";
+            }
+
+            // Scattering
+            if (o.type === "fog" && dist < 50) {
+                l.dy += (Math.random() - 0.5) * 0.5;
+            }
+        });
+    });
+}
+
+function drawLights() {
+    lights.forEach(l => {
+        ctx.strokeStyle = l.color;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(l.x, l.y);
+        ctx.lineTo(l.x - l.dx * 3, l.y - l.dy * 3);
+        ctx.stroke();
+    });
+}
+
+function loop() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawObjects();
+    updateLights();
+    drawLights();
+    requestAnimationFrame(loop);
+}
+
+loop();
+</script>
+
+</body>
+</html>
