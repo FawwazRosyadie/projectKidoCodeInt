@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Earth Explorer – Form 1 Science</title>
+<style>
+body {
+    margin: 0;
+    font-family: 'Segoe UI', sans-serif;
+    background: linear-gradient(#0b3d91, #1b1b1b);
+    color: #fff;
+}
+header {
+    text-align: center;
+    padding: 20px;
+    background: rgba(0,0,0,0.4);
+}
+header h1 {
+    margin: 0;
+    font-size: 2.2em;
+}
+header p {
+    margin-top: 8px;
+    font-size: 1.1em;
+}
+#game {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    height: calc(100vh - 120px);
+}
+#menu {
+    background: rgba(0,0,0,0.55);
+    padding: 15px;
+}
+#menu button {
+    width: 100%;
+    margin-bottom: 10px;
+    padding: 12px;
+    font-size: 1em;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    background: #2ecc71;
+    color: #000;
+}
+#menu button:hover {
+    background: #27ae60;
+}
+#scene {
+    padding: 20px;
+    overflow-y: auto;
+}
+.panel {
+    background: rgba(255,255,255,0.1);
+    border-radius: 16px;
+    padding: 20px;
+    animation: fadeIn 0.4s ease;
+}
+.panel h2 {
+    margin-top: 0;
+}
+.layer {
+    margin: 10px 0;
+    padding: 12px;
+    border-radius: 12px;
+    cursor: pointer;
+    background: rgba(0,0,0,0.4);
+}
+.layer:hover {
+    background: rgba(0,0,0,0.6);
+}
+.resource {
+    display: inline-block;
+    padding: 10px 14px;
+    margin: 6px;
+    background: #f1c40f;
+    color: #000;
+    border-radius: 12px;
+    cursor: pointer;
+}
+.hazard {
+    background: #e74c3c;
+    padding: 14px;
+    border-radius: 14px;
+    margin: 8px 0;
+    cursor: pointer;
+}
+@keyframes fadeIn {
+    from {opacity: 0; transform: translateY(10px);} 
+    to {opacity: 1; transform: translateY(0);} 
+}
+footer {
+    text-align: center;
+    padding: 10px;
+    font-size: 0.85em;
+    background: rgba(0,0,0,0.4);
+}
+</style>
+</head>
+<body>
+<header>
+    <h1>🌍 Earth Explorer</h1>
+    <p>Discover Earth by exploring, interacting, and experimenting</p>
+</header>
+
+<div id="game">
+    <div id="menu">
+        <button onclick="showStructure()">Earth Structure</button>
+        <button onclick="showComposition()">Earth Composition</button>
+        <button onclick="showProcesses()">Earth Processes</button>
+        <button onclick="showHazards()">Geohazards</button>
+        <button onclick="showAge()">Age of Earth</button>
+        <button onclick="showResources()">Earth Resources</button>
+        <button onclick="showApplied()">Applied Geology</button>
+    </div>
+
+    <div id="scene">
+        <div class="panel">
+            <h2>Welcome Explorer 👋</h2>
+            <p>You are a young Earth scientist. Click the panels on the left to explore how Earth works. This is not a quiz — touch, explore, and learn by discovery.</p>
+        </div>
+    </div>
+</div>
+
+<footer>
+    Form 1 Science • Interactive Learning Game
+</footer>
+
+<script>
+const scene = document.getElementById('scene');
+
+function showStructure() {
+    scene.innerHTML = `
+    <div class="panel">
+        <h2>🧱 Structure of the Earth</h2>
+        <p>Click each layer to discover what lies beneath your feet.</p>
+        <div class="layer" onclick="alert('Crust: Thin outer layer where we live. Continents and oceans are here.')">🌍 Crust</div>
+        <div class="layer" onclick="alert('Mantle: Thick layer of hot rock. Magma comes from here.')">🔥 Mantle</div>
+        <div class="layer" onclick="alert('Outer Core: Liquid iron and nickel. Creates Earth’s magnetic field.')">🧲 Outer Core</div>
+        <div class="layer" onclick="alert('Inner Core: Solid iron. Very hot and very dense.')">💎 Inner Core</div>
+    </div>`;
+}
+
+function showComposition() {
+    scene.innerHTML = `
+    <div class="panel">
+        <h2>🧪 Composition of the Earth</h2>
+        <p>Earth is made of different materials.</p>
+        <ul>
+            <li><b>Crust:</b> Rocks and minerals (granite, basalt)</li>
+            <li><b>Mantle:</b> Silicate rocks rich in magnesium and iron</li>
+            <li><b>Core:</b> Iron and nickel metals</li>
+        </ul>
+        <p>These materials explain why Earth is solid, hot inside, and magnetic.</p>
+    </div>`;
+}
+
+function showProcesses() {
+    scene.innerHTML = `
+    <div class="panel">
+        <h2>🔄 Main Earth Processes</h2>
+        <p>Click a process to see what it does.</p>
+        <div class="layer" onclick="alert('Plate Tectonics: Movement of plates causes earthquakes and mountains.')">🗺 Plate Tectonics</div>
+        <div class="layer" onclick="alert('Rock Cycle: Rocks change between igneous, sedimentary, and metamorphic.')">🪨 Rock Cycle</div>
+        <div class="layer" onclick="alert('Weathering & Erosion: Break down rocks and shape land.')">🌧 Weathering & Erosion</div>
+    </div>`;
+}
+
+function showHazards() {
+    scene.innerHTML = `
+    <div class="panel">
+        <h2>⚠️ Geohazard Phenomena</h2>
+        <p>Natural processes can be dangerous.</p>
+        <div class="hazard" onclick="alert('Earthquake: Sudden movement of Earth’s crust.')">🌏 Earthquake</div>
+        <div class="hazard" onclick="alert('Volcano: Magma erupts from the mantle.')">🌋 Volcano</div>
+        <div class="hazard" onclick="alert('Landslide: Soil and rock move downhill due to gravity.')">⛰ Landslide</div>
+        <div class="hazard" onclick="alert('Tsunami: Giant waves caused by underwater earthquakes.')">🌊 Tsunami</div>
+    </div>`;
+}
+
+function showAge() {
+    scene.innerHTML = `
+    <div class="panel">
+        <h2>⏳ Age of the Earth</h2>
+        <p>The Earth formed about <b>4.6 billion years ago</b>.</p>
+        <p>Scientists know this by studying rocks and meteorites using radioactive dating.</p>
+        <p>Older rocks tell stories of early Earth.</p>
+    </div>`;
+}
+
+function showResources() {
+    scene.innerHTML = `
+    <div class="panel">
+        <h2>⛏ Earth Resources</h2>
+        <p>Click a resource to see how humans use it.</p>
+        <div class="resource" onclick="alert('Water: Drinking, farming, industry.')">💧 Water</div>
+        <div class="resource" onclick="alert('Minerals: Used to make tools, electronics, buildings.')">🪙 Minerals</div>
+        <div class="resource" onclick="alert('Fossil Fuels: Coal, oil, gas for energy.')">🛢 Fossil Fuels</div>
+        <div class="resource" onclick="alert('Soil: Growing food.')">🌱 Soil</div>
+    </div>`;
+}
+
+function showApplied() {
+    scene.innerHTML = `
+    <div class="panel">
+        <h2>🏗 Applied Geology</h2>
+        <p>Geology helps people in real life.</p>
+        <ul>
+            <li>Finding safe places to build buildings</li>
+            <li>Predicting earthquakes and volcanoes</li>
+            <li>Finding clean water underground</li>
+            <li>Managing Earth resources sustainably</li>
+        </ul>
+        <p>You are now thinking like a geologist!</p>
+    </div>`;
+}
+</script>
+</body>
+</html>
