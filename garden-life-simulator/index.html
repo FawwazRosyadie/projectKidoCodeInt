@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Garden Life Simulator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            background: linear-gradient(to bottom, #87CEEB 0%, #98D8C8 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        h1 {
+            text-align: center;
+            color: #2d5016;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+
+        .instructions {
+            text-align: center;
+            color: #555;
+            margin-bottom: 20px;
+            font-size: 0.95em;
+        }
+
+        .game-area {
+            display: grid;
+            grid-template-columns: 3fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .garden {
+            background: linear-gradient(to bottom, #8BC34A 0%, #689F38 100%);
+            border-radius: 15px;
+            padding: 20px;
+            min-height: 400px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .controls {
+            background: #f5f5f5;
+            border-radius: 15px;
+            padding: 15px;
+        }
+
+        .control-btn {
+            width: 100%;
+            padding: 15px;
+            margin-bottom: 10px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            font-weight: bold;
+        }
+
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .control-btn:active {
+            transform: translateY(0);
+        }
+
+        .sun-btn {
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            color: #8B4513;
+        }
+
+        .water-btn {
+            background: linear-gradient(135deg, #4FC3F7, #0288D1);
+            color: white;
+        }
+
+        .sound-btn {
+            background: linear-gradient(135deg, #FF6B6B, #C92A2A);
+            color: white;
+        }
+
+        .touch-btn {
+            background: linear-gradient(135deg, #9C27B0, #6A1B9A);
+            color: white;
+        }
+
+        .entity {
+            position: absolute;
+            transition: all 0.5s ease;
+        }
+
+        .plant {
+            font-size: 5cm;
+            cursor: pointer;
+            filter: drop-shadow(3px 3px 5px rgba(0,0,0,0.3));
+        }
+
+        .animal {
+            font-size: 7cm;
+            cursor: pointer;
+            filter: drop-shadow(3px 3px 5px rgba(0,0,0,0.3));
+        }
+
+        .human {
+            font-size: 5em;
+            cursor: pointer;
+            filter: drop-shadow(3px 3px 5px rgba(0,0,0,0.3));
+        }
+
+        .sun {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 6em;
+            opacity: 0;
+            transition: opacity 0.5s;
+            filter: drop-shadow(0 0 20px rgba(255,215,0,0.8));
+        }
+
+        .sun.active {
+            opacity: 1;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .water-drop {
+            position: absolute;
+            font-size: 3.5em;
+            animation: fall 1s ease-in;
+            filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.3));
+        }
+
+        @keyframes fall {
+            from {
+                top: 0;
+                opacity: 1;
+            }
+            to {
+                top: 300px;
+                opacity: 0;
+            }
+        }
+
+        .sound-wave {
+            position: absolute;
+            font-size: 4em;
+            animation: soundPulse 1s ease-out;
+            filter: drop-shadow(0 0 10px rgba(255,0,0,0.5));
+        }
+
+        @keyframes soundPulse {
+            from {
+                transform: scale(0.5);
+                opacity: 1;
+            }
+            to {
+                transform: scale(3);
+                opacity: 0;
+            }
+        }
+
+        .info-panel {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            min-height: 80px;
+        }
+
+        .info-panel h3 {
+            color: #856404;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+
+        .info-panel p {
+            color: #533f03;
+            line-height: 1.6;
+            font-size: 0.95em;
+        }
+
+        .score-board {
+            display: flex;
+            justify-content: space-around;
+            background: #e8f5e9;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .score-item {
+            text-align: center;
+        }
+
+        .score-item .label {
+            font-size: 0.9em;
+            color: #2e7d32;
+            margin-bottom: 5px;
+        }
+
+        .score-item .value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #1b5e20;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-30px) scale(1.15); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0) scale(1); }
+            25% { transform: translateX(-10px) scale(1.1); }
+            75% { transform: translateX(10px) scale(1.1); }
+        }
+
+        @keyframes grow {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+            100% { transform: scale(1); }
+        }
+
+        .responding {
+            animation: bounce 0.8s ease;
+        }
+
+        .scared {
+            animation: shake 0.5s ease;
+        }
+
+        .growing {
+            animation: grow 1s ease;
+        }
+
+        .legend {
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 0.9em;
+        }
+
+        .legend h4 {
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .legend-icon {
+            font-size: 2em;
+            margin-right: 10px;
+        }
+
+        .touch-indicator {
+            position: absolute;
+            font-size: 4em;
+            animation: touchPulse 0.6s ease-out;
+            pointer-events: none;
+            filter: drop-shadow(0 0 10px rgba(156,39,176,0.7));
+        }
+
+        @keyframes touchPulse {
+            from {
+                transform: scale(0.3);
+                opacity: 1;
+            }
+            to {
+                transform: scale(2);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌿 Garden Life Simulator 🌿</h1>
+        <p class="instructions">Apply different stimuli and watch how plants, animals, and humans respond!</p>
+        
+        <div class="score-board">
+            <div class="score-item">
+                <div class="label">Observations</div>
+                <div class="value" id="observations">0</div>
+            </div>
+            <div class="score-item">
+                <div class="label">Happy Organisms</div>
+                <div class="value" id="happiness">0</div>
+            </div>
+        </div>
+
+        <div class="info-panel">
+            <h3>🔬 What's Happening?</h3>
+            <p id="info-text">Click on the control buttons to apply stimuli to your garden! Watch how different organisms respond.</p>
+        </div>
+
+        <div class="game-area">
+            <div class="garden" id="garden">
+                <div class="sun" id="sun">☀️</div>
+            </div>
+
+            <div class="controls">
+                <button class="control-btn sun-btn" onclick="applySunlight()">☀️ Sunlight</button>
+                <button class="control-btn water-btn" onclick="applyWater()">💧 Water</button>
+                <button class="control-btn sound-btn" onclick="applySound()">🔊 Loud Sound</button>
+                <button class="control-btn touch-btn" onclick="applyTouch()">👆 Touch</button>
+                
+                <div class="legend">
+                    <h4>Your Garden:</h4>
+                    <div class="legend-item">
+                        <span class="legend-icon">🌻</span>
+                        <span>Sunflower Plant</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-icon">🌿</span>
+                        <span>Mimosa Plant</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-icon">🐰</span>
+                        <span>Rabbit</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-icon">🐦</span>
+                        <span>Bird</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-icon">🧑</span>
+                        <span>Person</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let observations = 0;
+        let happiness = 0;
+
+        const entities = [
+            { type: 'sunflower', emoji: '🌻', x: 15, y: 60, name: 'Sunflower' },
+            { type: 'mimosa', emoji: '🌿', emoji2: '🥀', x: 70, y: 44, name: 'Mimosa Plant' },
+            { type: 'rabbit', emoji: '🐰', x: 55, y: 70, name: 'Rabbit' },
+            { type: 'bird', emoji: '🐦', x: 60, y: 30, name: 'Bird' },
+            { type: 'human', emoji: '🧑', x: 30, y: 50, name: 'Person' }
+        ];
+
+        function init() {
+            const garden = document.getElementById('garden');
+            entities.forEach((entity, index) => {
+                const el = document.createElement('div');
+                el.className = `entity ${entity.type}`;
+                el.innerHTML = entity.emoji;
+                el.id = `entity-${index}`;
+                el.style.left = entity.x + '%';
+                el.style.top = entity.y + '%';
+                garden.appendChild(el);
+            });
+        }
+
+        function updateInfo(text) {
+            document.getElementById('info-text').innerHTML = text;
+            observations++;
+            document.getElementById('observations').textContent = observations;
+        }
+
+        function updateHappiness(change) {
+            happiness += change;
+            document.getElementById('happiness').textContent = happiness;
+        }
+
+        function applySunlight() {
+            const sun = document.getElementById('sun');
+            sun.classList.add('active');
+            
+            // Sunflower responds to light - phototropism
+            const sunflower = document.getElementById('entity-0');
+            sunflower.classList.add('responding');
+            sunflower.style.transform = 'rotate(-20deg) scale(1.1)';
+            
+            updateInfo(`<strong>🌻 Phototropism in Action!</strong> The sunflower's stem bends toward the light source. Plants detect light and grow toward it to maximize photosynthesis. This response helps plants survive by getting more energy from the sun.`);
+            updateHappiness(1);
+
+            setTimeout(() => {
+                sunflower.classList.remove('responding');
+                sunflower.style.transform = 'rotate(0deg) scale(1)';
+            }, 2500);
+            
+            setTimeout(() => {
+                sun.classList.remove('active');
+            }, 3000);
+        }
+
+        function applyWater() {
+            const garden = document.getElementById('garden');
+            
+            // Create water drops
+            for (let i = 0; i < 12; i++) {
+                setTimeout(() => {
+                    const drop = document.createElement('div');
+                    drop.className = 'water-drop';
+                    drop.innerHTML = '💧';
+                    drop.style.left = (Math.random() * 80 + 10) + '%';
+                    drop.style.top = '0';
+                    garden.appendChild(drop);
+                    
+                    setTimeout(() => drop.remove(), 1000);
+                }, i * 100);
+            }
+
+            // Plants respond to water - hydrotropism
+            const sunflower = document.getElementById('entity-0');
+            const mimosa = document.getElementById('entity-1');
+            
+            sunflower.classList.add('growing');
+            mimosa.classList.add('growing');
+            
+            updateInfo(`<strong>💧 Hydrotropism - Plants Need Water!</strong> Plant roots grow toward water sources. The plants absorb water through their roots, which is essential for photosynthesis and keeping cells firm. Both plants show positive response to water!`);
+            updateHappiness(2);
+
+            setTimeout(() => {
+                sunflower.classList.remove('growing');
+                mimosa.classList.remove('growing');
+            }, 1200);
+        }
+
+        function applySound() {
+            const garden = document.getElementById('garden');
+            
+            // Create sound waves
+            for (let i = 0; i < 5; i++) {
+                setTimeout(() => {
+                    const wave = document.createElement('div');
+                    wave.className = 'sound-wave';
+                    wave.innerHTML = '🔊';
+                    wave.style.left = '45%';
+                    wave.style.top = '45%';
+                    garden.appendChild(wave);
+                    
+                    setTimeout(() => wave.remove(), 1000);
+                }, i * 250);
+            }
+
+            // Animals respond to sound - nervous system reaction
+            const rabbit = document.getElementById('entity-2');
+            const bird = document.getElementById('entity-3');
+            const human = document.getElementById('entity-4');
+            
+            rabbit.classList.add('scared');
+            const oldRabbitX = rabbit.style.left;
+            rabbit.style.left = '85%';
+            rabbit.style.transform = 'scaleX(-1)';
+            
+            bird.classList.add('scared');
+            const oldBirdY = bird.style.top;
+            bird.style.top = '5%';
+            
+            human.classList.add('scared');
+            
+            updateInfo(`<strong>🔊 Nervous System Alert!</strong> The loud sound is detected by ears (stimulus receptors). The brain processes this as danger. The nervous system sends signals to muscles, causing the rabbit and bird to flee and the person to react. This quick response helps animals avoid predators!`);
+            updateHappiness(0); // Neutral - it's a protective response
+
+            setTimeout(() => {
+                rabbit.classList.remove('scared');
+                bird.classList.remove('scared');
+                human.classList.remove('scared');
+                rabbit.style.left = oldRabbitX;
+                rabbit.style.transform = 'scaleX(1)';
+                bird.style.top = oldBirdY;
+            }, 2000);
+        }
+
+        function applyTouch() {
+            const garden = document.getElementById('garden');
+            
+            // Touch affects mimosa plant - thigmonasty
+            const mimosa = document.getElementById('entity-1');
+            const mimosaRect = mimosa.getBoundingClientRect();
+            const gardenRect = garden.getBoundingClientRect();
+            
+            // Create touch indicator
+            const touchIndicator = document.createElement('div');
+            touchIndicator.className = 'touch-indicator';
+            touchIndicator.innerHTML = '👆';
+            touchIndicator.style.left = (mimosaRect.left - gardenRect.left + 20) + 'px';
+            touchIndicator.style.top = (mimosaRect.top - gardenRect.top - 20) + 'px';
+            garden.appendChild(touchIndicator);
+            setTimeout(() => touchIndicator.remove(), 600);
+            
+            mimosa.innerHTML = entities[1].emoji2;
+            mimosa.classList.add('responding');
+            mimosa.style.transform = 'scale(0.85)';
+            
+            // Human responds to touch too
+            const human = document.getElementById('entity-4');
+            const humanRect = human.getBoundingClientRect();
+            
+            const touchIndicator2 = document.createElement('div');
+            touchIndicator2.className = 'touch-indicator';
+            touchIndicator2.innerHTML = '👆';
+            touchIndicator2.style.left = (humanRect.left - gardenRect.left + 20) + 'px';
+            touchIndicator2.style.top = (humanRect.top - gardenRect.top - 30) + 'px';
+            garden.appendChild(touchIndicator2);
+            setTimeout(() => touchIndicator2.remove(), 600);
+            
+            human.classList.add('responding');
+            human.innerHTML = '🙋';
+            
+            updateInfo(`<strong>👆 Touch Response!</strong> The Mimosa plant's leaves fold when touched (thigmonasty) - a defense mechanism against herbivores. The person's nervous system detects touch through skin receptors, sending signals through nerves to the brain, causing a voluntary response. Both show sensitivity to touch but through different systems!`);
+            updateHappiness(1);
+
+            setTimeout(() => {
+                mimosa.innerHTML = entities[1].emoji;
+                mimosa.classList.remove('responding');
+                mimosa.style.transform = 'scale(1)';
+                human.classList.remove('responding');
+                human.innerHTML = entities[4].emoji;
+            }, 2500);
+        }
+
+        init();
+    </script>
+</body>
+</html>
