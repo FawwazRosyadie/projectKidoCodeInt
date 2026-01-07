@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Breath Master</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .game-container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 900px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            text-align: center;
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 20px;
+            font-size: 1.1em;
+        }
+
+        .game-area {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .left-panel {
+            flex: 1;
+        }
+
+        .right-panel {
+            flex: 1;
+        }
+
+        .character-container {
+            background: linear-gradient(to bottom, #e3f2fd, #bbdefb);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+            position: relative;
+            height: 300px;
+        }
+
+        .character {
+            font-size: 100px;
+            margin: 20px 0;
+            transition: transform 0.3s;
+        }
+
+        .breathing-indicator {
+            font-size: 20px;
+            margin-top: 8px;
+        }
+
+        .lung-visual {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .lung {
+            width: 60px;
+            height: 80px;
+            background: #ff6b9d;
+            border-radius: 50% 50% 40% 40%;
+            position: relative;
+            transition: all 0.3s;
+        }
+
+        .lung.expanded {
+            transform: scaleY(0.8);
+            background: #ff8fab;
+        }
+
+        .oxygen-meter {
+            background: #f5f5f5;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .meter-label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .meter-bar {
+            background: #ddd;
+            height: 25px;
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .meter-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #8BC34A);
+            transition: width 0.3s;
+            border-radius: 15px;
+        }
+
+        .meter-fill.low {
+            background: linear-gradient(90deg, #f44336, #ff9800);
+        }
+
+        .activity-section {
+            background: #fff3e0;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .activity-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .activity-btn {
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+
+        .activity-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .rest-btn {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .walk-btn {
+            background: #2196F3;
+            color: white;
+        }
+
+        .run-btn {
+            background: #FF9800;
+            color: white;
+        }
+
+        .exercise-btn {
+            background: #f44336;
+            color: white;
+        }
+
+        .activity-btn.active {
+            box-shadow: 0 0 0 3px white, 0 0 0 5px currentColor;
+        }
+
+        .breath-button {
+            width: 100%;
+            padding: 20px;
+            font-size: 20px;
+            font-weight: bold;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 10px;
+        }
+
+        .inhale-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .exhale-btn {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+
+        .breath-button:active {
+            transform: scale(0.95);
+        }
+
+        .breath-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .info-panel {
+            background: #e8f5e9;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+
+        .info-title {
+            font-weight: bold;
+            color: #2e7d32;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+
+        .info-text {
+            font-size: 13px;
+            color: #555;
+            line-height: 1.5;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .stat-box {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .particle {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .oxygen {
+            background: #2196F3;
+            animation: float-up 2s ease-in infinite;
+        }
+
+        .co2 {
+            background: #9E9E9E;
+            animation: float-down 2s ease-in infinite;
+        }
+
+        @keyframes float-up {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(-100px); opacity: 0; }
+        }
+
+        @keyframes float-down {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(100px); opacity: 0; }
+        }
+
+        .game-over {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .game-over-content {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 500px;
+        }
+
+        .game-over-content h2 {
+            color: #f44336;
+            margin-bottom: 20px;
+            font-size: 2em;
+        }
+
+        .restart-btn {
+            padding: 15px 40px;
+            font-size: 18px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        .restart-btn:hover {
+            background: #45a049;
+        }
+
+        @media (max-width: 768px) {
+            .game-area {
+                flex-direction: column;
+            }
+
+            h1 {
+                font-size: 1.8em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>🫁 Breath Master</h1>
+        <p class="subtitle">Control your breathing during different activities!</p>
+        <div class="game-area">
+            <div class="left-panel">
+                <div class="character-container" id="characterContainer">
+                    <div class="character" id="character">🧍</div>
+                    <div class="breathing-indicator" id="breathIndicator">💨</div>
+                    <div class="lung-visual">
+                        <div class="lung" id="leftLung"></div>
+                        <div class="lung" id="rightLung"></div>
+                    </div>
+                </div>
+
+                <button class="breath-button inhale-btn" id="inhaleBtn">
+                    INHALE (Breathe In) 🌬️
+                </button>
+                <button class="breath-button exhale-btn" id="exhaleBtn">
+                    EXHALE (Breathe Out) 💨
+                </button>
+            </div>
+
+            <div class="right-panel">
+                <div class="stats">
+                    <div class="stat-box">
+                        <div class="stat-value" id="score">0</div>
+                        <div class="stat-label">Score</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="breathCount">0</div>
+                        <div class="stat-label">Breaths</div>
+                    </div>
+                </div>
+
+                <div class="oxygen-meter">
+                    <div class="meter-label">
+                        <span>Oxygen Level</span>
+                        <span id="oxygenValue">100%</span>
+                    </div>
+                    <div class="meter-bar">
+                        <div class="meter-fill" id="oxygenFill" style="width: 100%"></div>
+                    </div>
+                </div>
+
+                <div class="oxygen-meter">
+                    <div class="meter-label">
+                        <span>CO₂ Level</span>
+                        <span id="co2Value">0%</span>
+                    </div>
+                    <div class="meter-bar">
+                        <div class="meter-fill" id="co2Fill" style="width: 0%; background: linear-gradient(90deg, #757575, #bdbdbd)"></div>
+                    </div>
+                </div>
+
+                <div class="activity-section">
+                    <strong>Choose Activity:</strong>
+                    <div class="activity-buttons">
+                        <button class="activity-btn rest-btn active" data-activity="rest">
+                            😌 Resting
+                        </button>
+                        <button class="activity-btn walk-btn" data-activity="walk">
+                            🚶 Walking
+                        </button>
+                        <button class="activity-btn run-btn" data-activity="run">
+                            🏃 Running
+                        </button>
+                        <button class="activity-btn exercise-btn" data-activity="exercise">
+                            🏋️ Exercising
+                        </button>
+                    </div>
+                </div>
+
+                <div class="info-panel">
+                    <div class="info-title" id="infoTitle">💡 Respiration Fact</div>
+                    <div class="info-text" id="infoText">
+                        At rest, you breathe about 12-20 times per minute. Your lungs exchange oxygen and carbon dioxide with your blood!
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="game-over" id="gameOver">
+        <div class="game-over-content">
+            <h2>😵 Out of Oxygen!</h2>
+            <p style="font-size: 18px; margin: 20px 0;">Remember to breathe regularly during activities! Your body needs oxygen to produce energy.</p>
+            <p style="font-size: 16px; color: #666;">Final Score: <span id="finalScore" style="color: #667eea; font-weight: bold;">0</span></p>
+            <button class="restart-btn" onclick="location.reload()">Try Again</button>
+        </div>
+    </div>
+
+    <script>
+        const game = {
+            oxygen: 100,
+            co2: 0,
+            score: 0,
+            breathCount: 0,
+            currentActivity: 'rest',
+            isInhaling: false,
+            gameRunning: true,
+            activities: {
+                rest: { oxygenUse: 0.15, co2Production: 0.1, breathRate: 'slow', emoji: '😌' },
+                walk: { oxygenUse: 0.3, co2Production: 0.2, breathRate: 'normal', emoji: '🚶' },
+                run: { oxygenUse: 0.6, co2Production: 0.4, breathRate: 'fast', emoji: '🏃' },
+                exercise: { oxygenUse: 0.9, co2Production: 0.6, breathRate: 'very fast', emoji: '🏋️' }
+            },
+            facts: [
+                "Your lungs contain about 300 million tiny air sacs called alveoli where gas exchange happens!",
+                "The diaphragm is the main muscle used for breathing. It contracts when you inhale and relaxes when you exhale.",
+                "During exercise, your breathing rate increases to supply more oxygen to your muscles for energy production.",
+                "Plants release oxygen during photosynthesis, which we breathe in. We release CO₂, which plants use!",
+                "Red blood cells contain hemoglobin, which carries oxygen from your lungs to all body cells.",
+                "When you exercise, your body needs more oxygen to break down glucose for energy in cellular respiration.",
+                "Smoking damages the cilia in your airways and reduces lung capacity, making breathing harder.",
+                "At high altitudes, there's less oxygen, so your body produces more red blood cells to adapt!",
+                "Your body automatically controls breathing, but you can also control it voluntarily.",
+                "The trachea (windpipe) divides into two bronchi, one for each lung, like branches of a tree."
+            ]
+        };
+
+        const elements = {
+            character: document.getElementById('character'),
+            breathIndicator: document.getElementById('breathIndicator'),
+            leftLung: document.getElementById('leftLung'),
+            rightLung: document.getElementById('rightLung'),
+            inhaleBtn: document.getElementById('inhaleBtn'),
+            exhaleBtn: document.getElementById('exhaleBtn'),
+            oxygenFill: document.getElementById('oxygenFill'),
+            oxygenValue: document.getElementById('oxygenValue'),
+            co2Fill: document.getElementById('co2Fill'),
+            co2Value: document.getElementById('co2Value'),
+            score: document.getElementById('score'),
+            breathCount: document.getElementById('breathCount'),
+            infoTitle: document.getElementById('infoTitle'),
+            infoText: document.getElementById('infoText'),
+            gameOver: document.getElementById('gameOver'),
+            finalScore: document.getElementById('finalScore'),
+            characterContainer: document.getElementById('characterContainer')
+        };
+
+        // Activity selection
+        document.querySelectorAll('.activity-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (!game.gameRunning) return;
+                
+                document.querySelectorAll('.activity-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                game.currentActivity = btn.dataset.activity;
+                
+                const activity = game.activities[game.currentActivity];
+                elements.character.textContent = activity.emoji;
+                
+                showRandomFact();
+            });
+        });
+
+        // Breathing controls
+        elements.inhaleBtn.addEventListener('click', inhale);
+        elements.exhaleBtn.addEventListener('click', exhale);
+
+        function inhale() {
+            if (!game.gameRunning || game.isInhaling) return;
+            
+            game.isInhaling = true;
+            elements.leftLung.classList.add('expanded');
+            elements.rightLung.classList.add('expanded');
+            elements.character.style.transform = 'scale(1.1)';
+            elements.breathIndicator.textContent = '🌬️ IN';
+            
+            // Increase oxygen
+            game.oxygen = Math.min(100, game.oxygen + 25);
+            
+            // Create oxygen particles
+            createParticles('oxygen', 5);
+            
+            setTimeout(() => {
+                game.isInhaling = false;
+                elements.leftLung.classList.remove('expanded');
+                elements.rightLung.classList.remove('expanded');
+                elements.character.style.transform = 'scale(1)';
+            }, 500);
+        }
+
+        function exhale() {
+            if (!game.gameRunning || game.isInhaling) return;
+            
+            elements.breathIndicator.textContent = '💨 OUT';
+            
+            // Decrease CO2
+            game.co2 = Math.max(0, game.co2 - 30);
+            
+            // Create CO2 particles
+            createParticles('co2', 5);
+            
+            game.breathCount++;
+            game.score += Math.floor(10 * (game.currentActivity === 'rest' ? 1 : game.currentActivity === 'walk' ? 1.5 : game.currentActivity === 'run' ? 2 : 3));
+            
+            elements.breathCount.textContent = game.breathCount;
+            elements.score.textContent = game.score;
+            
+            // Show new fact occasionally
+            if (game.breathCount % 5 === 0) {
+                showRandomFact();
+            }
+        }
+
+        function createParticles(type, count) {
+            for (let i = 0; i < count; i++) {
+                const particle = document.createElement('div');
+                particle.className = `particle ${type}`;
+                particle.style.left = `${50 + (Math.random() - 0.5) * 40}%`;
+                particle.style.top = type === 'oxygen' ? '80%' : '20%';
+                particle.style.animationDelay = `${i * 0.2}s`;
+                elements.characterContainer.appendChild(particle);
+                
+                setTimeout(() => particle.remove(), 2000);
+            }
+        }
+
+        function showRandomFact() {
+            const fact = game.facts[Math.floor(Math.random() * game.facts.length)];
+            elements.infoText.textContent = fact;
+        }
+
+        function updateGame() {
+            if (!game.gameRunning) return;
+            
+            const activity = game.activities[game.currentActivity];
+            
+            // Decrease oxygen based on activity
+            game.oxygen -= activity.oxygenUse;
+            
+            // Increase CO2 based on activity
+            game.co2 += activity.co2Production;
+            
+            // Clamp values
+            game.oxygen = Math.max(0, Math.min(100, game.oxygen));
+            game.co2 = Math.max(0, Math.min(100, game.co2));
+            
+            // Update UI
+            elements.oxygenFill.style.width = game.oxygen + '%';
+            elements.oxygenValue.textContent = Math.round(game.oxygen) + '%';
+            elements.co2Fill.style.width = game.co2 + '%';
+            elements.co2Value.textContent = Math.round(game.co2) + '%';
+            
+            // Change oxygen bar color if low
+            if (game.oxygen < 30) {
+                elements.oxygenFill.classList.add('low');
+            } else {
+                elements.oxygenFill.classList.remove('low');
+            }
+            
+            // Game over condition
+            if (game.oxygen <= 0) {
+                gameOver();
+            }
+            
+            // Warning if CO2 too high
+            if (game.co2 > 70) {
+                elements.breathIndicator.textContent = '😰 High CO₂!';
+            }
+        }
+
+        function gameOver() {
+            game.gameRunning = false;
+            elements.finalScore.textContent = game.score;
+            elements.gameOver.style.display = 'flex';
+        }
+
+        // Game loop
+        setInterval(updateGame, 100);
+
+        // Show initial fact
+        showRandomFact();
+    </script>
+</body>
+</html>
