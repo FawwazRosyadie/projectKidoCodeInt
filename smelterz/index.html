@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smelterz: Industrial Reactivity Lab</title>
+    <style>
+        :root {
+            --high-reactivity: #00f2ff;
+            --low-reactivity: #ff9d00;
+            --bg-dark: #0f172a;
+            --panel: #1e293b;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: #f8fafc;
+            font-family: 'Courier New', Courier, monospace;
+            margin: 0;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        #game-interface {
+            width: 900px;
+            height: 600px;
+            background: var(--panel);
+            border: 4px solid #334155;
+            border-radius: 12px;
+            display: grid;
+            grid-template-columns: 250px 1fr 250px;
+            gap: 10px;
+            padding: 20px;
+            box-shadow: 0 0 50px rgba(0,0,0,0.8);
+            position: relative;
+        }
+
+        /* LEFT PANEL: REACTIVITY SERIES */
+        .sidebar {
+            background: #0f172a;
+            border-radius: 8px;
+            padding: 10px;
+            font-size: 0.8rem;
+            border: 1px solid #475569;
+        }
+
+        .series-item {
+            padding: 5px;
+            margin-bottom: 2px;
+            border-bottom: 1px solid #1e293b;
+            transition: 0.3s;
+        }
+
+        .series-item.active {
+            background: #334155;
+            color: var(--high-reactivity);
+            border-left: 4px solid var(--high-reactivity);
+        }
+
+        .carbon-divider {
+            color: #ff4757;
+            font-weight: bold;
+            text-align: center;
+            padding: 8px 0;
+            background: rgba(255, 71, 87, 0.1);
+            margin: 5px 0;
+            border: 1px dashed #ff4757;
+        }
+
+        /* CENTER PANEL: THE FORGE */
+        .forge-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-around;
+            position: relative;
+        }
+
+        .ore-capsule {
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, #475569 0%, #1e293b 100%);
+            border: 8px solid #64748b;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            animation: float 3s ease-in-out infinite;
+            z-index: 2;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .extraction-buttons {
+            display: flex;
+            gap: 20px;
+        }
+
+        .btn {
+            padding: 15px 25px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: 0.2s;
+        }
+
+        .btn-electrolysis {
+            background: var(--high-reactivity);
+            color: #000;
+            box-shadow: 0 0 15px rgba(0, 242, 255, 0.4);
+        }
+
+        .btn-carbon {
+            background: var(--low-reactivity);
+            color: #000;
+            box-shadow: 0 0 15px rgba(255, 157, 0, 0.4);
+        }
+
+        .btn:hover {
+            transform: scale(1.1);
+            filter: brightness(1.2);
+        }
+
+        /* RIGHT PANEL: STATS */
+        .dashboard {
+            background: #0f172a;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #475569;
+        }
+
+        .stat-box {
+            margin-bottom: 20px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: #334155;
+            border-radius: 5px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: var(--high-reactivity);
+            transition: width 0.3s;
+        }
+
+        /* NOTIFICATIONS */
+        #fx-layer {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .discovery-log {
+            font-size: 0.7rem;
+            color: #94a3b8;
+            max-height: 200px;
+            overflow-y: hidden;
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-interface">
+    <div class="sidebar" id="series-list">
+        <h3 style="text-align:center; color: var(--high-reactivity)">Reactivity Scale</h3>
+        <div id="series-content"></div>
+    </div>
+
+    <div class="forge-area">
+        <div style="text-align: center;">
+            <h2 id="level-display">SECTOR 1: BASIC ORES</h2>
+            <p id="timer-text">Thermal Stability: <span id="time-left">100%</span></p>
+        </div>
+
+        <div class="ore-capsule" id="ore-node">
+            <small id="ore-type">---</small>
+            <h1 id="metal-name">---</h1>
+        </div>
+
+        <div id="feedback-text" style="height: 20px; font-weight: bold;"></div>
+
+        <div class="extraction-buttons">
+            <button class="btn btn-electrolysis" onclick="handleAction('high')">⚡ Electrolysis</button>
+            <button class="btn btn-carbon" onclick="handleAction('low')">🔥 Carbon Reduction</button>
+        </div>
+    </div>
+
+    <div class="dashboard">
+        <div class="stat-box">
+            <label>PURIFICATION YIELD</label>
+            <div class="progress-bar"><div id="yield-fill" class="progress-fill"></div></div>
+            <h2 id="score-text">0 KG</h2>
+        </div>
+        
+        <div class="stat-box">
+            <label>ORE DISCOVERIES</label>
+            <div id="log" class="discovery-log"></div>
+        </div>
+    </div>
+
+    <canvas id="fx-layer"></canvas>
+</div>
+
+<script>
+    const DATA = {
+        metals: [
+            { name: "Potassium", ore: "Sylvite", type: "high", symbol: "K" },
+            { name: "Sodium", ore: "Rock Salt", type: "high", symbol: "Na" },
+            { name: "Calcium", ore: "Limestone", type: "high", symbol: "Ca" },
+            { name: "Magnesium", ore: "Magnesite", type: "high", symbol: "Mg" },
+            { name: "Aluminum", ore: "Bauxite", type: "high", symbol: "Al" },
+            { name: "Zinc", ore: "Sphalerite", type: "low", symbol: "Zn" },
+            { name: "Iron", ore: "Hematite", type: "low", symbol: "Fe" },
+            { name: "Tin", ore: "Cassiterite", type: "low", symbol: "Sn" },
+            { name: "Lead", ore: "Galena", type: "low", symbol: "Pb" },
+            { name: "Copper", ore: "Malachite", type: "low", symbol: "Cu" }
+        ],
+        seriesOrder: ["K", "Na", "Ca", "Mg", "Al", "CARBON", "Zn", "Fe", "Sn", "Pb", "Cu"]
+    };
+
+    let score = 0;
+    let currentMetal = {};
+    let timeLeft = 100;
+    let gameActive = true;
+
+    // Initialize UI
+    function initSeries() {
+        const container = document.getElementById('series-content');
+        DATA.seriesOrder.forEach(item => {
+            if(item === "CARBON") {
+                container.innerHTML += `<div class="carbon-divider">--- CARBON THRESHOLD ---</div>`;
+            } else {
+                const m = DATA.metals.find(x => x.symbol === item);
+                container.innerHTML += `<div class="series-item" id="item-${m.symbol}">${m.name} (${m.symbol})</div>`;
+            }
+        });
+    }
+
+    function spawnOre() {
+        if(!gameActive) return;
+        currentMetal = DATA.metals[Math.floor(Math.random() * DATA.metals.length)];
+        
+        document.getElementById('metal-name').innerText = currentMetal.name;
+        document.getElementById('ore-type').innerText = currentMetal.ore.toUpperCase();
+        
+        // Highlight in sidebar
+        document.querySelectorAll('.series-item').forEach(el => el.classList.remove('active'));
+        document.getElementById(`item-${currentMetal.symbol}`).classList.add('active');
+    }
+
+    function handleAction(choice) {
+        if(!gameActive) return;
+
+        const feedback = document.getElementById('feedback-text');
+        
+        if(choice === currentMetal.type) {
+            score += 150;
+            timeLeft = Math.min(timeLeft + 10, 100);
+            feedback.style.color = "#4ecca3";
+            feedback.innerText = "EXTRACTION SUCCESSFUL!";
+            createParticles(choice === 'high' ? '#00f2ff' : '#ff9d00');
+            addToLog(`Purified ${currentMetal.name} from ${currentMetal.ore}`);
+        } else {
+            timeLeft -= 20;
+            feedback.style.color = "#ff4757";
+            feedback.innerText = choice === 'high' ? "ELECTROLYSIS OVERLOAD!" : "INSUFFICIENT REDUCING AGENT!";
+            shakeEffect();
+        }
+
+        updateStats();
+        spawnOre();
+    }
+
+    function addToLog(msg) {
+        const log = document.getElementById('log');
+        log.innerHTML = `<div>> ${msg}</div>` + log.innerHTML;
+    }
+
+    function updateStats() {
+        document.getElementById('score-text').innerText = `${score} KG`;
+        document.getElementById('yield-fill').style.width = `${(score/5000)*100}%`;
+    }
+
+    // Timer Loop
+    setInterval(() => {
+        if(!gameActive) return;
+        timeLeft -= 1.5;
+        document.getElementById('time-left').innerText = Math.max(0, Math.floor(timeLeft)) + "%";
+        
+        if(timeLeft <= 0) {
+            gameActive = false;
+            document.getElementById('metal-name').innerText = "SYSTEM OFFLINE";
+            alert(`Forge Shutdown. Final Yield: ${score} KG of Pure Metal.`);
+            location.reload();
+        }
+    }, 1000);
+
+    // Visual FX (Canvas)
+    const canvas = document.getElementById('fx-layer');
+    const ctx = canvas.getContext('2d');
+    canvas.width = 900;
+    canvas.height = 600;
+
+    function createParticles(color) {
+        const parts = [];
+        for(let i=0; i<20; i++) {
+            parts.push({
+                x: 450, y: 300,
+                vx: (Math.random()-0.5)*10,
+                vy: (Math.random()-0.5)*10,
+                life: 1
+            });
+        }
+        
+        function animate() {
+            ctx.clearRect(0,0,900,600);
+            parts.forEach(p => {
+                p.x += p.vx; p.y += p.vy; p.life -= 0.02;
+                ctx.fillStyle = color;
+                ctx.globalAlpha = p.life;
+                ctx.fillRect(p.x, p.y, 4, 4);
+            });
+            if(parts[0].life > 0) requestAnimationFrame(animate);
+        }
+        animate();
+    }
+
+    function shakeEffect() {
+        const box = document.getElementById('game-interface');
+        box.style.transform = "translateX(10px)";
+        setTimeout(() => box.style.transform = "translateX(-10px)", 50);
+        setTimeout(() => box.style.transform = "translateX(0)", 100);
+    }
+
+    // Start
+    initSeries();
+    spawnOre();
+
+</script>
+</body>
+</html>
