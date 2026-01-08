@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Hemo-Engine: Master Architect</title>
+    <style>
+        :root {
+            --oxy: #ff0033; --deoxy: #1a3a8a; --bg: #0a0a0c;
+            --interface: #1e1e26; --accent: #00f2ff;
+        }
+        body { background: var(--bg); color: #afb1b6; font-family: 'Segoe UI', monospace; margin: 0; overflow: hidden; }
+        
+        /* Layout */
+        #main-ui { display: grid; grid-template-columns: 300px 1fr; height: 100vh; }
+        
+        #sidebar {
+            background: var(--interface); border-right: 2px solid #333;
+            padding: 20px; display: flex; flex-direction: column; gap: 20px;
+        }
+
+        #viewport {
+            position: relative; background: radial-gradient(circle at center, #16161d 0%, #050505 100%);
+            display: flex; justify-content: center; align-items: center;
+        }
+
+        /* Heart Anatomy */
+        .heart-container { position: relative; width: 400px; height: 500px; }
+        
+        .chamber {
+            position: absolute; border: 2px solid #444; transition: all 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.5);
+        }
+
+        /* 4-Chamber Sophistication */
+        #RA { width: 90px; height: 80px; top: 150px; left: 80px; border-radius: 40% 40% 0 0; background: rgba(26, 58, 138, 0.3); }
+        #RV { width: 110px; height: 140px; top: 230px; left: 70px; border-radius: 0 0 20% 80%; background: rgba(26, 58, 138, 0.5); }
+        #LA { width: 90px; height: 80px; top: 150px; left: 210px; border-radius: 40% 40% 0 0; background: rgba(255, 0, 51, 0.3); }
+        #LV { width: 110px; height: 160px; top: 230px; left: 200px; border-radius: 0 0 80% 20%; background: rgba(255, 0, 51, 0.6); border-width: 4px; }
+
+        .septum { position: absolute; width: 10px; height: 220px; background: #333; left: 185px; top: 160px; border-radius: 5px; }
+
+        /* Animation States */
+        .contract { transform: scale(0.85); border-color: #fff; filter: brightness(1.5); }
+
+        /* Nodes */
+        .system-node {
+            position: absolute; padding: 15px; border: 1px solid var(--accent);
+            border-radius: 8px; text-align: center; width: 120px; font-size: 12px;
+        }
+
+        /* Gauges */
+        .gauge-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--accent); }
+        .gauge-bar { width: 100%; height: 6px; background: #000; margin-top: 5px; position: relative; }
+        .gauge-fill { height: 100%; width: 0%; transition: width 0.3s; }
+
+        .btn {
+            background: #252530; border: 1px solid #444; color: white; padding: 12px;
+            cursor: pointer; font-family: inherit; font-size: 12px; border-radius: 4px;
+        }
+        .btn:hover { background: #303040; border-color: var(--accent); }
+        .btn:active { transform: translateY(2px); }
+
+        .particle { position: absolute; width: 6px; height: 6px; border-radius: 50%; pointer-events: none; z-index: 10; }
+    </style>
+</head>
+<body>
+
+<div id="main-ui">
+    <div id="sidebar">
+        <h2 style="color:white; margin:0;">HEMO-CORE </h2>
+        <div style="font-size: 11px; color: #666;">BIOLOGICAL TRANSPORT SIMULATOR</div>
+
+        <div class="stat-group">
+            <div class="gauge-label">Oxygen Saturation ($SaO_2$)</div>
+            <div class="gauge-bar"><div id="fill-oxy" class="gauge-fill" style="background: var(--oxy);"></div></div>
+        </div>
+
+        <div class="stat-group">
+            <div class="gauge-label">Aortic Pressure ($mmHg$)</div>
+            <div class="gauge-bar"><div id="fill-bp" class="gauge-fill" style="background: #00ff88;"></div></div>
+        </div>
+
+        <div class="stat-group">
+            <div class="gauge-label">Metabolic Waste ($CO_2$)</div>
+            <div class="gauge-bar"><div id="fill-co2" class="gauge-fill" style="background: #7b2cbf;"></div></div>
+        </div>
+
+        <hr style="border:0; border-top:1px solid #333; width:100%;">
+        
+        <button class="btn" onmousedown="systole('atria')">ATRIAL SYSTOLE<br><small>Fill Ventricles</small></button>
+        <button class="btn" onmousedown="systole('ventricles')">VENTRICULAR SYSTOLE<br><small>Systemic Ejection</small></button>
+
+        <div id="log" style="font-size: 11px; height: 100px; overflow-y: hidden; color: #888;">
+            > Initialize system...<br>
+            > Awaiting cardiac cycle...
+        </div>
+    </div>
+
+    <div id="viewport">
+        <div class="system-node" style="top: 20px;">PULMONARY<br><small>Alveoli Interface</small></div>
+        <div class="system-node" style="bottom: 20px;">SYSTEMIC<br><small>Capillary Bed</small></div>
+
+        <div class="heart-container">
+            <div id="RA" class="chamber">RA</div>
+            <div id="RV" class="chamber">RV</div>
+            <div id="LA" class="chamber">LA</div>
+            <div id="LV" class="chamber">LV</div>
+            <div class="septum"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let heart = {
+        ra_vol: 100, la_vol: 100,
+        rv_vol: 20, lv_vol: 20,
+        oxy: 95, bp: 80, co2: 10
+    };
+
+    function addLog(msg) {
+        const log = document.getElementById('log');
+        log.innerHTML = `> ${msg}<br>${log.innerHTML.split('<br>').slice(0,5).join('<br>')}`;
+    }
+
+    function systole(type) {
+        if(type === 'atria') {
+            // Atria push to Ventricles
+            animateChamber('RA'); animateChamber('LA');
+            
+            let transfer = 40;
+            heart.rv_vol = Math.min(100, heart.rv_vol + transfer);
+            heart.lv_vol = Math.min(100, heart.lv_vol + transfer);
+            
+            spawnParticles('RA', 'RV', varColor('deoxy'));
+            spawnParticles('LA', 'LV', varColor('oxy'));
+            addLog("P-WAVE: Atrial contraction complete.");
+        } else {
+            // Ventricles push to Lungs/Body
+            animateChamber('RV'); animateChamber('LV');
+            
+            // Efficiency based on volume
+            let efficiency = heart.lv_vol / 100;
+            heart.bp = Math.min(160, heart.bp + (80 * efficiency));
+            heart.oxy = Math.min(100, heart.oxy + (15 * (heart.rv_vol/100)));
+            heart.co2 = Math.max(0, heart.co2 - 10);
+            
+            spawnParticles('RV', 'top', varColor('deoxy'));
+            spawnParticles('LV', 'bottom', varColor('oxy'));
+            
+            heart.rv_vol = 10; heart.lv_vol = 10; // Reset after ejection
+            addLog(`QRS: Systemic Stroke Vol: ${Math.floor(efficiency*100)}%`);
+        }
+    }
+
+    function animateChamber(id) {
+        const el = document.getElementById(id);
+        el.classList.add('contract');
+        setTimeout(() => el.classList.remove('contract'), 150);
+    }
+
+    function varColor(type) {
+        return type === 'oxy' ? 'var(--oxy)' : 'var(--deoxy)';
+    }
+
+    function spawnParticles(fromId, toDir, color) {
+        const from = document.getElementById(fromId).getBoundingClientRect();
+        for(let i=0; i<8; i++) {
+            const p = document.createElement('div');
+            p.className = 'particle';
+            p.style.background = color;
+            p.style.left = (from.left + from.width/2) + 'px';
+            p.style.top = (from.top + from.height/2) + 'px';
+            document.body.appendChild(p);
+
+            let targetY = toDir === 'top' ? -100 : window.innerHeight + 100;
+            if(toDir === 'RV') targetY = from.top + 150;
+            if(toDir === 'LV') targetY = from.top + 150;
+
+            p.animate([
+                { transform: 'translate(0,0)', opacity: 1 },
+                { transform: `translate(${(Math.random()-0.5)*100}px, ${toDir === 'top' || toDir === 'bottom' ? (toDir === 'top' ? -300 : 300) : 100}px)`, opacity: 0 }
+            ], { duration: 1000 }).onfinish = () => p.remove();
+        }
+    }
+
+    // Engine Loop
+    setInterval(() => {
+        // Natural decay
+        heart.oxy -= 0.2;
+        heart.co2 += 0.15;
+        heart.bp *= 0.99; // Pressure drops over time
+
+        // Update UI
+        document.getElementById('fill-oxy').style.width = heart.oxy + "%";
+        document.getElementById('fill-bp').style.width = (heart.bp / 160 * 100) + "%";
+        document.getElementById('fill-co2').style.width = (heart.co2 * 2) + "%";
+
+        // Failure Check
+        if(heart.oxy <= 0 || heart.bp < 20) {
+            alert("CRITICAL SYSTEM FAILURE: Transport Arrest.");
+            location.reload();
+        }
+    }, 100);
+</script>
+</body>
+</html>
