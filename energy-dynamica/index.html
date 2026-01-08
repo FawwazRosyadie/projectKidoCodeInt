@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Advanced Energy Dynamics Lab v2.1</title>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --panel: #1e293b;
+            --border: #334155;
+            --text: #f8fafc;
+            --accent-pe: #22d3ee;
+            --accent-ke: #818cf8;
+            --accent-work: #fbbf24;
+            --accent-heat: #ef4444;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        /* Main Dashboard Grid */
+        #dashboard {
+            display: grid;
+            grid-template-columns: 300px 1fr 300px;
+            grid-template-rows: 80px 1fr 180px;
+            gap: 20px;
+            width: 1100px;
+            height: 750px;
+            padding: 20px;
+            background: var(--panel);
+            border-radius: 24px;
+            border: 1px solid var(--border);
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+        }
+
+        header {
+            grid-column: 1 / -1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 10px;
+        }
+
+        .title-group h1 { margin: 0; font-size: 24px; letter-spacing: -1px; }
+        .title-group p { margin: 0; color: #94a3b8; font-size: 14px; }
+
+        /* Modules */
+        #input-module { grid-row: 2 / 4; display: flex; flex-direction: column; gap: 15px; }
+        
+        #physics-engine {
+            grid-row: 2;
+            background: #020617;
+            border-radius: 16px;
+            position: relative;
+            border: 1px solid #1e293b;
+            overflow: hidden;
+        }
+
+        #data-module { grid-row: 2 / 4; display: flex; flex-direction: column; gap: 15px; }
+
+        footer {
+            grid-column: 2;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            background: rgba(255,255,255,0.02);
+            border-radius: 16px;
+            padding: 0 20px;
+        }
+
+        .card {
+            background: rgba(255,255,255,0.03);
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+
+        .metric-label { font-size: 11px; text-transform: uppercase; color: #94a3b8; font-weight: 700; }
+        .metric-value { font-size: 28px; font-weight: 800; font-variant-numeric: tabular-nums; }
+
+        /* Visual Components */
+        #tower-container {
+            position: absolute;
+            left: 40px;
+            bottom: 60px;
+            width: 80px;
+            height: 350px;
+            background: #0f172a;
+            border: 3px solid #475569;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        #water-level {
+            width: 100%;
+            height: 0%;
+            background: linear-gradient(to top, #0891b2, #22d3ee);
+            position: absolute;
+            bottom: 0;
+            transition: height 0.3s ease-out;
+        }
+
+        #turbine-axle {
+            position: absolute;
+            right: 80px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 180px;
+            height: 180px;
+            border: 10px solid #334155;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .blade { position: absolute; width: 10px; height: 100%; background: #64748b; }
+
+        #heat-glow {
+            position: absolute;
+            right: 70px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            filter: blur(30px);
+            background: rgba(239, 68, 68, 0);
+            pointer-events: none;
+        }
+
+        /* Controls */
+        .btn {
+            padding: 16px 24px;
+            border-radius: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            font-size: 14px;
+        }
+
+        #work-btn { background: var(--accent-work); color: #451a03; box-shadow: 0 4px 0 #b45309; width: 100%; }
+        #work-btn:active { transform: translateY(4px); box-shadow: none; }
+
+        #valve-btn { background: #10b981; color: white; min-width: 180px; box-shadow: 0 4px 0 #047857; }
+        #valve-btn.closed { background: #64748b; box-shadow: 0 4px 0 #334155; }
+
+        #reset-btn {
+            background: #334155;
+            color: #f8fafc;
+            border: 1px solid #475569;
+        }
+        #reset-btn:hover { background: var(--accent-heat); border-color: #ef4444; }
+
+        .unit { font-size: 14px; color: #64748b; margin-left: 4px; }
+    </style>
+</head>
+<body>
+
+<div id="dashboard">
+    <header>
+        <div class="title-group">
+            <h1>ENERGY DYNAMICA</h1>
+            
+        </div>
+        <div id="status-indicator" style="color: #10b981; font-weight: bold; font-size: 12px; display: flex; align-items: center; gap: 8px;">
+            <div style="width: 10px; height: 10px; background: #10b981; border-radius: 50%;"></div>
+            ANALYZER ACTIVE
+        </div>
+    </header>
+
+    <div id="input-module">
+        <div class="card" style="border-left: 4px solid var(--accent-work)">
+            <div class="metric-label">Input Power (P)</div>
+            <div class="metric-value" id="val-power">0 <span class="unit">W</span></div>
+        </div>
+        <div class="card">
+            <div class="metric-label">Total Work Done (W)</div>
+            <div class="metric-value" id="val-work">0 <span class="unit">J</span></div>
+        </div>
+        <button id="work-btn" class="btn">Apply Work (Push)</button>
+        <div class="card" style="background: transparent; border-style: dashed;">
+            <p style="font-size: 11px; color: #94a3b8; margin: 0;">
+                Recall: Power = Work/Time<br><br>
+                Higher click frequency increases your power output.
+            </p>
+        </div>
+    </div>
+
+    <div id="physics-engine">
+        <div id="heat-glow"></div>
+        <div id="tower-container">
+            <div id="water-level"></div>
+        </div>
+        <div style="position: absolute; left: 120px; top: 55%; width: 140px; height: 15px; background: #334155; border-radius: 4px;"></div>
+        
+        <div id="turbine-axle">
+            <div class="blade" style="transform: rotate(0deg)"></div>
+            <div class="blade" style="transform: rotate(45deg)"></div>
+            <div class="blade" style="transform: rotate(90deg)"></div>
+            <div class="blade" style="transform: rotate(135deg)"></div>
+            <div id="inner-hub" style="width: 40px; height: 40px; background: #1e293b; z-index: 10; border-radius: 50%; border: 4px solid #475569;"></div>
+        </div>
+    </div>
+
+    <div id="data-module">
+        <div class="card" style="border-left: 4px solid var(--accent-pe)">
+            <div class="metric-label">Stored Potential (Potential energy)</div>
+            <div class="metric-value" id="val-pe">0 <span class="unit">J</span></div>
+        </div>
+        <div class="card" style="border-left: 4px solid var(--accent-ke)">
+            <div class="metric-label">Active Kinetic (Kinectic energy)</div>
+            <div class="metric-value" id="val-ke">0 <span class="unit">J</span></div>
+        </div>
+        <div class="card" style="border-left: 4px solid var(--accent-heat)">
+            <div class="metric-label">Thermal Waste (Heat)</div>
+            <div class="metric-value" id="val-heat">0 <span class="unit">J</span></div>
+        </div>
+        <div class="card">
+            <div class="metric-label">Efficiency Output</div>
+            <div class="metric-value" id="val-eff">100 <span class="unit">%</span></div>
+        </div>
+    </div>
+
+    <footer>
+        <button id="reset-btn" class="btn">Reset Lab</button>
+        <div style="height: 40px; width: 1px; background: var(--border);"></div>
+        <button id="valve-btn" class="btn closed">Valve: Closed</button>
+    </footer>
+</div>
+
+<script>
+    // System Variables
+    const INITIAL_STATE = {
+        workDone: 0,
+        pe: 0,
+        ke: 0,
+        heat: 0,
+        power: 0,
+        valveOpen: false,
+        rotation: 0,
+        clicksInLastSecond: 0
+    };
+
+    let state = { ...INITIAL_STATE };
+
+    const CONFIG = {
+        workPerClick: 100,
+        maxPe: 3000,
+        conversionRate: 12,
+        friction: 0.99,
+        heatConversion: 0.01
+    };
+
+    // DOM Elements
+    const elements = {
+        work: document.getElementById('val-work'),
+        power: document.getElementById('val-power'),
+        pe: document.getElementById('val-pe'),
+        ke: document.getElementById('val-ke'),
+        heat: document.getElementById('val-heat'),
+        eff: document.getElementById('val-eff'),
+        water: document.getElementById('water-level'),
+        turbine: document.getElementById('turbine-axle'),
+        glow: document.getElementById('heat-glow'),
+        btnWork: document.getElementById('work-btn'),
+        btnValve: document.getElementById('valve-btn'),
+        btnReset: document.getElementById('reset-btn')
+    };
+
+    // Logic: Input Handling
+    elements.btnWork.addEventListener('click', () => {
+        state.workDone += CONFIG.workPerClick;
+        state.clicksInLastSecond += CONFIG.workPerClick;
+        if (state.pe < CONFIG.maxPe) state.pe += CONFIG.workPerClick;
+    });
+
+    elements.btnValve.addEventListener('click', () => {
+        state.valveOpen = !state.valveOpen;
+        elements.btnValve.classList.toggle('closed');
+        elements.btnValve.innerText = state.valveOpen ? "Valve: Open" : "Valve: Closed";
+    });
+
+    elements.btnReset.addEventListener('click', () => {
+        state = { ...INITIAL_STATE };
+        elements.btnValve.classList.add('closed');
+        elements.btnValve.innerText = "Valve: Closed";
+        // Visual immediate reset
+        elements.water.style.height = '0%';
+        elements.glow.style.background = 'transparent';
+    });
+
+    // Power Calculator
+    setInterval(() => {
+        state.power = state.clicksInLastSecond;
+        state.clicksInLastSecond = 0;
+    }, 1000);
+
+    function update() {
+        // Transformation Logic
+        if (state.valveOpen && state.pe > 0) {
+            let transfer = Math.min(state.pe, CONFIG.conversionRate);
+            state.pe -= transfer;
+            state.ke += transfer;
+        }
+
+        // Dissipation Logic
+        if (state.ke > 0.1) {
+            let energyLost = state.ke * (1 - CONFIG.friction);
+            state.ke -= energyLost;
+            state.heat += energyLost;
+        } else {
+            state.ke = 0;
+        }
+
+        // Update UI
+        elements.work.innerHTML = `${Math.floor(state.workDone)} <span class="unit">J</span>`;
+        elements.power.innerHTML = `${state.power} <span class="unit">W</span>`;
+        elements.pe.innerHTML = `${Math.floor(state.pe)} <span class="unit">J</span>`;
+        elements.ke.innerHTML = `${Math.floor(state.ke)} <span class="unit">J</span>`;
+        elements.heat.innerHTML = `${Math.floor(state.heat)} <span class="unit">J</span>`;
+        
+        let efficiency = state.workDone > 0 ? ((state.workDone - state.heat) / state.workDone) * 100 : 100;
+        elements.eff.innerHTML = `${Math.max(0, efficiency.toFixed(1))} <span class="unit">%</span>`;
+
+        // Update Visuals
+        elements.water.style.height = `${(state.pe / CONFIG.maxPe) * 100}%`;
+        state.rotation += (state.ke * 0.4);
+        elements.turbine.style.transform = `translateY(-50%) rotate(${state.rotation}deg)`;
+        
+        let intensity = Math.min(state.ke / 800, 0.5);
+        elements.glow.style.background = `rgba(239, 68, 68, ${intensity})`;
+
+        requestAnimationFrame(update);
+    }
+
+    update();
+</script>
+
+</body>
+</html>
