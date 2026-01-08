@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nuclear Command | Spectrometer Pro</title>
+    <style>
+        :root {
+            --alpha: #ff4757; --beta: #2e86de; --gamma: #a55eea;
+            --bg: #05070a; --panel: #0d1117; --accent: #00d2ff;
+            --neutron: #8b949e;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: #c9d1d9;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0; display: flex; justify-content: center; align-items: center;
+            height: 100vh; overflow: hidden;
+        }
+
+        #ui-wrapper {
+            display: grid;
+            grid-template-columns: 350px 1fr 300px;
+            grid-template-rows: 100px 1fr 150px;
+            gap: 15px; width: 98vw; height: 95vh;
+        }
+
+        .panel { background: var(--panel); border: 1px solid #30363d; border-radius: 12px; padding: 20px; position: relative; }
+
+        /* Header Stats */
+        header { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--accent); }
+        
+        .big-stat { text-align: center; flex: 1; }
+        .big-stat label { font-size: 0.7rem; color: var(--accent); text-transform: uppercase; letter-spacing: 2px; }
+        .big-stat div { font-size: 2rem; font-weight: bold; font-family: 'Courier New', monospace; }
+
+        /* Nucleus Viewport */
+        #viewport { grid-column: 2; grid-row: 2; display: flex; justify-content: center; align-items: center; background: radial-gradient(circle, #111 0%, #000 100%); overflow: hidden; }
+        
+        .particle { position: absolute; border-radius: 50%; width: 14px; height: 14px; transform: translate(-50%, -50%); transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .proton { background: var(--alpha); box-shadow: 0 0 10px var(--alpha); }
+        .neutron { background: var(--neutron); box-shadow: 0 0 5px #fff; }
+
+        /* Spectrometer Map */
+        #spectrometer {
+            grid-column: 1; grid-row: 2;
+            display: flex; flex-direction: column; gap: 10px;
+        }
+
+        .chart-area {
+            height: 250px; background: #000; border: 1px solid #333; position: relative;
+            display: grid; grid-template-columns: repeat(10, 1fr); grid-template-rows: repeat(10, 1fr);
+        }
+
+        .node { width: 100%; height: 100%; border: 1px solid #111; }
+        #current-pos {
+            position: absolute; width: 15px; height: 15px; background: yellow;
+            border-radius: 2px; transition: 0.5s; box-shadow: 0 0 15px yellow;
+        }
+
+        /* Controls */
+        .controls { grid-column: 3; grid-row: 2; display: flex; flex-direction: column; gap: 10px; }
+        .btn {
+            padding: 15px; border: none; border-radius: 8px; color: white; font-weight: bold;
+            cursor: pointer; transition: 0.3s; text-transform: uppercase;
+        }
+        .btn-alpha { background: var(--alpha); }
+        .btn-beta { background: var(--beta); }
+        .btn-gamma { background: var(--gamma); }
+        .btn:hover { filter: brightness(1.2); transform: translateY(-2px); }
+
+        /* Objectives */
+        footer { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-around; }
+        
+        .objective-box { border-left: 3px solid var(--accent); padding-left: 15px; }
+        .active-task { color: #fff; font-weight: bold; font-size: 1.1rem; }
+
+        #alert-panel {
+            position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+            background: rgba(255, 71, 87, 0.2); border: 1px solid var(--alpha);
+            padding: 5px 20px; border-radius: 20px; color: var(--alpha);
+            display: none; animation: blink 1s infinite;
+        }
+
+        @keyframes blink { 50% { opacity: 0; } }
+    </style>
+</head>
+<body>
+
+<div id="ui-wrapper">
+    <header class="panel">
+        <div class="big-stat">
+            <label>Protons (Z)</label>
+            <div id="p-val" style="color: var(--alpha);">92</div>
+        </div>
+        <div class="big-stat">
+            <label>Neutrons (N)</label>
+            <div id="n-val" style="color: var(--neutron);">146</div>
+        </div>
+        <div class="big-stat">
+            <label>Mass Number (A)</label>
+            <div id="m-val">238</div>
+        </div>
+        <div class="big-stat">
+            <label>Nuclide Name</label>
+            <div id="iso-name" style="color: var(--accent);">Uranium</div>
+        </div>
+    </header>
+
+    <aside id="spectrometer" class="panel">
+        <h3>STABILITY SPECTROMETER</h3>
+        <p style="font-size: 0.8rem;">Yellow dot shows your position on the <b>Line of Stability</b>.</p>
+        <div class="chart-area" id="chart">
+            <div id="current-pos"></div>
+        </div>
+        <div id="stability-info" style="font-size: 0.85rem; margin-top: 10px; color: #8b949e;">
+            Analyzing nuclear binding forces...
+        </div>
+    </aside>
+
+    <main id="viewport" class="panel">
+        <div id="alert-panel">N:P RATIO UNSTABLE - DECAY IMMINENT</div>
+        <div id="nucleus-root" style="position: relative;"></div>
+    </main>
+
+    <aside class="controls panel">
+        <h3>EMISSION MANUAL</h3>
+        <button class="btn btn-alpha" onclick="action('alpha')">α-Decay (-2P, -2N)</button>
+        <button class="btn btn-beta" onclick="action('beta')">β-Decay (-1N, +1P)</button>
+        <button class="btn btn-gamma" onclick="action('gamma')">γ-Release (Energy)</button>
+        
+        <div style="margin-top: 20px; font-size: 0.8rem;">
+            <strong>Manual:</strong>
+            <p>Alpha: Reduce mass quickly.</p>
+            <p>Beta: Fix neutron-heavy cores.</p>
+            <p>Gamma: Stabilize high-energy states.</p>
+        </div>
+    </aside>
+
+    <footer class="panel">
+        <div class="objective-box">
+            <small>CURRENT MISSION</small>
+            <div id="mission-text" class="active-task">Stabilize the Uranium Core</div>
+        </div>
+        <div style="text-align: right;">
+            <small>REVENUE (Uses Found)</small>
+            <div id="score" style="font-size: 1.5rem; color: #ffa502;">$0</div>
+        </div>
+    </footer>
+</div>
+
+
+
+<script>
+    let p = 92;
+    let n = 146;
+    let score = 0;
+    let missionIdx = 0;
+
+    const missions = [
+        { text: "Decay Uranium until Protons = 88 (Radium)", target: () => p === 88, reward: 500 },
+        { text: "Fix N:P Ratio: Get Neutrons below 135", target: () => n < 135, reward: 1000 },
+        { text: "Final Goal: Reach the Stable Lead-206 (82P, 124N)", target: () => p === 82 && n === 124, reward: 5000 }
+    ];
+
+    const isotopes = {
+        92: "Uranium", 91: "Protactinium", 90: "Thorium", 89: "Actinium", 
+        88: "Radium", 87: "Francium", 86: "Radon", 85: "Astatine", 
+        84: "Polonium", 83: "Bismuth", 82: "Lead"
+    };
+
+    function updateUI() {
+        document.getElementById('p-val').innerText = p;
+        document.getElementById('n-val').innerText = n;
+        document.getElementById('m-val').innerText = p + n;
+        document.getElementById('iso-name').innerText = isotopes[p] || "Unknown";
+        document.getElementById('score').innerText = `$${score}`;
+        document.getElementById('mission-text').innerText = missions[missionIdx].text;
+
+        // Update Spectrometer Position
+        // Map 82-92 protons to 0-100%
+        const x = ((p - 80) / 15) * 100;
+        const y = 100 - (((n - 120) / 30) * 100);
+        const marker = document.getElementById('current-pos');
+        marker.style.left = `${Math.max(0, Math.min(90, x))}%`;
+        marker.style.top = `${Math.max(0, Math.min(90, y))}%`;
+
+        // Check N:P Ratio (Stability Line)
+        const ratio = n / p;
+        const alert = document.getElementById('alert-panel');
+        const info = document.getElementById('stability-info');
+
+        if (ratio > 1.6) {
+            alert.style.display = 'block';
+            info.innerHTML = "Status: <span style='color:var(--beta)'>Neutron Rich.</span> Beta decay recommended.";
+        } else if (p > 83) {
+            alert.style.display = 'block';
+            info.innerHTML = "Status: <span style='color:var(--alpha)'>Too Heavy.</span> Alpha decay recommended.";
+        } else {
+            alert.style.display = 'none';
+            info.innerHTML = "Status: <span style='color:#4ade80'>Stability Zone Approaching.</span>";
+        }
+
+        if (missions[missionIdx].target()) {
+            score += missions[missionIdx].reward;
+            missionIdx++;
+            if (missionIdx >= missions.length) {
+                alert("MISSION COMPLETE! Nucleus Stabilized.");
+                location.reload();
+            }
+        }
+        renderNucleus();
+    }
+
+    function renderNucleus() {
+        const root = document.getElementById('nucleus-root');
+        root.innerHTML = '';
+        const total = Math.floor((p + n) / 4); // Visual scaling
+
+        for (let i = 0; i < total; i++) {
+            const particle = document.createElement('div');
+            particle.className = `particle ${Math.random() > 0.4 ? 'neutron' : 'proton'}`;
+            
+            const angle = i * 137.5 * (Math.PI / 180);
+            const radius = Math.sqrt(i) * 12;
+            particle.style.left = `${Math.cos(angle) * radius}px`;
+            particle.style.top = `${Math.sin(angle) * radius}px`;
+            root.appendChild(particle);
+        }
+    }
+
+    function action(type) {
+        if (type === 'alpha' && p >= 2) { p -= 2; n -= 2; }
+        if (type === 'beta' && n > 0) { n -= 1; p += 1; }
+        if (type === 'gamma') { /* Gamma doesn't change P/N, but clears energy */ }
+        updateUI();
+    }
+
+    // Initial Start
+    updateUI();
+</script>
+</body>
+</html>
