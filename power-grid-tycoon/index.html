@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Power Grid Tycoon | Form 3 Science</title>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --panel: #1e293b;
+            --accent: #38bdf8;
+            --success: #22c55e;
+            --danger: #ef4444;
+            --text: #f1f5f9;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* --- Header & Stats --- */
+        header {
+            background: #020617;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--accent);
+        }
+
+        .stats {
+            display: flex;
+            gap: 20px;
+        }
+
+        .stat-box {
+            background: var(--panel);
+            padding: 5px 15px;
+            border-radius: 8px;
+            border: 1px solid #334155;
+        }
+
+        .stat-val {
+            color: var(--accent);
+            font-weight: bold;
+            font-family: monospace;
+            font-size: 1.2rem;
+        }
+
+        /* --- Main Layout --- */
+        main {
+            display: flex;
+            flex: 1;
+            padding: 20px;
+            gap: 20px;
+        }
+
+        #game-canvas-container {
+            flex: 2;
+            background: #000;
+            border-radius: 12px;
+            position: relative;
+            overflow: hidden;
+            border: 2px solid #334155;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+
+        #ui-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        /* --- Control Cards --- */
+        .card {
+            background: var(--panel);
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid var(--accent);
+        }
+
+        .card h3 { margin-top: 0; color: var(--accent); font-size: 1rem; text-transform: uppercase; }
+
+        .control-group {
+            margin-bottom: 10px;
+        }
+
+        label { display: block; font-size: 0.8rem; margin-bottom: 5px; opacity: 0.8; }
+
+        input[type="range"] {
+            width: 100%;
+            cursor: pointer;
+        }
+
+        button {
+            background: var(--accent);
+            border: none;
+            padding: 10px;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            transition: 0.2s;
+        }
+
+        button:hover { filter: brightness(1.2); }
+
+        /* --- Bill Section --- */
+        #bill-display {
+            font-family: monospace;
+            background: #f8fafc;
+            color: #1e293b;
+            padding: 15px;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .warning {
+            color: var(--danger);
+            font-weight: bold;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink { 50% { opacity: 0; } }
+
+        canvas { width: 100%; height: 100%; }
+    </style>
+</head>
+<body>
+
+<header>
+    <div style="font-size: 1.5rem; font-weight: bold;">⚡ POWER GRID TYCOON</div>
+    <div class="stats">
+        <div class="stat-box">Budget: <span id="stat-money" class="stat-val">$1000</span></div>
+        <div class="stat-box">Grid Freq: <span id="stat-freq" class="stat-val">50Hz</span></div>
+        <div class="stat-box">Efficiency: <span id="stat-eff" class="stat-val">100%</span></div>
+    </div>
+</header>
+
+<main>
+    <div id="game-canvas-container">
+        <canvas id="gameCanvas"></canvas>
+    </div>
+
+    <div id="ui-panel">
+        <div class="card">
+            <h3>1. Power Generation</h3>
+            <div class="control-group">
+                <label>Source Type</label>
+                <select id="gen-type" style="width:100%; padding: 5px;">
+                    <option value="coal">Coal (High Output, High Pollution)</option>
+                    <option value="hydro">Hydroelectric (Stable, Clean)</option>
+                    <option value="wind">Wind (Variable, Green)</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label>Output Power (kW)</label>
+                <input type="range" id="gen-output" min="100" max="5000" value="1000">
+                <span id="gen-val">1000 kW</span>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>2. Transformers & Transmission</h3>
+            <div class="control-group">
+                <label>Step-Up Transformer (V)</label>
+                <input type="range" id="step-up" min="240" max="132000" step="1000" value="240">
+                <span id="step-up-val">240 V</span>
+            </div>
+            <div class="control-group">
+                <label>Step-Down Transformer (V)</label>
+                <input type="range" id="step-down" min="240" max="33000" step="100" value="240">
+                <span id="step-down-val">240 V</span>
+            </div>
+            <p style="font-size: 0.7rem; color: #94a3b8;">Tip: High voltage transmission reduces energy loss ($P = I^2 R$).</p>
+        </div>
+
+        <div class="card">
+            <h3>3. Consumer Bill (24h Est.)</h3>
+            <div id="bill-display">
+                Energy Used: 0 kWh<br>
+                Tariff: $0.21 / kWh<br>
+                <hr>
+                Total: $0.00
+            </div>
+            <p id="safety-msg" style="margin-top:10px; font-size:0.8rem;"></p>
+        </div>
+        
+        <button id="reset-btn">RESET GRID</button>
+    </div>
+</main>
+
+<script>
+    /** @type {HTMLCanvasElement} */
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    
+    // Game State
+    let state = {
+        money: 5000,
+        genPower: 1000, // Watts
+        transmissionVoltage: 240,
+        targetVoltage: 240,
+        actualVoltage: 240,
+        efficiency: 1,
+        hourlyRate: 0.218,
+        time: 0,
+        lostPower: 0,
+        gridHealth: 100
+    };
+
+    // DOM Elements
+    const genSlider = document.getElementById('gen-output');
+    const stepUpSlider = document.getElementById('step-up');
+    const stepDownSlider = document.getElementById('step-down');
+    const billDisplay = document.getElementById('bill-display');
+
+    // Resize Canvas
+    function resize() {
+        canvas.width = canvas.parentElement.clientWidth;
+        canvas.height = canvas.parentElement.clientHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    // Logic Functions
+    function updateLogic() {
+        state.genPower = parseInt(genSlider.value);
+        state.transmissionVoltage = parseInt(stepUpSlider.value);
+        state.targetVoltage = parseInt(stepDownSlider.value);
+
+        // Physics Simulation (Simplified for Form 3)
+        // 1. Loss increases if voltage is low (Higher Current = Higher Loss)
+        // P_loss = (P/V)^2 * R. Let's assume R=50 ohms for the long cable.
+        const resistance = 50;
+        const current = (state.genPower * 1000) / state.transmissionVoltage;
+        state.lostPower = (Math.pow(current, 2) * resistance) / 1000; // kW loss
+        
+        if (state.lostPower > state.genPower) state.lostPower = state.genPower;
+        
+        state.efficiency = ((state.genPower - state.lostPower) / state.genPower) * 100;
+        
+        // Safety Logic: If user delivers > 250V to houses, appliances explode!
+        const safetyMsg = document.getElementById('safety-msg');
+        if (state.targetVoltage > 250) {
+            safetyMsg.innerHTML = "<span class='warning'>⚠️ DANGER: VOLTAGE TOO HIGH FOR HOMES! APPLIANCES BLOWN!</span>";
+            state.money -= 0.5; 
+        } else if (state.targetVoltage < 220) {
+            safetyMsg.innerHTML = "<span class='warning'>⚠️ BROWNOUT: NOT ENOUGH VOLTAGE FOR CITY.</span>";
+        } else {
+            safetyMsg.textContent = "✅ Voltage Stable (230V-240V)";
+            state.money += (state.genPower / 1000); // Income based on power
+        }
+
+        // Update UI Text
+        document.getElementById('gen-val').textContent = state.genPower + " kW";
+        document.getElementById('step-up-val').textContent = state.transmissionVoltage + " V";
+        document.getElementById('step-down-val').textContent = state.targetVoltage + " V";
+        document.getElementById('stat-money').textContent = "$" + Math.floor(state.money);
+        document.getElementById('stat-eff').textContent = Math.max(0, state.efficiency).toFixed(1) + "%";
+
+        // Calculate Bill
+        const dailyKwh = state.genPower * 24;
+        const totalCost = dailyKwh * state.hourlyRate;
+        billDisplay.innerHTML = `
+            Energy Used: ${dailyKwh.toLocaleString()} kWh<br>
+            Tariff Rate: $${state.hourlyRate}<br>
+            <hr>
+            Est. Daily Cost: $${totalCost.toLocaleString(undefined, {minimumFractionDigits: 2})}
+        `;
+    }
+
+    // Animation / Drawing
+    function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        const midY = canvas.height / 2;
+        const margin = 100;
+        const width = canvas.width - (margin * 2);
+
+        // Define Points
+        const p1 = { x: margin, y: midY + 50 }; // Power Plant
+        const p2 = { x: margin + width * 0.25, y: midY }; // Step Up
+        const p3 = { x: margin + width * 0.75, y: midY }; // Step Down
+        const p4 = { x: margin + width, y: midY + 50 }; // City
+
+        // Draw Cables with "flowing" electricity
+        drawCable(p1, p2, "gray", 4);
+        drawCable(p2, p3, state.efficiency > 50 ? "#38bdf8" : "#ef4444", 2); // Transmission line
+        drawCable(p3, p4, "gray", 4);
+
+        // Draw Electrons (Flowing dots)
+        const speed = (state.genPower / 500);
+        state.time += speed;
+        drawElectrons(p1, p2, state.time, 5);
+        drawElectrons(p2, p3, state.time, 15 * (state.efficiency/100)); // Fewer if inefficient
+        drawElectrons(p3, p4, state.time, 5);
+
+        // Draw Components
+        drawPlant(p1.x, p1.y);
+        drawTransformer(p2.x, p2.y, "STEP-UP");
+        drawTransformer(p3.x, p3.y, "STEP-DOWN");
+        drawCity(p4.x, p4.y);
+
+        requestAnimationFrame(draw);
+    }
+
+    function drawCable(start, end, color, thickness) {
+        ctx.beginPath();
+        ctx.strokeStyle = color;
+        ctx.lineWidth = thickness;
+        ctx.moveTo(start.x, start.y);
+        ctx.lineTo(end.x, end.y);
+        ctx.stroke();
+    }
+
+    function drawElectrons(start, end, time, count) {
+        for(let i=0; i<count; i++) {
+            let offset = ((time + (i * 20)) % 100) / 100;
+            let x = start.x + (end.x - start.x) * offset;
+            let y = start.y + (end.y - start.y) * offset;
+            ctx.fillStyle = "#fbbf24";
+            ctx.beginPath();
+            ctx.arc(x, y, 4, 0, Math.PI*2);
+            ctx.fill();
+        }
+    }
+
+    function drawPlant(x, y) {
+        ctx.fillStyle = "#475569";
+        ctx.fillRect(x - 40, y - 40, 60, 40);
+        ctx.fillStyle = "#334155";
+        ctx.fillRect(x - 30, y - 60, 15, 30);
+        ctx.fillRect(x - 10, y - 60, 15, 30);
+        ctx.fillStyle = "white";
+        ctx.fillText("POWER STATION", x - 45, y + 20);
+    }
+
+    function drawTransformer(x, y, label) {
+        ctx.fillStyle = "#1e293b";
+        ctx.strokeStyle = varColor('--accent');
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(x, y, 25, 0, Math.PI*2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = "white";
+        ctx.font = "10px Arial";
+        ctx.textAlign = "center";
+        ctx.fillText(label, x, y - 35);
+        ctx.fillText("⚡", x, y + 5);
+    }
+
+    function drawCity(x, y) {
+        ctx.fillStyle = "#1e293b";
+        ctx.fillRect(x - 20, y - 50, 20, 50);
+        ctx.fillRect(x + 5, y - 70, 20, 70);
+        ctx.fillStyle = state.targetVoltage > 250 ? "red" : (state.targetVoltage < 220 ? "#334155" : "#fef08a");
+        // Windows
+        ctx.fillRect(x-15, y-40, 5, 5);
+        ctx.fillRect(x+10, y-60, 5, 5);
+        ctx.fillStyle = "white";
+        ctx.fillText("CONSUMERS", x, y + 20);
+    }
+
+    function varColor(name) {
+        return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    }
+
+    // Initialize
+    setInterval(updateLogic, 100);
+    draw();
+
+    document.getElementById('reset-btn').onclick = () => location.reload();
+
+</script>
+</body>
+</html>
