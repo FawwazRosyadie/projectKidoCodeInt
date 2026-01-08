@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Thermic Lab</title>
+    <style>
+        :root {
+            --exo-red: #ff3e3e;
+            --endo-blue: #00d2ff;
+            --bg: #0f172a;
+            --panel: #1e293b;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: var(--bg);
+            color: #f8fafc;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        #main-layout {
+            display: grid;
+            grid-template-columns: 320px 1fr 280px;
+            gap: 20px;
+            width: 100%;
+            max-width: 1200px;
+            height: 80vh;
+            margin-top: 20px;
+        }
+
+        /* Reactant Buttons */
+        .sidebar {
+            background: var(--panel);
+            padding: 20px;
+            border-radius: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            overflow-y: auto;
+        }
+
+        .react-btn {
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            color: white;
+            transition: 0.2s;
+            text-align: left;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .exo { background: #991b1b; border-left: 5px solid var(--exo-red); }
+        .exo:hover { background: var(--exo-red); transform: translateX(5px); }
+        
+        .endo { background: #075985; border-left: 5px solid var(--endo-blue); }
+        .endo:hover { background: var(--endo-blue); transform: translateX(5px); }
+
+        /* Central Chamber */
+        #chamber-view {
+            background: radial-gradient(circle, #334155 0%, #020617 100%);
+            border-radius: 15px;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        #beaker-wrap {
+            position: relative;
+            width: 250px;
+            height: 300px;
+            border: 6px solid #94a3b8;
+            border-top: none;
+            border-bottom-left-radius: 30px;
+            border-bottom-right-radius: 30px;
+            background: rgba(255,255,255,0.05);
+            overflow: hidden;
+        }
+
+        #liquid {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 60%;
+            background: rgba(148, 163, 184, 0.5);
+            transition: background 0.8s, height 0.5s;
+        }
+
+        /* Logs & Stats */
+        .stats-panel {
+            background: var(--panel);
+            padding: 20px;
+            border-radius: 15px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .log-box {
+            background: #020617;
+            flex-grow: 1;
+            margin-top: 10px;
+            padding: 10px;
+            font-family: monospace;
+            font-size: 12px;
+            border-radius: 5px;
+            overflow-y: auto;
+            color: #10b981;
+        }
+
+        .gauge { font-size: 2rem; font-weight: bold; margin-bottom: 10px; }
+        .target { color: var(--endo-blue); }
+        .current { color: var(--exo-red); }
+
+        #overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .modal {
+            background: var(--panel);
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 400px;
+        }
+
+        .bubble {
+            position: absolute;
+            border-radius: 50%;
+            animation: rise 2s infinite ease-in;
+        }
+
+        @keyframes rise {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(-250px); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>THERMOCHEMICAL REACTION ENGINE</h1>
+
+    <div id="main-layout">
+        <div class="sidebar">
+            <h3 style="color: var(--endo-blue)">Endothermic (+)</h3>
+            <button class="react-btn endo" onclick="react('Ammonium Nitrate', -12)">
+                NH₄NO₃ <span>+Cold</span>
+            </button>
+            <button class="react-btn endo" onclick="react('Baking Soda + Citric Acid', -8)">
+                NaHCO₃ + CA <span>-Heat</span>
+            </button>
+            <button class="react-btn endo" onclick="react('Sherbet Powder', -4)">
+                Glucose + Acid <span>-Chill</span>
+            </button>
+            <button class="react-btn endo" onclick="react('Ammonium Chloride', -6)">
+                NH₄Cl <span>-Absorb</span>
+            </button>
+            <div style="margin-top:20px; font-size: 0.8em; color: #94a3b8;">
+                *Endothermic reactions absorb heat energy from the surroundings.
+            </div>
+        </div>
+
+        <div id="chamber-view">
+            <div id="beaker-wrap">
+                <div id="liquid"></div>
+            </div>
+            <div style="margin-top: 20px; text-align: center;">
+                <div class="gauge current" id="cur-txt">25.0°C</div>
+                <div style="font-size: 0.8em; letter-spacing: 2px;">REACTOR CORE TEMP</div>
+            </div>
+        </div>
+
+        <div class="sidebar">
+            <h3 style="color: var(--exo-red)">Exothermic (-)</h3>
+            <button class="react-btn exo" onclick="react('Sodium Hydroxide', 15)">
+                NaOH <span>++Hot</span>
+            </button>
+            <button class="react-btn exo" onclick="react('Calcium Oxide', 10)">
+                CaO <span>+Heat</span>
+            </button>
+            <button class="react-btn exo" onclick="react('Concentrated Acid', 20)">
+                H₂SO₄ <span>!!DANGER</span>
+            </button>
+            <button class="react-btn exo" onclick="react('Magnesium + HCl', 8)">
+                Mg + HCl <span>+Fizz</span>
+            </button>
+            <div class="stats-panel" style="margin-top: 20px; padding: 10px; height: 150px;">
+                <div class="target">TARGET: <span id="tar-txt">60</span>°C</div>
+                <div class="log-box" id="log">System Ready...</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="overlay">
+        <div class="modal">
+            <h2 id="modal-title">Level Success</h2>
+            <p id="modal-desc">Reaction balanced perfectly.</p>
+            <button class="react-btn exo" style="width:100%" onclick="setupLevel()">Initialize Next Stage</button>
+        </div>
+    </div>
+
+    <script>
+        let currentTemp = 25.0;
+        let targetTemp = 60;
+        let gameActive = true;
+        let level = 1;
+
+        function react(name, value) {
+            if (!gameActive) return;
+            
+            currentTemp += value;
+            logAction(name, value);
+            createBubbles(value > 0 ? '#ff3e3e' : '#00d2ff');
+            updateUI();
+            checkWin();
+        }
+
+        function logAction(name, val) {
+            const log = document.getElementById('log');
+            const type = val > 0 ? "EXO" : "ENDO";
+            const color = val > 0 ? "#ef4444" : "#3b82f6";
+            log.innerHTML = `<span style="color:${color}">[${type}] Added ${name} (${val > 0 ? '+' : ''}${val}°C)</span><br>` + log.innerHTML;
+        }
+
+        function updateUI() {
+            document.getElementById('cur-txt').innerText = currentTemp.toFixed(1) + "°C";
+            
+            // Background color shifting
+            const r = Math.min(255, Math.max(0, (currentTemp - 20) * 5));
+            const b = Math.min(255, Math.max(0, 255 - (currentTemp - 20) * 5));
+            document.getElementById('liquid').style.backgroundColor = `rgba(${r}, 100, ${b}, 0.7)`;
+            
+            // Beaker height jitter
+            document.getElementById('liquid').style.height = (50 + (Math.random() * 5)) + "%";
+        }
+
+        function createBubbles(color) {
+            const wrap = document.getElementById('beaker-wrap');
+            for(let i=0; i<8; i++) {
+                const b = document.createElement('div');
+                b.className = 'bubble';
+                b.style.left = Math.random() * 230 + 'px';
+                b.style.bottom = '10px';
+                b.style.width = b.style.height = (Math.random() * 15 + 5) + 'px';
+                b.style.border = `2px solid ${color}`;
+                wrap.appendChild(b);
+                setTimeout(() => b.remove(), 2000);
+            }
+        }
+
+        function checkWin() {
+            if (Math.abs(currentTemp - targetTemp) <= 2) {
+                gameActive = false;
+                document.getElementById('overlay').style.display = 'flex';
+                document.getElementById('modal-title').innerText = "STABILIZED!";
+                document.getElementById('modal-desc').innerText = `Target: ${targetTemp}°C. Final: ${currentTemp.toFixed(1)}°C.`;
+            } else if (currentTemp > 120 || currentTemp < -20) {
+                gameActive = false;
+                document.getElementById('overlay').style.display = 'flex';
+                document.getElementById('modal-title').innerText = "CRITICAL FAILURE";
+                document.getElementById('modal-desc').innerText = "The container cracked due to extreme temperature!";
+                document.querySelector('.modal .exo').innerText = "Reset Lab";
+            }
+        }
+
+        function setupLevel() {
+            level++;
+            targetTemp = Math.floor(Math.random() * 80) + 10;
+            currentTemp = 25.0;
+            gameActive = true;
+            document.getElementById('tar-txt').innerText = targetTemp;
+            document.getElementById('overlay').style.display = 'none';
+            document.getElementById('log').innerHTML = "--- Level " + level + " Start ---";
+            updateUI();
+        }
+
+        // Ambient cooling/heating toward room temp
+        setInterval(() => {
+            if (gameActive) {
+                if (currentTemp > 25.5) currentTemp -= 0.1;
+                else if (currentTemp < 24.5) currentTemp += 0.1;
+                updateUI();
+            }
+        }, 200);
+
+        document.getElementById('tar-txt').innerText = targetTemp;
+    </script>
+</body>
+</html>
