@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Magneto-Shield: Multi-Spectra Command</title>
+    <style>
+        :root {
+            --lcd-blue: #00d2ff;
+            --solar-flare: #ff6600;
+            --warning: #ff3333;
+            --panel-hex: #0a0e14;
+        }
+
+        body, html {
+            margin: 0; padding: 0;
+            background: #000;
+            color: var(--lcd-blue);
+            font-family: 'Segoe UI', 'Consolas', monospace;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        #command-center {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            grid-template-rows: 1fr 280px;
+            height: 100vh;
+            gap: 10px;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+
+        .module {
+            background: var(--panel-hex);
+            border: 1px solid #1a3a5a;
+            position: relative;
+            padding: 15px;
+            box-shadow: inset 0 0 20px rgba(0, 210, 255, 0.05);
+        }
+
+        /* Viewports */
+        #magneto-view {
+            grid-column: 2;
+            grid-row: 1;
+            background: radial-gradient(circle at 10% 50%, #051020 0%, #000 100%);
+        }
+
+        #solar-telescope {
+            grid-column: 1;
+            grid-row: 2;
+            background: #000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        canvas { display: block; border-radius: 2px; }
+
+        /* Data Readouts */
+        .sidebar { grid-column: 1; grid-row: 1; display: flex; flex-direction: column; gap: 10px; }
+        .data-bit { border-bottom: 1px solid #1a3a5a; padding: 10px 0; }
+        .label { font-size: 0.7rem; color: #557799; text-transform: uppercase; letter-spacing: 1px; }
+        .val { font-size: 1.4rem; font-weight: bold; }
+
+        /* HUD */
+        #control-panel {
+            grid-column: 2; grid-row: 2;
+            display: flex; gap: 20px;
+            align-items: center;
+            justify-content: space-around;
+        }
+
+        #alert-hub {
+            position: absolute;
+            top: 20px; right: 20px;
+            background: var(--warning);
+            color: white;
+            padding: 10px 20px;
+            font-weight: bold;
+            display: none;
+            animation: blink 0.5s infinite;
+        }
+
+        @keyframes blink { 50% { opacity: 0.3; } }
+
+        #init-screen {
+            position: absolute; inset: 0; background: rgba(0,0,0,0.9);
+            z-index: 1000; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; text-align: center;
+        }
+        
+        .progress-container { width: 100%; height: 6px; background: #051015; margin-top: 5px; }
+        .progress-fill { height: 100%; background: var(--lcd-blue); width: 0%; transition: width 0.3s; }
+    </style>
+</head>
+<body>
+
+<div id="command-center">
+    <div id="init-screen">
+        <h1 style="font-size: 3rem; margin-bottom: 0;">SOLAR SYSTEMS COMMAND</h1>
+        <p style="color: #6688aa;">Monitor Sunspots. Predict Storms. Protect the Grid.</p>
+        <button onclick="boot()" style="background: none; border: 2px solid var(--lcd-blue); color: var(--lcd-blue); padding: 15px 40px; cursor: pointer; font-weight: bold; font-size: 1.2rem;">INITIALIZE SAT-LINK</button>
+    </div>
+
+    <div class="sidebar module">
+        <div class="data-bit">
+            <div class="label">Magnetic Flux Density</div>
+            <div id="flux-val" class="val">0.00 nT</div>
+        </div>
+        <div class="data-bit">
+            <div class="label">Solar Wind Stream</div>
+            <div id="wind-val" class="val">400 km/s</div>
+        </div>
+        <div class="data-bit">
+            <div class="label">Magnetopause Radius</div>
+            <div id="r-val" class="val">10.2 Re</div>
+        </div>
+        <div class="data-bit">
+            <div class="label">Active Sunspot Regions</div>
+            <div id="spot-val" class="val">0</div>
+        </div>
+    </div>
+
+    <div id="magneto-view" class="module">
+        <div id="alert-hub">HIGH ENERGY PROTONS DETECTED</div>
+        <canvas id="canvas-mag"></canvas>
+    </div>
+
+    <div id="solar-telescope" class="module">
+        <div class="label" style="margin-bottom: 5px;">H-Alpha Spectroscopic View</div>
+        <canvas id="canvas-sun" width="200" height="200"></canvas>
+        <p style="font-size: 0.7rem; color: #555; text-align: center; margin-top: 10px;">
+            SUNSPOT ANALYSIS:<br>Regions of high magnetic field.<br>Black spots predict wind increases.
+        </p>
+    </div>
+
+    <div id="control-panel" class="module">
+        <div style="flex: 1;">
+            <div class="label">Aurora Energy Accumulation</div>
+            <div class="progress-container"><div id="aurora-bar" class="progress-fill" style="background: #2ecc71;"></div></div>
+            <small style="font-size: 0.6rem;">Press SPACE to vent energy when full.</small>
+        </div>
+        <div style="flex: 1; text-align: center; border-left: 1px solid #1a3a5a; border-right: 1px solid #1a3a5a;">
+            <div class="label">Grid Infrastructure Health</div>
+            <div id="health-val" class="val">100%</div>
+            <div class="progress-container" style="width: 80%; margin: 5px auto;"><div id="health-bar" class="progress-fill"></div></div>
+        </div>
+        <div style="flex: 1; text-align: right;">
+            <div class="label">Current Phase</div>
+            <div id="phase-val" class="val" style="color: var(--solar-flare);">SOLAR MINIMUM</div>
+        </div>
+    </div>
+</div>
+
+<script>
+/**
+ * FORM 3 SCIENCE: SPACE WEATHER PREDICTIVE COMMAND
+ * Concept: Sunspots Regions of high magnetic activity -> Increased Solar Wind.
+ */
+
+const cMag = document.getElementById('canvas-mag');
+const ctxMag = cMag.getContext('2d');
+const cSun = document.getElementById('canvas-sun');
+const ctxSun = cSun.getContext('2d');
+
+let state = {
+    running: false,
+    frame: 0,
+    wind: 400,
+    health: 100,
+    aurora: 0,
+    sunspots: [],
+    particles: [],
+    mouseX: 0,
+    mouseY: 0
+};
+
+const earth = { x: 180, y: 0, r: 60 };
+
+class Sunspot {
+    constructor() {
+        this.angle = Math.random() * Math.PI * 2;
+        this.dist = Math.random() * 60;
+        this.size = 2 + Math.random() * 6;
+        this.life = 200 + Math.random() * 400;
+    }
+}
+
+class Particle {
+    constructor(isCME = false) {
+        this.isCME = isCME;
+        this.reset();
+    }
+    reset() {
+        this.x = cMag.width + Math.random() * 500;
+        this.y = Math.random() * cMag.height;
+        this.vx = -(state.wind / 80) - (this.isCME ? 5 : 0);
+        this.vy = (Math.random() - 0.5) * 2;
+    }
+    update() {
+        this.x += this.vx;
+        this.y += this.vy;
+
+        // Alignment with Magnetopause (Parabolic)
+        let standoff = 150 - (state.wind / 10);
+        let dy = this.y - state.mouseY;
+        let shieldX = earth.x + standoff + (dy*dy)/300;
+
+        if (this.x < shieldX && this.x > earth.x) {
+            this.vx *= -0.2;
+            this.vy = (this.y < state.mouseY) ? -4 : 4;
+            state.aurora = Math.min(100, state.aurora + 0.15);
+        }
+
+        if (this.x < earth.x + 20 && Math.abs(this.y - earth.y) < 80) {
+            state.health -= this.isCME ? 8 : 0.4;
+            this.reset();
+        }
+        if (this.x < -20) this.reset();
+    }
+    draw() {
+        ctxMag.fillStyle = this.isCME ? "red" : "#ffaa00";
+        ctxMag.beginPath(); ctxMag.arc(this.x, this.y, this.isCME ? 10 : 2, 0, Math.PI*2); ctxMag.fill();
+    }
+}
+
+function boot() {
+    document.getElementById('init-screen').style.display = 'none';
+    state.running = true;
+    resize();
+    for(let i=0; i<50; i++) state.particles.push(new Particle());
+    loop();
+}
+
+function resize() {
+    cMag.width = cMag.parentElement.clientWidth;
+    cMag.height = cMag.parentElement.clientHeight;
+    earth.y = cMag.height / 2;
+}
+
+window.addEventListener('mousemove', (e) => {
+    state.mouseX = e.offsetX;
+    state.mouseY = e.offsetY;
+});
+
+window.addEventListener('keydown', (e) => {
+    if(e.code === 'Space' && state.aurora >= 100) {
+        state.aurora = 0;
+        state.particles.forEach(p => { if(p.x < cMag.width) p.x = -100; });
+        state.health = Math.min(100, state.health + 10);
+    }
+});
+
+function drawSun() {
+    ctxSun.clearRect(0,0,200,200);
+    // Solar Disk
+    let grad = ctxSun.createRadialGradient(100, 100, 20, 100, 100, 80);
+    grad.addColorStop(0, '#fff200');
+    grad.addColorStop(1, '#ff6600');
+    ctxSun.fillStyle = grad;
+    ctxSun.beginPath(); ctxSun.arc(100,100, 80, 0, Math.PI*2); ctxSun.fill();
+
+    // Sunspots logic
+    if (state.frame % 100 === 0 && Math.random() > 0.5) state.sunspots.push(new Sunspot());
+    
+    state.sunspots = state.sunspots.filter(s => {
+        s.life--;
+        ctxSun.fillStyle = 'rgba(20, 10, 0, 0.8)';
+        ctxSun.beginPath();
+        ctxSun.arc(100 + Math.cos(s.angle)*s.dist, 100 + Math.sin(s.angle)*s.dist, s.size, 0, Math.PI*2);
+        ctxSun.fill();
+        return s.life > 0;
+    });
+
+    // Update Wind based on Sunspots
+    let targetWind = 400 + (state.sunspots.length * 80);
+    state.wind += (targetWind - state.wind) * 0.01;
+}
+
+function loop() {
+    if(!state.running) return;
+    state.frame++;
+    ctxMag.clearRect(0,0,cMag.width, cMag.height);
+
+    // Draw Atmosphere/Earth
+    ctxMag.fillStyle = "#002244";
+    ctxMag.beginPath(); ctxMag.arc(earth.x, earth.y, earth.r, 0, Math.PI*2); ctxMag.fill();
+    ctxMag.strokeStyle = "var(--lcd-blue)";
+    ctxMag.stroke();
+
+    // Draw Magnetosphere
+    let standoff = 150 - (state.wind / 10);
+    ctxMag.strokeStyle = "rgba(0, 210, 255, 0.2)";
+    for(let i=0; i<4; i++) {
+        ctxMag.beginPath();
+        ctxMag.moveTo(earth.x + standoff + i*20, 0);
+        ctxMag.quadraticCurveTo(earth.x + standoff + i*20 + 200, state.mouseY, earth.x + standoff + i*20, cMag.height);
+        ctxMag.stroke();
+    }
+
+    state.particles.forEach(p => { p.update(); p.draw(); });
+    drawSun();
+
+    // UI Updates
+    document.getElementById('wind-val').innerText = Math.floor(state.wind) + " km/s";
+    document.getElementById('flux-val').innerText = (state.wind / 50).toFixed(2) + " nT";
+    document.getElementById('r-val').innerText = (standoff / 15).toFixed(1) + " Re";
+    document.getElementById('spot-val').innerText = state.sunspots.length;
+    document.getElementById('health-val').innerText = Math.floor(state.health) + "%";
+    document.getElementById('health-bar').style.width = state.health + "%";
+    document.getElementById('aurora-bar').style.width = state.aurora + "%";
+    document.getElementById('phase-val').innerText = state.wind > 650 ? "SOLAR MAXIMUM" : "SOLAR MINIMUM";
+
+    if (state.health <= 0) {
+        alert("CRITICAL POWER FAILURE: Solar Storm has overwhelmed the global grid.");
+        location.reload();
+    }
+
+    requestAnimationFrame(loop);
+}
+</script>
+</body>
+</html>
