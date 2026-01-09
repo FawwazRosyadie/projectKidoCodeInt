@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Astro-Systems Command | NASA-Style Simulation</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=JetBrains+Mono:wght@300;500&display=swap');
+
+        :root {
+            --neon-blue: #00f2ff;
+            --deep-space: #02060c;
+            --panel-hex: #0b121d;
+            --alert-red: #ff3e3e;
+            --gold-foil: #d4af37;
+        }
+
+        body {
+            background-color: var(--deep-space);
+            color: #e0e6ed;
+            font-family: 'JetBrains+Mono', monospace;
+            margin: 0;
+            display: grid;
+            grid-template-columns: 380px 1fr 320px;
+            grid-template-rows: 80px 1fr 180px;
+            height: 100vh;
+            overflow: hidden;
+            gap: 10px;
+            padding: 10px;
+        }
+
+        /* --- HEADER --- */
+        header {
+            grid-column: 1 / 4;
+            background: var(--panel-hex);
+            border: 1px solid #1a2638;
+            display: flex;
+            align-items: center;
+            padding: 0 25px;
+            justify-content: space-between;
+            border-radius: 4px;
+        }
+
+        .logo { font-family: 'Orbitron', sans-serif; font-size: 1.5rem; letter-spacing: 4px; color: var(--neon-blue); }
+
+        /* --- CONTROL SLIDERS (LEFT) --- */
+        #systems-panel {
+            grid-row: 2 / 4;
+            background: var(--panel-hex);
+            border: 1px solid #1a2638;
+            padding: 20px;
+            border-radius: 4px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        .system-block {
+            background: rgba(0,0,0,0.3);
+            padding: 15px;
+            border-left: 3px solid var(--neon-blue);
+        }
+
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 4px;
+            background: #1a2638;
+            outline: none;
+            margin: 15px 0;
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 15px;
+            height: 15px;
+            background: var(--neon-blue);
+            cursor: pointer;
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--neon-blue);
+        }
+
+        /* --- VIEWPORT (CENTER) --- */
+        #viewport {
+            grid-row: 2;
+            position: relative;
+            background: radial-gradient(circle at center, #0a192f 0%, #02060c 100%);
+            border: 1px solid #1a2638;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        #starfield {
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            background-image: radial-gradient(white 1px, transparent 1px);
+            background-size: 50px 50px;
+            opacity: 0.3;
+            animation: drift 100s linear infinite;
+        }
+
+        @keyframes drift { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        #spacecraft-svg {
+            width: 450px;
+            filter: drop-shadow(0 0 20px rgba(0, 242, 255, 0.2));
+            z-index: 2;
+        }
+
+        /* --- TELEMETRY (RIGHT) --- */
+        #telemetry-panel {
+            grid-row: 2 / 4;
+            background: var(--panel-hex);
+            border: 1px solid #1a2638;
+            padding: 15px;
+            font-size: 0.75rem;
+        }
+
+        .telemetry-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #1a2638;
+        }
+
+        .value { color: var(--neon-blue); font-weight: bold; }
+
+        /* --- MISSION OVERVIEW (BOTTOM) --- */
+        #mission-control {
+            grid-column: 2;
+            background: var(--panel-hex);
+            border: 1px solid #1a2638;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .progress-bar-bg {
+            width: 100%;
+            height: 8px;
+            background: #1a2638;
+            border-radius: 10px;
+            margin: 15px 0;
+        }
+
+        #progress-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--neon-blue), #bc8cff);
+            box-shadow: 0 0 10px var(--neon-blue);
+            transition: width 0.3s;
+        }
+
+        #upgrade-btn {
+            background: #1a2638;
+            color: var(--neon-blue);
+            border: 1px solid var(--neon-blue);
+            padding: 10px 20px;
+            font-family: 'Orbitron';
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        #upgrade-btn:not(:disabled):hover {
+            background: var(--neon-blue);
+            color: black;
+        }
+
+        #upgrade-btn:disabled { opacity: 0.2; cursor: not-allowed; }
+
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="logo">ASTRO-SYSTEMS CMD</div>
+    <div id="era-indicator" style="color: var(--gold-foil)">ERA: EARLY ROCKETRY (1940-1960)</div>
+</header>
+
+<div id="systems-panel">
+    <h3 style="font-family: Orbitron; font-size: 0.9rem;">SUBSYSTEM ALLOCATION</h3>
+    
+    <div class="system-block">
+        <label>OPTICS / PAYLOAD <span id="label-opt" class="value">33%</span></label>
+        <input type="range" id="slider-opt" min="5" max="90" value="33">
+        <small style="font-size: 0.6rem; color: #666;">Controls data collection purity.</small>
+    </div>
+
+    <div class="system-block">
+        <label>POWER / THERMAL <span id="label-pwr" class="value">33%</span></label>
+        <input type="range" id="slider-pwr" min="5" max="90" value="33">
+        <small style="font-size: 0.6rem; color: #666;">Keeps delicate electronics from freezing.</small>
+    </div>
+
+    <div class="system-block">
+        <label>PROPULSION / RCS <span id="label-prp" class="value">34%</span></label>
+        <input type="range" id="slider-prp" min="5" max="90" value="34">
+        <small style="font-size: 0.6rem; color: #666;">Maintains stable orbital trajectory.</small>
+    </div>
+
+    <button id="upgrade-btn" disabled>EXECUTE TECH UPGRADE</button>
+</div>
+
+<div id="viewport">
+    <div id="starfield"></div>
+    <svg id="spacecraft-svg" viewBox="0 0 200 200">
+        <rect id="part-core" x="80" y="70" width="40" height="60" fill="#2c3e50" stroke="#58a6ff" stroke-width="1" />
+        
+        <g id="part-comm">
+            <line x1="100" y1="70" x2="100" y2="40" stroke="#58a6ff" stroke-width="2" />
+            <circle cx="100" cy="40" r="3" fill="#ff3e3e" />
+        </g>
+
+        <g id="part-power" opacity="0.2">
+            <rect x="40" y="90" width="40" height="20" fill="#1a2638" stroke="#00f2ff" />
+            <rect x="120" y="90" width="40" height="20" fill="#1a2638" stroke="#00f2ff" />
+        </g>
+
+        <g id="part-lens" opacity="0.2">
+            <path d="M85 70 L100 55 L115 70" fill="none" stroke="#00f2ff" stroke-width="2" />
+        </g>
+    </svg>
+</div>
+
+<div id="telemetry-panel">
+    <h3 style="font-family: Orbitron; font-size: 0.8rem;">TELEMETRY LOG</h3>
+    <div class="telemetry-row"><span>Orbital Decay</span><span id="tel-decay" class="value">0.0 mm/s</span></div>
+    <div class="telemetry-row"><span>Signal Strength</span><span id="tel-signal" class="value">Low</span></div>
+    <div class="telemetry-row"><span>Thermal Margin</span><span id="tel-temp" class="value">OK</span></div>
+    <div class="telemetry-row"><span>Scientific Yield</span><span id="tel-yield" class="value">0.0 GB</span></div>
+    
+    <div id="log-window" style="margin-top:20px; color:#566475; line-height:1.4; font-size: 0.7rem;">
+        > Initialize Sputnik-type probe...<br>
+        > Waiting for stable orbit...
+    </div>
+</div>
+
+<div id="mission-control">
+    <div style="display:flex; justify-content: space-between;">
+        <span id="objective-title" style="font-weight: bold; color: var(--gold-foil);">OBJECTIVE: FIRST RADIO PING</span>
+        <span id="objective-counter">0 / 500 Data Pts</span>
+    </div>
+    <div class="progress-bar-bg">
+        <div id="progress-fill"></div>
+    </div>
+    <div id="objective-desc" style="font-size: 0.75rem; opacity: 0.7;">
+        Demonstrate that human technology can function in a vacuum. Balance power to the transmitter to relay signals back to Earth stations.
+    </div>
+</div>
+
+<script>
+    const STAGES = [
+        { name: "EARLY ROCKETRY", obj: "RADIO TELEMETRY", goal: 500, desc: "Focus on Propulsion and Basic Radio. Vacuum tubes are heavy!", parts: ['part-comm'] },
+        { name: "LUNAR EXPLORATION", obj: "GEOLOGICAL MAPPING", goal: 2000, desc: "Requires Solar Arrays. Moving from radio beeps to image transmission.", parts: ['part-comm', 'part-power'] },
+        { name: "ORBITAL OBSERVATORY", obj: "DEEP SPACE SURVEY", goal: 8000, desc: "High Optics needed. Technology shift: Solid state sensors replace film.", parts: ['part-comm', 'part-power', 'part-lens'] }
+    ];
+
+    let currentStage = 0;
+    let progress = 0;
+    let allocations = { opt: 33, pwr: 33, prp: 34 };
+    let yieldTotal = 0;
+
+    // Inputs
+    const sliders = {
+        opt: document.getElementById('slider-opt'),
+        pwr: document.getElementById('slider-pwr'),
+        prp: document.getElementById('slider-prp')
+    };
+
+    function updateLogic() {
+        // Science Logic: Data yield depends on Optics * Power
+        let yieldRate = (allocations.opt * allocations.pwr) / 1000;
+        
+        // Physics Logic: Propulsion prevents decay
+        let decay = Math.max(0, (40 - allocations.prp) * 0.1);
+        
+        // Update Stats
+        yieldTotal += yieldRate;
+        document.getElementById('tel-yield').innerText = yieldTotal.toFixed(1) + " GB";
+        document.getElementById('tel-decay').innerText = decay.toFixed(2) + " mm/s";
+        document.getElementById('tel-signal').innerText = (allocations.opt > 50) ? "STRONG" : "NOMINAL";
+
+        // Progress
+        let pCent = (yieldTotal / STAGES[currentStage].goal) * 100;
+        document.getElementById('progress-fill').style.width = Math.min(100, pCent) + "%";
+        document.getElementById('objective-counter').innerText = `${Math.floor(yieldTotal)} / ${STAGES[currentStage].goal}`;
+
+        if (pCent >= 100) document.getElementById('upgrade-btn').disabled = false;
+        
+        // Spacecraft jitter based on instability
+        document.getElementById('spacecraft-svg').style.transform = `translate(${Math.random()*decay}px, ${Math.random()*decay}px)`;
+    }
+
+    function handleSlider(type) {
+        // Constrain total to 100%
+        let total = parseInt(sliders.opt.value) + parseInt(sliders.pwr.value) + parseInt(sliders.prp.value);
+        let diff = total - 100;
+        
+        // Auto-adjust others
+        if (type === 'opt') {
+            sliders.pwr.value -= diff/2;
+            sliders.prp.value -= diff/2;
+        } else if (type === 'pwr') {
+            sliders.opt.value -= diff/2;
+            sliders.prp.value -= diff/2;
+        } else {
+            sliders.opt.value -= diff/2;
+            sliders.pwr.value -= diff/2;
+        }
+
+        allocations.opt = parseInt(sliders.opt.value);
+        allocations.pwr = parseInt(sliders.pwr.value);
+        allocations.prp = parseInt(sliders.prp.value);
+
+        document.getElementById('label-opt').innerText = allocations.opt + "%";
+        document.getElementById('label-pwr').innerText = allocations.pwr + "%";
+        document.getElementById('label-prp').innerText = allocations.prp + "%";
+    }
+
+    function nextEra() {
+        currentStage++;
+        if (currentStage >= STAGES.length) {
+            alert("Mission Accomplished! You have successfully evolved space technology from beeping spheres to deep space eyes.");
+            return;
+        }
+        
+        yieldTotal = 0;
+        const s = STAGES[currentStage];
+        document.getElementById('era-indicator').innerText = "ERA: " + s.name;
+        document.getElementById('objective-title').innerText = "OBJECTIVE: " + s.obj;
+        document.getElementById('objective-desc').innerText = s.desc;
+        document.getElementById('upgrade-btn').disabled = true;
+
+        // Visual Upgrade: Turn on spacecraft parts
+        s.parts.forEach(id => {
+            document.getElementById(id).setAttribute('opacity', '1');
+        });
+
+        const log = document.getElementById('log-window');
+        log.innerHTML = `> New Technology Integrated... <br> > ${s.name} initialized...<br>` + log.innerHTML;
+    }
+
+    sliders.opt.oninput = () => handleSlider('opt');
+    sliders.pwr.oninput = () => handleSlider('pwr');
+    sliders.prp.oninput = () => handleSlider('prp');
+    document.getElementById('upgrade-btn').onclick = nextEra;
+
+    setInterval(updateLogic, 100);
+</script>
+
+</body>
+</html>
