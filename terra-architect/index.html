@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terra-Architect: Ultimate Equilibrium</title>
+    <style>
+        :root {
+            --bg: #030508;
+            --panel-bg: #0d1117;
+            --border-glow: #00d4ff;
+            --text-main: #e6edf3;
+            --warn: #ff9e00;
+            --crit: #f85149;
+            --safe: #238636;
+            --bio-green: #3fb950;
+            --litho-brown: #8b5e3c;
+            --hydro-blue: #38bdf8;
+        }
+
+        body {
+            margin: 0; padding: 0;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            display: grid;
+            grid-template-columns: 350px 1fr 320px;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* SYSTEM METERS */
+        #system-panel {
+            background: var(--panel-bg);
+            border-right: 1px solid #30363d;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .meter-container {
+            background: #161b22;
+            border-radius: 10px;
+            padding: 15px;
+            border: 1px solid #30363d;
+        }
+
+        .meter-label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; margin-bottom: 10px; display: flex; justify-content: space-between; }
+        .bar-outer { width: 100%; height: 10px; background: #010409; border-radius: 5px; overflow: hidden; }
+        .bar-inner { height: 100%; width: 100%; transition: width 1.5s cubic-bezier(0.4, 0, 0.2, 1); }
+
+        /* CENTER VISUALIZER */
+        #visualizer {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: radial-gradient(circle at center, #0d1117 0%, #030508 100%);
+        }
+
+        .epoch-tag {
+            position: absolute; top: 20px;
+            background: rgba(1, 4, 9, 0.8);
+            padding: 8px 20px;
+            border: 1px solid #30363d;
+            border-radius: 50px;
+            font-family: 'Courier New', monospace;
+            color: var(--border-glow);
+        }
+
+        /* ACTION PANEL */
+        #resource-panel {
+            background: var(--panel-bg);
+            border-left: 1px solid #30363d;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .funds-display {
+            font-size: 2.5rem;
+            color: var(--safe);
+            text-align: center;
+            margin-bottom: 25px;
+            font-weight: 800;
+        }
+
+        .action-btn {
+            background: #21262d;
+            border: 1px solid #363b42;
+            color: #c9d1d9;
+            padding: 16px;
+            margin-bottom: 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            text-align: left;
+            transition: 0.3s;
+        }
+
+        .action-btn:hover:not(:disabled) { background: #30363d; border-color: #8b949e; transform: translateY(-2px); }
+        .action-btn:disabled { opacity: 0.2; cursor: not-allowed; }
+        .action-btn strong { display: block; margin-bottom: 4px; }
+        .action-btn small { display: block; font-size: 0.75rem; color: #8b949e; }
+
+        /* Color accents for buttons */
+        .btn-hydro { border-left: 5px solid var(--hydro-blue); }
+        .btn-litho { border-left: 5px solid var(--litho-brown); }
+        .btn-bio { border-left: 5px solid var(--bio-green); }
+        .btn-atmo { border-left: 5px solid var(--border-glow); }
+        .btn-mine { border-left: 5px solid var(--crit); }
+
+        #log-console {
+            margin-top: auto;
+            height: 120px;
+            background: #010409;
+            font-size: 0.8rem;
+            padding: 10px;
+            border-radius: 6px;
+            overflow-y: auto;
+            color: #8b949e;
+            border: 1px solid #30363d;
+        }
+
+        .hazard-msg { color: var(--crit); font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div id="system-panel">
+    <h3 style="margin:0; letter-spacing:1px;">EARTH SYSTEMS</h3>
+    <p style="font-size:0.7rem; color:#8b949e; margin-bottom:15px;">MONITORING STATIONS ACTIVE</p>
+
+    <div class="meter-container">
+        <div class="meter-label">Atmosphere <span id="atmo-p">100%</span></div>
+        <div class="bar-outer"><div id="atmo-bar" class="bar-inner"></div></div>
+    </div>
+    <div class="meter-container">
+        <div class="meter-label">Hydrosphere <span id="hydro-p">100%</span></div>
+        <div class="bar-outer"><div id="hydro-bar" class="bar-inner"></div></div>
+    </div>
+    <div class="meter-container">
+        <div class="meter-label">Lithosphere <span id="litho-p">100%</span></div>
+        <div class="bar-outer"><div id="litho-bar" class="bar-inner"></div></div>
+    </div>
+    <div class="meter-container">
+        <div class="meter-label">Biosphere <span id="bio-p">100%</span></div>
+        <div class="bar-outer"><div id="bio-bar" class="bar-inner"></div></div>
+    </div>
+
+    <div style="font-size:0.8rem; padding:10px; border: 1px dashed #30363d; margin-top:10px;">
+        <span style="color:var(--warn)">ℹ️ TIP:</span> High Hydrosphere levels naturally support the Biosphere and slowly repair the Lithosphere via sedimentation.
+    </div>
+</div>
+
+<div id="visualizer">
+    <div class="epoch-tag">GEOLOGICAL AGE: <span id="earth-age">4.60</span> Billion years ago</div>
+    <canvas id="earthCanvas" width="600" height="600"></canvas>
+</div>
+
+<div id="resource-panel">
+    <div class="funds-display">$<span id="funds">800</span></div>
+
+    <button class="action-btn btn-mine" onclick="mine()">
+        <strong>RESOURCE EXTRACTION</strong>
+        <small>Mine Minerals/Ores. Damage Crust.</small>
+        <small style="color:var(--safe)">Yield: +$300 | Litho: -12%</small>
+    </button>
+
+    <button class="action-btn btn-hydro" onclick="boostHydro()">
+        <strong>BOOST HYDRO-CYCLE</strong>
+        <small>Accelerate Precipitation & Storage.</small>
+        <small style="color:var(--border-glow)">Cost: $150 | Hydro: +20%</small>
+    </button>
+
+    <button class="action-btn btn-litho" onclick="boostLitho()">
+        <strong>CRUSTAL STABILIZATION</strong>
+        <small>Applied Geology: Reinforce plates.</small>
+        <small style="color:var(--border-glow)">Cost: $200 | Litho: +20%</small>
+    </button>
+
+    <button class="action-btn btn-bio" onclick="boostBio()">
+        <strong>RESTORE BIOTA</strong>
+        <small>Reforest & support biodiversity.</small>
+        <small style="color:var(--border-glow)">Cost: $150 | Bio: +25%</small>
+    </button>
+
+    <button class="action-btn btn-atmo" onclick="boostAtmo()">
+        <strong>ATMOSPHERIC FILTER</strong>
+        <small>Clean air and regulate pressure.</small>
+        <small style="color:var(--border-glow)">Cost: $100 | Atmo: +15%</small>
+    </button>
+
+    <div id="log-console"></div>
+</div>
+
+<script>
+const canvas = document.getElementById('earthCanvas');
+const ctx = canvas.getContext('2d');
+const log = document.getElementById('log-console');
+
+let state = {
+    atmo: 85, hydro: 80, litho: 90, bio: 45,
+    funds: 800, age: 4.6, rotation: 0,
+    hazardChance: 0.0007 // Slower hazard pace
+};
+
+function addLog(msg, isHazard = false) {
+    const style = isHazard ? 'class="hazard-msg"' : '';
+    log.innerHTML = `<div ${style}>• ${msg}</div>` + log.innerHTML;
+}
+
+function updateUI() {
+    ['atmo', 'hydro', 'litho', 'bio'].forEach(s => {
+        state[s] = Math.max(0, Math.min(100, state[s]));
+        const bar = document.getElementById(`${s}-bar`);
+        document.getElementById(`${s}-p`).innerText = Math.ceil(state[s]) + "%";
+        bar.style.width = state[s] + "%";
+        
+        // Dynamic colors
+        if(state[s] > 60) bar.style.background = "#238636";
+        else if(state[s] > 30) bar.style.background = "#d29922";
+        else bar.style.background = "#f85149";
+    });
+    document.getElementById('funds').innerText = state.funds;
+    document.getElementById('earth-age').innerText = state.age.toFixed(3);
+}
+
+// LOGIC ACTIONS
+function mine() {
+    state.funds += 300; state.litho -= 12; state.atmo -= 2;
+    state.hazardChance += 0.001;
+    addLog("Mining ops completed. Tectonic stress detected.");
+}
+
+function boostHydro() {
+    if(state.funds >= 150) {
+        state.funds -= 150; state.hydro += 20;
+        addLog("Hydro-Cycle acceleration: Aquifers replenished.");
+    }
+}
+
+function boostLitho() {
+    if(state.funds >= 200) {
+        state.funds -= 200; state.litho += 20;
+        state.hazardChance = Math.max(0.001, state.hazardChance - 0.001);
+        addLog("Geological engineering: Crustal stability improved.");
+    }
+}
+
+function boostBio() {
+    if(state.funds >= 150) {
+        state.funds -= 150; state.bio += 25;
+        addLog("Ecosystem restoration: Biodiversity increased.");
+    }
+}
+
+function boostAtmo() {
+    if(state.funds >= 100) {
+        state.funds -= 100; state.atmo += 15;
+        addLog("Atmospheric scrubbing successful.");
+    }
+}
+
+function draw() {
+    ctx.clearRect(0, 0, 600, 600);
+    const cx = 300, cy = 300;
+    state.rotation += 0.0015; // Slowed rotation
+
+    // Earth Structure
+    ctx.beginPath();
+    ctx.arc(cx, cy, 200, 0, Math.PI*2);
+    ctx.fillStyle = '#161b22'; ctx.fill();
+
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(state.rotation);
+    
+    // Oceans
+    ctx.beginPath();
+    ctx.arc(0, 0, 205, 0, Math.PI*2);
+    ctx.fillStyle = `rgba(56, 189, 248, ${state.hydro/150})`;
+    ctx.fill();
+
+    // Landmasses
+    for(let i=0; i<5; i++) {
+        let angle = (i/5) * Math.PI * 2;
+        ctx.beginPath();
+        ctx.ellipse(Math.cos(angle)*140, Math.sin(angle)*140, 90, 50, angle, 0, Math.PI*2);
+        let g = 40 + (state.bio);
+        let r = 100 - (state.litho/2);
+        ctx.fillStyle = `rgb(${r}, ${g}, 40)`;
+        ctx.fill();
+    }
+    ctx.restore();
+
+    // Atmosphere Glow
+    ctx.beginPath();
+    ctx.arc(cx, cy, 240, 0, Math.PI*2);
+    let grad = ctx.createRadialGradient(cx, cy, 205, cx, cy, 240);
+    grad.addColorStop(0, `rgba(0, 212, 255, ${state.atmo/200})`);
+    grad.addColorStop(1, 'transparent');
+    ctx.fillStyle = grad;
+    ctx.fill();
+
+    // Slower Passive Decay
+    state.atmo -= 0.002;
+    state.hydro -= 0.0015;
+    state.bio -= 0.001;
+    state.age -= 0.000005;
+
+    // Interaction logic
+    if(state.hydro > 75) state.litho += 0.001; // Passive sedimentation
+
+    if(Math.random() < state.hazardChance) {
+        const h = ["EARTHQUAKE", "TSUNAMI", "LANDSLIDE"][Math.floor(Math.random()*3)];
+        addLog(`GEOHAZARD: ${h} occurred.`, true);
+        state.litho -= 5; state.bio -= 3;
+    }
+
+    updateUI();
+    requestAnimationFrame(draw);
+}
+
+draw();
+</script>
+</body>
+</html>
