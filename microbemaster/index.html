@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Microbe-Master: Lab Defense</title>
+    <style>
+        :root {
+            --bio-green: #2ecc71;
+            --patho-red: #e74c3c;
+            --chem-blue: #3498db;
+            --dark-lab: #2c3e50;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #1a1a1a;
+            color: white;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* UI Headers */
+        #game-header {
+            width: 100%;
+            padding: 15px 30px;
+            background: var(--dark-lab);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-sizing: border-box;
+            border-bottom: 4px solid var(--chem-blue);
+        }
+
+        .stats-box {
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        #timer { color: #f1c40f; }
+        #score { color: var(--bio-green); }
+        #stars { color: #f1c40f; font-size: 1.5rem; }
+
+        /* Game Board */
+        #game-container {
+            position: relative;
+            width: 90vw;
+            height: 70vh;
+            margin-top: 20px;
+            background: radial-gradient(circle, #2c3e50 0%, #000000 100%);
+            border: 5px solid #444;
+            border-radius: 15px;
+            overflow: hidden;
+            cursor: crosshair;
+        }
+
+        /* Microbe Styling */
+        .microbe {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 0.7rem;
+            font-weight: bold;
+            text-align: center;
+            transition: transform 0.2s;
+            cursor: pointer;
+            user-select: none;
+            box-shadow: 0 0 15px rgba(255,255,255,0.2);
+        }
+
+        .microbe:hover { transform: scale(1.1); }
+
+        /* Types */
+        .useful { background: rgba(46, 204, 113, 0.8); border: 3px solid #fff; color: white; }
+        .virus { background: rgba(231, 76, 60, 0.8); border: 3px dashed #ff0000; }
+        .bacteria { background: rgba(155, 89, 182, 0.8); border: 3px solid #8e44ad; }
+        .fungi { background: rgba(230, 126, 34, 0.8); border: 3px double #d35400; }
+
+        /* Tool Palette */
+        #controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .tool-btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+            text-transform: uppercase;
+        }
+
+        .tool-btn.active {
+            outline: 4px solid white;
+            transform: translateY(-5px);
+        }
+
+        #btn-antibiotic { background: #8e44ad; }
+        #btn-antiviral { background: #e74c3c; }
+        #btn-antifungal { background: #e67e22; }
+        #btn-collect { background: #2ecc71; }
+
+        /* Overlays */
+        #overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .hidden { display: none !important; }
+
+        .modal {
+            background: var(--dark-lab);
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            border: 2px solid var(--chem-blue);
+        }
+
+        button.start-btn {
+            background: var(--bio-green);
+            color: white;
+            padding: 15px 40px;
+            font-size: 1.5rem;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-header">
+    <div class="stats-box">Time: <span id="timer">60</span>s</div>
+    <div class="stats-box">Stars: <span id="stars">☆☆☆</span></div>
+    <div class="stats-box">Score: <span id="score">0</span></div>
+    <div class="stats-box">Top Score: <span id="top-score">0</span></div>
+</div>
+
+<div id="game-container">
+    </div>
+
+<div id="controls">
+    <button id="btn-collect" class="tool-btn active" onclick="setTool('collect')">Collect Useful (Bio-Harvest)</button>
+    <button id="btn-antibiotic" class="tool-btn" onclick="setTool('antibiotic')">Antibiotic (For Bacteria)</button>
+    <button id="btn-antiviral" class="tool-btn" onclick="setTool('antiviral')">Antiviral (For Virus)</button>
+    <button id="btn-antifungal" class="tool-btn" onclick="setTool('antifungal')">Antifungal (For Fungi)</button>
+</div>
+
+<div id="overlay">
+    <div id="start-screen" class="modal">
+        <h1>MICROBE-MASTER</h1>
+        <p>Form 5 Bio-Lab Simulation</p>
+        <ul style="text-align: left; line-height: 1.6;">
+            <li>🟢 <b>Harvest</b> Useful Microbes (Lactobacillus/Yeast) for points.</li>
+            <li>🟣 Use <b>Antibiotics</b> only on Bacteria!</li>
+            <li>🔴 Use <b>Antivirals</b> only on Viruses!</li>
+            <li>🟠 Use <b>Antifungals</b> only on Fungi!</li>
+            <li>⚠️ Wrong treatments lose points. Don't let pathogens escape!</li>
+        </ul>
+        <button class="start-btn" onclick="startGame()">START RESEARCH</button>
+    </div>
+
+    <div id="end-screen" class="modal hidden">
+        <h1 id="end-title">RESEARCH COMPLETE</h1>
+        <p>Your Final Score: <span id="final-score">0</span></p>
+        <p>Rating: <span id="final-stars">☆☆☆</span></p>
+        <button class="start-btn" onclick="startGame()">RETRY</button>
+    </div>
+</div>
+
+<script>
+    // Game State
+    let score = 0;
+    let timeLeft = 60;
+    let gameActive = false;
+    let currentTool = 'collect';
+    let spawnRate = 1000;
+    let topScore = localStorage.getItem('microbeTopScore') || 0;
+    let gameInterval, timerInterval;
+
+    const container = document.getElementById('game-container');
+    document.getElementById('top-score').innerText = topScore;
+
+    const microbeTypes = [
+        { name: 'Lactobacillus', type: 'useful', class: 'useful' },
+        { name: 'Yeast', type: 'useful', class: 'useful' },
+        { name: 'Streptococcus', type: 'bacteria', class: 'bacteria' },
+        { name: 'Influenza', type: 'virus', class: 'virus' },
+        { name: 'Tinea', type: 'fungi', class: 'fungi' },
+        { name: 'Staphylococcus', type: 'bacteria', class: 'bacteria' },
+        { name: 'COVID-19', type: 'virus', class: 'virus' },
+        { name: 'Mucor', type: 'fungi', class: 'fungi' }
+    ];
+
+    function setTool(tool) {
+        currentTool = tool;
+        document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active'));
+        document.getElementById(`btn-${tool}`).classList.add('active');
+    }
+
+    function startGame() {
+        score = 0;
+        timeLeft = 60;
+        gameActive = true;
+        spawnRate = 1000;
+        container.innerHTML = '';
+        updateUI();
+        
+        document.getElementById('overlay').classList.add('hidden');
+        document.getElementById('end-screen').classList.add('hidden');
+        document.getElementById('start-screen').classList.add('hidden');
+
+        gameInterval = setInterval(spawnMicrobe, spawnRate);
+        timerInterval = setInterval(updateTimer, 1000);
+    }
+
+    function spawnMicrobe() {
+        if (!gameActive) return;
+
+        const microbeData = microbeTypes[Math.floor(Math.random() * microbeTypes.length)];
+        const microbe = document.createElement('div');
+        microbe.className = `microbe ${microbeData.class}`;
+        microbe.innerText = microbeData.name;
+        
+        // Random Position
+        const x = Math.random() * (container.offsetWidth - 80);
+        const y = Math.random() * (container.offsetHeight - 80);
+        microbe.style.left = `${x}px`;
+        microbe.style.top = `${y}px`;
+
+        // Movement behavior
+        let velX = (Math.random() - 0.5) * 4;
+        let velY = (Math.random() - 0.5) * 4;
+
+        const move = () => {
+            if (!gameActive || !microbe.parentNode) return;
+            let curX = parseFloat(microbe.style.left);
+            let curY = parseFloat(microbe.style.top);
+
+            if (curX <= 0 || curX >= container.offsetWidth - 60) velX *= -1;
+            if (curY <= 0 || curY >= container.offsetHeight - 60) velY *= -1;
+
+            microbe.style.left = (curX + velX) + 'px';
+            microbe.style.top = (curY + velY) + 'px';
+            requestAnimationFrame(move);
+        };
+
+        microbe.onclick = (e) => handleMicrobeClick(microbeData, microbe);
+        
+        container.appendChild(microbe);
+        move();
+
+        // Speed up game over time
+        if (spawnRate > 400) {
+            clearInterval(gameInterval);
+            spawnRate -= 10;
+            gameInterval = setInterval(spawnMicrobe, spawnRate);
+        }
+    }
+
+    function handleMicrobeClick(data, element) {
+        let success = false;
+        let points = 0;
+
+        if (currentTool === 'collect' && data.type === 'useful') {
+            success = true;
+            points = 10;
+        } else if (currentTool === 'antibiotic' && data.type === 'bacteria') {
+            success = true;
+            points = 15;
+        } else if (currentTool === 'antiviral' && data.type === 'virus') {
+            success = true;
+            points = 20;
+        } else if (currentTool === 'antifungal' && data.type === 'fungi') {
+            success = true;
+            points = 20;
+        } else {
+            // Wrong tool penalty
+            score = Math.max(0, score - 15);
+            createFloatingText(element.offsetLeft, element.offsetTop, "-15 WRONG TREATMENT!", "#e74c3c");
+        }
+
+        if (success) {
+            score += points;
+            createFloatingText(element.offsetLeft, element.offsetTop, `+${points}`, "#2ecc71");
+            element.remove();
+            updateUI();
+        }
+    }
+
+    function createFloatingText(x, y, text, color) {
+        const txt = document.createElement('div');
+        txt.style.position = 'absolute';
+        txt.style.left = x + 'px';
+        txt.style.top = y + 'px';
+        txt.style.color = color;
+        txt.style.fontWeight = 'bold';
+        txt.style.pointerEvents = 'none';
+        txt.innerText = text;
+        container.appendChild(txt);
+
+        let op = 1;
+        let moveY = y;
+        const anim = setInterval(() => {
+            op -= 0.05;
+            moveY -= 2;
+            txt.style.opacity = op;
+            txt.style.top = moveY + 'px';
+            if (op <= 0) {
+                clearInterval(anim);
+                txt.remove();
+            }
+        }, 30);
+    }
+
+    function updateTimer() {
+        timeLeft--;
+        document.getElementById('timer').innerText = timeLeft;
+        if (timeLeft <= 0) endGame();
+    }
+
+    function updateUI() {
+        document.getElementById('score').innerText = score;
+        
+        // Star logic
+        let stars = "☆☆☆";
+        if (score > 100) stars = "★☆☆";
+        if (score > 300) stars = "★★☆";
+        if (score > 500) stars = "★★★";
+        document.getElementById('stars').innerText = stars;
+    }
+
+    function endGame() {
+        gameActive = false;
+        clearInterval(gameInterval);
+        clearInterval(timerInterval);
+
+        if (score > topScore) {
+            topScore = score;
+            localStorage.setItem('microbeTopScore', topScore);
+            document.getElementById('top-score').innerText = topScore;
+        }
+
+        document.getElementById('final-score').innerText = score;
+        let finalStars = "☆☆☆";
+        if (score > 50) finalStars = "★☆☆";
+        if (score > 100) finalStars = "★★☆";
+        if (score > 200) finalStars = "★★★";
+        
+        document.getElementById('final-stars').innerText = finalStars;
+        document.getElementById('overlay').classList.remove('hidden');
+        document.getElementById('end-screen').classList.remove('hidden');
+    }
+</script>
+
+</body>
+</html>
