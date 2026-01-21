@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nutri-Tech: Laboratory Edition</title>
+    <style>
+        :root {
+            --bg: #0b0e14;
+            --panel: #161b22;
+            --accent: #58a6ff;
+            --success: #238636;
+            --warning: #d29922;
+            --danger: #da3633;
+            --nitro: #bc8cff;
+            --text: #c9d1d9;
+        }
+
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Top Navigation / Stats */
+        #header {
+            width: 100%;
+            padding: 20px;
+            background: var(--panel);
+            display: flex;
+            justify-content: space-around;
+            border-bottom: 1px solid #30363d;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+
+        .stat-group { text-align: center; }
+        .stat-label { font-size: 0.7rem; color: #8b949e; text-transform: uppercase; letter-spacing: 1px; }
+        .stat-value { font-size: 1.4rem; font-weight: bold; color: var(--accent); }
+
+        /* Game Layout */
+        #game-grid {
+            display: grid;
+            grid-template-columns: 400px 1fr 350px;
+            gap: 20px;
+            width: 1200px;
+            margin-top: 30px;
+            height: 600px;
+        }
+
+        .module {
+            background: var(--panel);
+            border-radius: 12px;
+            border: 1px solid #30363d;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .module-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #f0f6fc;
+        }
+
+        /* Agricultural Module (Nitrogen Cycle) */
+        .soil-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .pot {
+            background: #0d1117;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            border: 2px solid transparent;
+            transition: 0.3s;
+            position: relative;
+        }
+
+        .pot.needs-n { border-color: var(--warning); animation: pulse 2s infinite; }
+        .pot.growing { border-color: var(--success); }
+
+        .n-meter {
+            height: 4px;
+            background: #333;
+            width: 100%;
+            margin-top: 10px;
+            border-radius: 2px;
+        }
+
+        .n-fill { height: 100%; background: var(--nitro); width: 50%; transition: 0.5s; }
+
+        /* Floating Bubbles Area */
+        #atmosphere {
+            position: relative;
+            background: radial-gradient(circle, #1c2128 0%, #0b0e14 100%);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px dashed #444;
+        }
+
+        .bubble {
+            position: absolute;
+            cursor: pointer;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: transform 0.2s, opacity 0.3s;
+            user-select: none;
+        }
+
+        .bubble:hover { transform: scale(1.1); }
+
+        /* Processing Lab */
+        #lab-queue {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .batch {
+            background: #0d1117;
+            padding: 12px;
+            border-radius: 8px;
+            border-left: 4px solid var(--accent);
+        }
+
+        .progress-container {
+            height: 8px;
+            background: #333;
+            border-radius: 4px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+
+        .progress-bar { height: 100%; background: var(--accent); width: 0%; }
+
+        .tech-tag {
+            font-size: 0.65rem;
+            padding: 2px 6px;
+            background: #232d38;
+            border-radius: 4px;
+            color: var(--accent);
+        }
+
+        /* Animations */
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        /* Overlay */
+        #overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.9);
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .card {
+            background: var(--panel);
+            padding: 40px;
+            border-radius: 20px;
+            border: 1px solid var(--accent);
+            max-width: 500px;
+        }
+
+        .btn-start {
+            background: var(--success);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 8px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        .instruction-pointer {
+            position: absolute;
+            background: var(--warning);
+            color: black;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 0.8rem;
+            pointer-events: none;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+
+<div id="header">
+    <div class="stat-group">
+        <div class="stat-label">Production Score</div>
+        <div id="score" class="stat-value">0</div>
+    </div>
+    <div class="stat-group">
+        <div class="stat-label">Total Calories (kcal)</div>
+        <div id="calories" class="stat-value">0</div>
+    </div>
+    <div class="stat-group">
+        <div class="stat-label">Shift Timer</div>
+        <div id="timer" class="stat-value">02:00</div>
+    </div>
+    <div class="stat-group">
+        <div class="stat-label">Facility Integrity</div>
+        <div id="health" class="stat-value">100%</div>
+    </div>
+</div>
+
+<div id="game-grid">
+    <div class="module">
+        <div class="module-title">🧪 Hydroponic Nitrogen Sync</div>
+        <div class="soil-grid" id="soil-grid">
+            </div>
+        <div style="margin-top: auto; font-size: 0.8rem; color: #8b949e;">
+            <p><strong>Step 1:</strong> Collect Nitrate (NO3-) bubbles from the center atmosphere.</p>
+            <p><strong>Step 2:</strong> Click the highlighted plants to apply nutrients.</p>
+        </div>
+    </div>
+
+    <div id="atmosphere">
+        <div id="hint-text" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #30363d; font-size: 2rem; font-weight: bold; text-align: center; pointer-events: none;">
+            ATMOSPHERIC<br>FIXATION ZONE
+        </div>
+    </div>
+
+    <div class="module">
+        <div class="module-title">🏭 Food Technology Lab</div>
+        <div id="lab-queue">
+            </div>
+        <div style="margin-top: auto; font-size: 0.8rem; color: #8b949e;">
+            <p><strong>Step 3:</strong> Harvested crops appear here. Select a processing technology to stabilize them for consumption.</p>
+        </div>
+    </div>
+</div>
+
+<div id="overlay">
+    <div class="card">
+        <h1 style="color: var(--accent);">Nutri-Tech Pro</h1>
+        <p>You are the Chief Food Technologist. Balance the Nitrogen Cycle to grow crops and process them using modern food technology.</p>
+        <div style="text-align: left; background: #0d1117; padding: 15px; border-radius: 8px; font-size: 0.9rem; line-height: 1.6;">
+            • <strong>Nitrogen Fixation:</strong> Convert NH4 (Ammonia) to NO3 (Nitrate).<br>
+            • <strong>Nutrient Req:</strong> Plants need Nitrates to build proteins.<br>
+            • <strong>Food Tech:</strong> Choose between Pasteurization or Vacuum Packing.
+        </div>
+        <button class="btn-start" onclick="Engine.start()">Begin Shift</button>
+    </div>
+</div>
+
+<script>
+    const Engine = {
+        score: 0,
+        kcal: 0,
+        integrity: 100,
+        timeLeft: 120,
+        active: false,
+        nitratesInInventory: 0,
+
+        start() {
+            this.active = true;
+            document.getElementById('overlay').style.display = 'none';
+            this.initAgri();
+            this.gameLoop();
+            this.spawnAtmosphere();
+        },
+
+        initAgri() {
+            const grid = document.getElementById('soil-grid');
+            grid.innerHTML = '';
+            for(let i=0; i<4; i++) {
+                const pot = document.createElement('div');
+                pot.className = 'pot';
+                pot.id = `pot-${i}`;
+                pot.innerHTML = `
+                    <div style="font-size: 2rem;">🌱</div>
+                    <div class="stat-label">Crop #${i+1}</div>
+                    <div class="n-meter"><div class="n-fill" id="fill-${i}" style="width: 50%"></div></div>
+                `;
+                pot.onclick = () => this.applyNutrients(i);
+                grid.appendChild(pot);
+            }
+        },
+
+        spawnAtmosphere() {
+            if(!this.active) return;
+            const zone = document.getElementById('atmosphere');
+            const b = document.createElement('div');
+            const isAmmonia = Math.random() > 0.4;
+            
+            b.className = 'bubble';
+            b.style.width = '60px';
+            b.style.height = '60px';
+            b.style.left = Math.random() * 80 + 10 + '%';
+            b.style.top = Math.random() * 80 + 10 + '%';
+            b.style.background = isAmmonia ? '#d29922' : '#bc8cff';
+            b.innerHTML = `<b style="color:black">${isAmmonia ? 'NH₄' : 'NO₃'}</b>`;
+            
+            b.onclick = () => {
+                if(isAmmonia) {
+                    // Simulating Nitrobacter action
+                    b.innerHTML = '<b style="color:black">NO₃</b>';
+                    b.style.background = '#bc8cff';
+                    b.style.boxShadow = '0 0 20px #bc8cff';
+                    this.notify("Nitrifying Bacteria Converted Ammonia!", "success");
+                } else {
+                    this.nitratesInInventory++;
+                    b.remove();
+                    this.updateGuides();
+                }
+            };
+
+            zone.appendChild(b);
+            setTimeout(() => { if(b.parentNode) b.remove(); }, 5000);
+            setTimeout(() => this.spawnAtmosphere(), 2500);
+        },
+
+        applyNutrients(index) {
+            if(this.nitratesInInventory > 0) {
+                const fill = document.getElementById(`fill-${index}`);
+                let current = parseFloat(fill.style.width);
+                if(current < 100) {
+                    fill.style.width = (current + 25) + '%';
+                    this.nitratesInInventory--;
+                    this.updateGuides();
+                    if(current + 25 >= 100) this.harvest(index);
+                }
+            } else {
+                this.notify("Collect Nitrates (NO₃) first!", "warning");
+            }
+        },
+
+        harvest(index) {
+            this.notify("Crop Harvested! Moving to Lab...", "success");
+            const fill = document.getElementById(`fill-${index}`);
+            fill.style.width = '20%';
+            
+            const queue = document.getElementById('lab-queue');
+            const batch = document.createElement('div');
+            batch.className = 'batch';
+            const type = Math.random() > 0.5 ? {n: 'Organic Legumes', c: 450} : {n: 'High-Protein Grain', c: 600};
+            
+            batch.innerHTML = `
+                <div style="display:flex; justify-content:space-between">
+                    <b>${type.n}</b>
+                    <span class="tech-tag">RAW</span>
+                </div>
+                <div class="progress-container"><div class="progress-bar"></div></div>
+                <button class="btn-start" style="font-size:0.7rem; padding: 5px 10px; margin:0;" onclick="Engine.process(this, ${type.c})">Apply Pasteurization</button>
+            `;
+            queue.appendChild(batch);
+        },
+
+        process(btn, calories) {
+            const bar = btn.previousElementSibling.firstElementChild;
+            btn.disabled = true;
+            btn.innerText = "Processing...";
+            
+            let p = 0;
+            const interval = setInterval(() => {
+                p += 2;
+                bar.style.width = p + '%';
+                if(p >= 100) {
+                    clearInterval(interval);
+                    this.score += 100;
+                    this.kcal += calories;
+                    btn.parentElement.remove();
+                    this.updateUI();
+                }
+            }, 50);
+        },
+
+        updateGuides() {
+            const pots = document.querySelectorAll('.pot');
+            pots.forEach(p => {
+                const val = parseFloat(p.querySelector('.n-fill').style.width);
+                if(this.nitratesInInventory > 0 && val < 80) p.classList.add('needs-n');
+                else p.classList.remove('needs-n');
+            });
+        },
+
+        notify(text, type) {
+            const n = document.createElement('div');
+            n.className = 'instruction-pointer';
+            n.style.top = '100px';
+            n.style.left = '50%';
+            n.style.transform = 'translateX(-50%)';
+            n.style.background = type === 'success' ? '#238636' : '#d29922';
+            n.innerText = text;
+            document.body.appendChild(n);
+            setTimeout(() => n.remove(), 2000);
+        },
+
+        updateUI() {
+            document.getElementById('score').innerText = this.score;
+            document.getElementById('calories').innerText = this.kcal;
+            document.getElementById('health').innerText = this.integrity + '%';
+            
+            const mins = Math.floor(this.timeLeft / 60);
+            const secs = Math.floor(this.timeLeft % 60);
+            document.getElementById('timer').innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        },
+
+        gameLoop() {
+            const loop = setInterval(() => {
+                if(!this.active) return clearInterval(loop);
+                
+                this.timeLeft -= 1;
+                this.updateUI();
+
+                // Slow Nitrogen Depletion
+                for(let i=0; i<4; i++) {
+                    const fill = document.getElementById(`fill-${i}`);
+                    let current = parseFloat(fill.style.width);
+                    if(current > 0) fill.style.width = (current - 0.2) + '%';
+                }
+
+                if(this.timeLeft <= 0) {
+                    this.active = false;
+                    alert(`Shift Complete!\nFinal Score: ${this.score}\nTotal Calories Produced: ${this.kcal}kcal`);
+                    location.reload();
+                }
+            }, 1000);
+        }
+    };
+</script>
+
+</body>
+</html>
