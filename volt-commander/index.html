@@ -1,0 +1,1120 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Volt Commander: Electro-Defense Mk.III</title>
+    <!-- Modern Tech Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&family=Share+Tech+Mono&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg-deep: #050608;
+            --bg-panel: #0f111a;
+            --hex-cyan: #00f3ff;
+            --hex-pink: #ff0055;
+            --hex-gold: #ffcc00;
+            --hex-green: #00ff66;
+            --hex-purple: #bc13fe;
+            --text-main: #e0e6ed;
+            --glass-low: rgba(255, 255, 255, 0.03);
+            --glass-high: rgba(255, 255, 255, 0.1);
+            --font-head: 'Orbitron', sans-serif;
+            --font-body: 'Rajdhani', sans-serif;
+            --font-mono: 'Share Tech Mono', monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-drag: none;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-deep);
+            color: var(--text-main);
+            font-family: var(--font-body);
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        canvas {
+            position: absolute;
+            pointer-events: none;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 50;
+        }
+
+        /* --- UI LAYER --- */
+        #ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 60;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .hud-top {
+            height: 100px;
+            background: linear-gradient(180deg, rgba(5, 6, 8, 0.98) 0%, rgba(5, 6, 8, 0) 100%);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 40px;
+            pointer-events: auto;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .stat-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 120px;
+        }
+
+        .stat-label {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            color: #8892b0;
+            letter-spacing: 2px;
+        }
+
+        .stat-val {
+            font-family: var(--font-head);
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: white;
+            text-shadow: 0 0 10px var(--hex-cyan);
+        }
+
+        .energy-wrapper {
+            flex: 1;
+            max-width: 500px;
+            margin: 0 40px;
+        }
+
+        .energy-bar-bg {
+            width: 100%;
+            height: 16px;
+            background: #111;
+            border: 1px solid #333;
+            position: relative;
+            transform: skewX(-20deg);
+            overflow: hidden;
+        }
+
+        .energy-bar-fill {
+            height: 100%;
+            width: 50%;
+            background: repeating-linear-gradient(45deg, var(--hex-green), var(--hex-green) 10px, #00cc55 10px, #00cc55 20px);
+            box-shadow: 0 0 15px var(--hex-green);
+            transition: width 0.3s cubic-bezier(0.1, 0.9, 0.2, 1);
+        }
+
+        /* --- SCREENS --- */
+        .modal-screen {
+            position: fixed;
+            inset: 0;
+            z-index: 100;
+            background: rgba(5, 6, 8, 0.9);
+            backdrop-filter: blur(20px);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.5s;
+        }
+
+        .hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        h1.title {
+            font-family: var(--font-head);
+            font-size: 5rem;
+            margin: 0;
+            background: linear-gradient(135deg, white, var(--hex-cyan));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 50px rgba(0, 243, 255, 0.4);
+            letter-spacing: 5px;
+            text-transform: uppercase;
+        }
+
+        .modal-body {
+            max-width: 800px;
+            text-align: center;
+            color: #ccc;
+            margin: 40px 0;
+            line-height: 1.8;
+            font-size: 1.1rem;
+        }
+
+        .highlight {
+            color: var(--hex-cyan);
+            font-weight: bold;
+        }
+
+        .warn {
+            color: var(--hex-pink);
+            font-weight: bold;
+        }
+
+        .btn-main {
+            padding: 20px 60px;
+            background: rgba(0, 243, 255, 0.1);
+            border: 1px solid var(--hex-cyan);
+            color: var(--hex-cyan);
+            font-family: var(--font-head);
+            font-size: 1.5rem;
+            letter-spacing: 4px;
+            cursor: pointer;
+            transition: 0.3s;
+            clip-path: polygon(10% 0, 100% 0, 100% 80%, 90% 100%, 0 100%, 0 20%);
+        }
+
+        .btn-main:hover {
+            background: var(--hex-cyan);
+            color: #000;
+            transform: scale(1.05);
+            box-shadow: 0 0 30px var(--hex-cyan);
+        }
+
+        /* --- GAME GRID --- */
+        #game-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            width: 100%;
+            height: 100%;
+            padding-top: 100px;
+        }
+
+        .panel {
+            position: relative;
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            background: radial-gradient(circle at 50% 10%, #1a1c29 0%, #050608 90%);
+            display: flex;
+            flex-direction: column;
+            padding: 25px;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 15px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.05);
+            margin-bottom: 20px;
+        }
+
+        .p-title {
+            font-family: var(--font-head);
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .p-sub {
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        /* GALVANIC SPECIFIC */
+        .reactor-core {
+            flex: 2;
+            position: relative;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-end;
+            padding-bottom: 40px;
+            margin-bottom: 20px;
+        }
+
+        .beaker-bg {
+            position: absolute;
+            bottom: 0;
+            left: 10%;
+            width: 80%;
+            height: 50%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.15);
+            border-top: none;
+            border-radius: 0 0 20px 20px;
+        }
+
+        .metal-rod {
+            width: 80px;
+            height: 180px;
+            background: #333;
+            border: 2px solid #555;
+            position: relative;
+            z-index: 5;
+            cursor: pointer;
+            transition: 0.3s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: var(--font-head);
+            font-size: 2rem;
+            color: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .metal-rod:hover {
+            border-color: white;
+        }
+
+        .metal-rod.active {
+            box-shadow: 0 0 20px var(--hex-cyan);
+            border-color: var(--hex-cyan);
+            color: white;
+        }
+
+        .wire-bridge {
+            position: absolute;
+            top: 10%;
+            left: 25%;
+            width: 50%;
+            height: 50px;
+            border-top: 6px solid #444;
+            border-left: 6px solid #444;
+            border-right: 6px solid #444;
+            border-radius: 10px 10px 0 0;
+            z-index: 0;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        .voltmeter-badge {
+            background: #111;
+            border: 2px solid #444;
+            padding: 5px 20px;
+            border-radius: 20px;
+            margin-top: -15px;
+            font-family: var(--font-mono);
+            font-size: 1.5rem;
+            color: #666;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.8);
+        }
+
+        .deck-tray {
+            height: 140px;
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+        }
+
+        .element-card {
+            min-width: 90px;
+            height: 120px;
+            background: linear-gradient(135deg, #232530, #161823);
+            border: 1px solid #444;
+            border-radius: 6px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .element-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--hex-cyan);
+            background: #2a2d3e;
+        }
+
+        .element-card.selected {
+            border-color: var(--hex-gold);
+            box-shadow: 0 0 15px rgba(255, 204, 0, 0.3);
+        }
+
+        /* ELECTROLYTIC SPECIFIC */
+        .refinery-tank {
+            flex: 1;
+            position: relative;
+            background: #080a10;
+            border: 1px solid rgba(0, 243, 255, 0.2);
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.8);
+            overflow: hidden;
+        }
+
+        .electrolyte {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 85%;
+            background: linear-gradient(180deg, rgba(0, 100, 255, 0.05), rgba(0, 50, 200, 0.1));
+            z-index: 0;
+        }
+
+        /* ELECTRODES CONTROL */
+        .electrode-controls {
+            display: flex;
+            justify-content: space-between;
+            padding: 0 40px;
+        }
+
+        .e-toggle {
+            width: 100px;
+            padding: 10px;
+            text-align: center;
+            background: #222;
+            border: 1px solid #444;
+            color: #666;
+            cursor: pointer;
+            font-family: var(--font-mono);
+            font-size: 0.9rem;
+            transition: 0.2s;
+        }
+
+        .e-toggle:hover {
+            filter: brightness(1.3);
+        }
+
+        .e-toggle.pos {
+            background: #3c001a;
+            border-color: var(--hex-pink);
+            color: var(--hex-pink);
+            box-shadow: 0 0 15px rgba(255, 0, 85, 0.3);
+        }
+
+        .e-toggle.neg {
+            background: #001a2b;
+            border-color: var(--hex-cyan);
+            color: var(--hex-cyan);
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.3);
+        }
+
+        /* IMMERSED ELECTRODES */
+        .tank-rod {
+            position: absolute;
+            top: -10px;
+            width: 40px;
+            height: 60%;
+            background: #222;
+            border: 2px solid #444;
+            border-radius: 0 0 8px 8px;
+            z-index: 10;
+            transition: 0.3s;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            padding-bottom: 10px;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .tank-rod.pos {
+            border-color: var(--hex-pink);
+            background: repeating-linear-gradient(45deg, #440022, #440022 10px, #220011 10px, #220011 20px);
+            color: var(--hex-pink);
+        }
+
+        .tank-rod.neg {
+            border-color: var(--hex-cyan);
+            background: repeating-linear-gradient(45deg, #002244, #002244 10px, #001122 10px, #001122 20px);
+            color: var(--hex-cyan);
+        }
+
+        #rod-left {
+            left: 20%;
+        }
+
+        #rod-right {
+            right: 20%;
+        }
+
+        /* IONS */
+        .ion-orb {
+            position: absolute;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: var(--font-body);
+            font-weight: 700;
+            color: white;
+            z-index: 20;
+            box-shadow: 0 0 10px currentColor;
+            background: black;
+        }
+
+        .ion-orb.cation {
+            border: 2px solid var(--hex-pink);
+            color: var(--hex-pink);
+            box-shadow: 0 0 10px var(--hex-pink);
+        }
+
+        .ion-orb.anion {
+            border: 2px solid var(--hex-cyan);
+            color: var(--hex-cyan);
+            box-shadow: 0 0 10px var(--hex-cyan);
+        }
+
+        /* BUBBLES & PLATING */
+        .bubble {
+            position: absolute;
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            background: rgba(255, 255, 255, 0.1);
+            pointer-events: none;
+            z-index: 15;
+            animation: riseUp 2s linear forwards;
+        }
+
+        @keyframes riseUp {
+            0% {
+                opacity: 0;
+                transform: translateY(0) scale(0.5);
+            }
+
+            20% {
+                opacity: 1;
+            }
+
+            100% {
+                opacity: 0;
+                transform: translateY(-100px) scale(1.2);
+            }
+        }
+
+        /* Info Overlay */
+        .info-tag {
+            position: absolute;
+            padding: 5px 10px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid #444;
+            font-size: 0.7rem;
+            color: #aaa;
+            pointer-events: none;
+            z-index: 100;
+            font-family: var(--font-mono);
+        }
+    </style>
+</head>
+
+<body>
+
+    <canvas id="fx-layer"></canvas>
+
+    <div id="ui-layer">
+        <div class="hud-top">
+            <div class="stat-group">
+                <span class="stat-label">REACTOR STATUS</span>
+                <span class="stat-val" style="color:var(--hex-green)">ONLINE</span>
+            </div>
+
+            <div class="energy-wrapper">
+                <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                    <span class="stat-label">GRID POWER</span>
+                    <span class="stat-label" id="energy-txt">100%</span>
+                </div>
+                <div class="energy-bar-bg">
+                    <div class="energy-bar-fill" id="energy-bar"></div>
+                </div>
+            </div>
+
+            <div class="stat-group">
+                <span class="stat-val" id="score">0</span>
+                <span class="stat-label">SCORE</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- START SCREEN -->
+    <div id="start-screen" class="modal-screen">
+        <h1 class="title">VOLT COMMANDER <span style="font-size:1.5rem; opacity:0.7;">Mk.III</span></h1>
+        <div class="modal-body">
+            <p style="font-size:1.4rem; color:white;">CRITICAL SYSTEM FAILURE IMMINENT</p>
+            <p>
+                <span class="highlight">LEFT: GALVANIC REACTOR</span><br>
+                Generate power by pairing metals with <strong>DIFFERENT</strong> reactivity.<br>
+                Reactivity: <span style="color:var(--hex-pink)">Mg (High)</span> > Zn > Fe > Cu > <span
+                    style="color:var(--hex-cyan)">Ag (Low)</span>
+            </p>
+            <p>
+                <span class="highlight">RIGHT: ION REFINERY</span><br>
+                Extract ions using electrolysis. Control electrode polarity to attract ions.<br>
+                <span style="color:var(--hex-pink)">CATIONS (+)</span> attract to <span
+                    style="color:var(--hex-cyan)">NEGATIVE (Cathode)</span><br>
+                <span style="color:var(--hex-cyan)">ANIONS (-)</span> attract to <span
+                    style="color:var(--hex-pink)">POSITIVE (Anode)</span><br>
+                <span class="warn">WARNING:</span> Incorrect polarity causes repulsion and energy loss.
+            </p>
+        </div>
+        <button class="btn-main" onclick="GAME.start()">INITIALIZE</button>
+    </div>
+
+    <!-- GAME OVER SCREEN -->
+    <div id="end-screen" class="modal-screen hidden">
+        <h1 class="title">SYSTEM REPORT</h1>
+        <div class="modal-body">
+            <h2 id="end-reason" style="font-family: var(--font-mono); margin-bottom: 20px;"></h2>
+            <div class="stat-val" id="final-score">0</div>
+            <p class="stat-label">FINAL EFFICIENCY SCORE</p>
+        </div>
+        <button class="btn-main" onclick="location.reload()">REBOOT</button>
+    </div>
+
+    <!-- MAIN GAME AREA -->
+    <div id="game-grid">
+        <!-- GALVANIC PANEL -->
+        <div class="panel">
+            <div class="panel-header">
+                <div>
+                    <div class="p-title">GALVANIC REACTOR</div>
+                    <div class="p-sub">GENERATE POTENTIAL DIFFERENCE</div>
+                </div>
+                <div style="text-align:right">
+                    <div class="p-sub">Mg(High) > Zn > Fe > Cu > Ag(Low)</div>
+                </div>
+            </div>
+
+            <div class="reactor-core">
+                <div class="wire-bridge">
+                    <div class="voltmeter-badge" id="voltmeter">0.00 V</div>
+                </div>
+                <div class="beaker-bg"></div>
+
+                <div class="metal-rod" id="slot-0" onclick="GAME.chem.clickSlot(0)">?</div>
+                <div class="metal-rod" id="slot-1" onclick="GAME.chem.clickSlot(1)">?</div>
+            </div>
+
+            <div class="deck-tray" id="chem-deck">
+                <!-- Cards injected here -->
+            </div>
+            <div class="info-tag" style="bottom:150px; left:50%; transform:translateX(-50%);">Select a metal card, then
+                click a slot.</div>
+        </div>
+
+        <!-- ELECTROLYTIC PANEL -->
+        <div class="panel">
+            <div class="panel-header">
+                <div>
+                    <div class="p-title">ION REFINERY</div>
+                    <div class="p-sub">ELECTROLYTIC EXTRACTION</div>
+                </div>
+                <div style="text-align:right">
+                    <div class="p-sub">OPPOSITES: (+)→(-) AND (-)→(+)</div>
+                </div>
+            </div>
+
+            <div class="refinery-tank" id="refinery">
+                <div class="electrolyte"></div>
+
+                <!-- Electrodes inside tank -->
+                <div class="tank-rod neg" id="rod-left">+</div> <!-- Initial State Visual -->
+                <div class="tank-rod pos" id="rod-right">-</div>
+            </div>
+
+            <div class="electrode-controls">
+                <div id="btn-left" class="e-toggle neg" onclick="GAME.elec.toggle(0)">
+                    LEFT<br><span id="lbl-left">CATHODE (-)</span>
+                </div>
+                <div id="btn-right" class="e-toggle pos" onclick="GAME.elec.toggle(1)">
+                    RIGHT<br><span id="lbl-right">ANODE (+)</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- CONSTANTS & DATA ---
+        const METALS = [
+            { id: 'Mg', name: 'Magnesium', E: -2.37, react: 10 },
+            { id: 'Zn', name: 'Zinc', E: -0.76, react: 8 },
+            { id: 'Fe', name: 'Iron', E: -0.44, react: 6 },
+            { id: 'Cu', name: 'Copper', E: +0.34, react: 4 },
+            { id: 'Ag', name: 'Silver', E: +0.80, react: 2 }
+        ];
+
+        // Refined Ions: Cations (Pos) go to Cathode (Neg). Anions (Neg) go to Anode (Pos).
+        const IONS = [
+            { sym: 'Cu²⁺', name: 'Copper Ion', type: 'cation', charge: 1, c: '#ff3366' },
+            { sym: 'Ag⁺', name: 'Silver Ion', type: 'cation', charge: 1, c: '#eeeeee' },
+            { sym: 'H⁺', name: 'Hydrogen', type: 'cation', charge: 1, c: '#ffffff' },
+            { sym: 'Cl⁻', name: 'Chloride', type: 'anion', charge: -1, c: '#00ffaa' },
+            { sym: 'O²⁻', name: 'Oxide', type: 'anion', charge: -1, c: '#0099ff' },
+            { sym: 'Br⁻', name: 'Bromide', type: 'anion', charge: -1, c: '#ffaa00' }
+        ];
+
+        // --- AUDIO SYSTEM ---
+        const AudioSys = {
+            ctx: new (window.AudioContext || window.webkitAudioContext)(),
+            play(type) {
+                if (this.ctx.state === 'suspended') this.ctx.resume();
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.connect(gain); gain.connect(this.ctx.destination);
+
+                const now = this.ctx.currentTime;
+                if (type === 'click') {
+                    osc.frequency.setValueAtTime(800, now);
+                    osc.frequency.exponentialRampToValueAtTime(300, now + 0.1);
+                    gain.gain.setValueAtTime(0.1, now);
+                    gain.gain.linearRampToValueAtTime(0, now + 0.1);
+                    osc.start(now); osc.stop(now + 0.1);
+                } else if (type === 'success') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(440, now);
+                    osc.frequency.setValueAtTime(880, now + 0.1);
+                    gain.gain.setValueAtTime(0.1, now);
+                    gain.gain.linearRampToValueAtTime(0, now + 0.3);
+                    osc.start(now); osc.stop(now + 0.3);
+                } else if (type === 'error') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(150, now);
+                    osc.frequency.linearRampToValueAtTime(100, now + 0.3);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.linearRampToValueAtTime(0, now + 0.3);
+                    osc.start(now); osc.stop(now + 0.3);
+                }
+            }
+        };
+
+        // --- FX SYSTEM (Canvas) ---
+        class FXSystem {
+            constructor() {
+                this.cvs = document.getElementById('fx-layer');
+                this.ctx = this.cvs.getContext('2d');
+                this.particles = [];
+                this.resize();
+                window.addEventListener('resize', () => this.resize());
+            }
+            resize() { this.cvs.width = window.innerWidth; this.cvs.height = window.innerHeight; }
+
+            spawnText(x, y, text, color) {
+                this.particles.push({ type: 'text', x, y, text, color, life: 1.0, dy: -2 });
+            }
+
+            spawnSpark(x, y, color) {
+                for (let i = 0; i < 8; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const speed = Math.random() * 4 + 2;
+                    this.particles.push({
+                        type: 'spark', x, y,
+                        vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
+                        color, life: 1.0
+                    });
+                }
+            }
+
+            update() {
+                this.ctx.clearRect(0, 0, this.cvs.width, this.cvs.height);
+                this.particles.forEach(p => {
+                    p.life -= 0.02;
+                    if (p.type === 'text') {
+                        p.y += p.dy;
+                        this.ctx.font = "bold 24px 'Orbitron'";
+                        this.ctx.fillStyle = p.color;
+                        this.ctx.globalAlpha = p.life;
+                        this.ctx.fillText(p.text, p.x, p.y);
+                    } else if (p.type === 'spark') {
+                        p.x += p.vx; p.y += p.vy;
+                        p.vy += 0.2; // gravity
+                        this.ctx.beginPath();
+                        this.ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
+                        this.ctx.fillStyle = p.color;
+                        this.ctx.globalAlpha = p.life;
+                        this.ctx.fill();
+                    }
+                });
+                this.ctx.globalAlpha = 1;
+                this.particles = this.particles.filter(p => p.life > 0);
+            }
+        }
+
+        // --- GALVANIC COMPONENT ---
+        class Galvanic {
+            constructor() {
+                this.slots = [null, null];
+                this.deck = [];
+                this.selectedCard = null;
+                this.voltage = 0;
+            }
+
+            init() {
+                this.fillDeck();
+            }
+
+            fillDeck() {
+                const tray = document.getElementById('chem-deck');
+                tray.innerHTML = '';
+                for (let i = 0; i < 5; i++) {
+                    const metal = METALS[Math.floor(Math.random() * METALS.length)];
+                    const card = document.createElement('div');
+                    card.className = 'element-card';
+                    card.innerHTML = `<span style="font-size:2rem; font-weight:bold; color:white">${metal.id}</span>
+                                      <span style="font-size:0.8rem; color:#aaa">${metal.name}</span>
+                                      <span style="font-size:0.7rem; color:var(--hex-cyan)">R: ${metal.react}</span>`;
+                    card.onclick = () => {
+                        this.selectedCard = metal;
+                        document.querySelectorAll('.element-card').forEach(c => c.classList.remove('selected'));
+                        card.classList.add('selected');
+                        AudioSys.play('click');
+                    };
+                    tray.appendChild(card);
+                }
+            }
+
+            clickSlot(idx) {
+                if (!this.selectedCard) return;
+
+                this.slots[idx] = this.selectedCard;
+                this.selectedCard = null;
+                document.querySelectorAll('.element-card').forEach(c => c.classList.remove('selected'));
+                this.renderSlots();
+                this.calcVoltage();
+
+                // Replace used card
+                this.fillDeck();
+            }
+
+            renderSlots() {
+                this.slots.forEach((m, i) => {
+                    const el = document.getElementById(`slot-${i}`);
+                    if (m) {
+                        el.innerHTML = m.id;
+                        el.classList.add('active');
+                        el.style.color = 'white';
+                    } else {
+                        el.innerHTML = '?';
+                        el.classList.remove('active');
+                    }
+                });
+            }
+
+            calcVoltage() {
+                const vBadge = document.getElementById('voltmeter');
+                if (this.slots[0] && this.slots[1]) {
+                    const m1 = this.slots[0];
+                    const m2 = this.slots[1];
+
+                    if (m1.id === m2.id) {
+                        vBadge.innerText = "SHORT!";
+                        vBadge.style.color = "var(--hex-pink)";
+                        vBadge.style.borderColor = "var(--hex-pink)";
+                        AudioSys.play('error');
+                        GAME.drainEnergy(10);
+
+                        // Clear slots after delay
+                        setTimeout(() => this.reset(), 1000);
+                    } else {
+                        // Success
+                        const diff = Math.abs(m1.E - m2.E).toFixed(2);
+                        this.voltage = parseFloat(diff);
+                        vBadge.innerHTML = diff + " V";
+                        vBadge.style.color = "var(--hex-green)";
+                        vBadge.style.borderColor = "var(--hex-green)";
+                        AudioSys.play('success');
+
+                        // Bonus for high voltage
+                        const energyGain = Math.ceil(this.voltage * 15);
+                        GAME.addEnergy(energyGain);
+                        GAME.addScore(energyGain * 10);
+
+                        const r = document.querySelector('.reactor-core').getBoundingClientRect();
+                        GAME.fx.spawnText(r.x + r.width / 2, r.y, `+${Math.floor(this.voltage * 100)} POWER`, "#00ff66");
+
+                        // Clear slots
+                        setTimeout(() => this.reset(), 2000);
+                    }
+                }
+            }
+
+            reset() {
+                this.slots = [null, null];
+                document.getElementById('voltmeter').innerHTML = "0.00 V";
+                document.getElementById('voltmeter').style.color = "#666";
+                document.getElementById('voltmeter').style.borderColor = "#444";
+                this.renderSlots();
+            }
+        }
+
+        // --- ELECTROLYTIC COMPONENT ---
+        class Electrolysis {
+            constructor() {
+                this.tank = document.getElementById('refinery');
+                this.polarity = [-1, 1]; // Left (-), Right (+) default
+                this.ions = [];
+                this.spawnTimer = 0;
+            }
+
+            toggle(idx) {
+                // Flip specific electrode
+                this.polarity[idx] *= -1;
+                this.updateElectrodes();
+                AudioSys.play('click');
+            }
+
+            updateElectrodes() {
+                const rodL = document.getElementById('rod-left');
+                const rodR = document.getElementById('rod-right');
+                const btnL = document.getElementById('btn-left');
+                const btnR = document.getElementById('btn-right');
+                const lblL = document.getElementById('lbl-left');
+                const lblR = document.getElementById('lbl-right');
+
+                // Helper
+                const setVis = (rod, btn, lbl, pol) => {
+                    const isPos = pol === 1;
+                    rod.className = isPos ? 'tank-rod pos' : 'tank-rod neg';
+                    rod.innerHTML = isPos ? '+' : '-';
+                    btn.className = isPos ? 'e-toggle pos' : 'e-toggle neg';
+                    lbl.innerHTML = isPos ? 'ANODE (+)' : 'CATHODE (-)';
+                };
+
+                setVis(rodL, btnL, lblL, this.polarity[0]);
+                setVis(rodR, btnR, lblR, this.polarity[1]);
+            }
+
+            spawnIon() {
+                // Create DOM element
+                const data = IONS[Math.floor(Math.random() * IONS.length)];
+                const el = document.createElement('div');
+                el.className = data.type === 'cation' ? 'ion-orb cation' : 'ion-orb anion';
+                el.innerText = data.sym;
+
+                // Spawn at bottom center
+                // Randomize slightly X
+                const startX = 50 + (Math.random() * 20 - 10);
+                const startY = 80;
+
+                el.style.left = startX + '%';
+                el.style.top = startY + '%';
+
+                this.tank.appendChild(el);
+
+                this.ions.push({
+                    el: el,
+                    data: data,
+                    x: startX,
+                    y: startY,
+                    vx: 0,
+                    vy: -0.1 // drift up naturally
+                });
+            }
+
+            tick() {
+                this.spawnTimer++;
+                if (this.spawnTimer > 100) {
+                    this.spawnIon();
+                    this.spawnTimer = 0;
+                }
+
+                // PHYSICS UPDATE
+                // Electrodes are at Left (~20%) and Right (~80%)
+                const leftPol = this.polarity[0];
+                const rightPol = this.polarity[1];
+
+                this.ions.forEach((ion, idx) => {
+                    // Force = q * E
+                    // Simplified: Each electrode exerts force based on charge
+                    // Force ~ (Pol * -Charge) / Distance^2 ? 
+                    // Let's use simple attraction/repulsion logic
+
+                    const q = ion.data.charge;
+
+                    // Left Electrode Force (at x=20)
+                    // If leftPol is (-1) and q is (+1), Attract.
+                    // If leftPol is (+1) and q is (+1), Repel.
+                    // Force direction: (20 - x)
+                    let fLeft = (leftPol * q) * -1; // -1 because opposite charges attract. 
+                    // wait: if Pol = -1 (neg), q = +1. product = -1. we want attraction to left (neg dir). correct.
+                    // if Pol = +1, q = +1. product = 1. we want repulsion (pos dir). correct.
+
+                    // Distance factor
+                    let distL = Math.abs(ion.x - 20);
+                    let forceL = (fLeft * 50) / (distL * distL + 10); // clamp distance
+
+                    // Right Electrode Force (at x=80)
+                    let fRight = (rightPol * q) * -1;
+                    let distR = Math.abs(ion.x - 80);
+                    // attraction to right is POSITIVE direction
+                    let forceR = (fRight * 50) / (distR * distR + 10);
+                    // wait: if Pol = -1, q = +1. product = -1. we want attraction tokens Right (pos dir). 
+                    // so we need to invert the sign logic for right side?
+                    // No, let's just make attraction "move towards source".
+
+                    // New Force Logic:
+                    // ForceVec = (Target - Current) * Strength
+
+                    let dxL = 20 - ion.x;
+                    let attractionL = (leftPol === -1 && q > 0) || (leftPol === 1 && q < 0);
+                    // Simulating Electric Field is hard, let's sim "Attraction"
+
+                    // Net Force X
+                    let ax = 0;
+
+                    // Left Influence
+                    if ((leftPol * q) < 0) { // Opposite signs = Attract
+                        ax += (20 - ion.x) * 0.005;
+                    } else { // Repel
+                        ax += (ion.x - 20) * 0.002; // Weaker repulsion for gameplay feel
+                    }
+
+                    // Right Influence
+                    if ((rightPol * q) < 0) { // Attract
+                        ax += (80 - ion.x) * 0.005;
+                    } else { // Repel
+                        ax += (ion.x - 80) * 0.002;
+                    }
+
+                    ion.vx += ax;
+                    ion.vx *= 0.95; // Friction
+
+                    ion.x += ion.vx;
+                    ion.y += ion.vy + (Math.random() * 0.1 - 0.05); // slight wander
+
+                    // Boundary Bounce
+                    if (ion.x < 0 || ion.x > 95) ion.vx *= -1;
+
+                    // Update DOM
+                    ion.el.style.left = ion.x + '%';
+                    ion.el.style.top = ion.y + '%';
+
+                    // COLLISION
+                    // Check Left (20%, ~top of rod)
+                    const checkHit = (xPos, pol) => {
+                        return Math.abs(ion.x - xPos) < 10 && ion.y < 60;
+                    }
+
+                    let hitLeft = checkHit(20, leftPol);
+                    let hitRight = checkHit(80, rightPol);
+
+                    if (hitLeft || hitRight) {
+                        const targetPol = hitLeft ? leftPol : rightPol;
+                        const correct = (targetPol * q) < 0; // Opposite signs
+
+                        // Rect for FX
+                        const r = ion.el.getBoundingClientRect();
+
+                        if (correct) {
+                            GAME.addScore(50);
+                            GAME.addEnergy(2);
+                            GAME.fx.spawnText(r.left, r.top, "COLLECTED", "#00ff66");
+                            this.spawnBubbles(ion.x, ion.y);
+                            AudioSys.play('success');
+                        } else {
+                            GAME.addScore(-10);
+                            GAME.drainEnergy(5);
+                            GAME.fx.spawnText(r.left, r.top, "REPELLED", "#ff0055");
+                            GAME.fx.spawnSpark(r.left, r.top, "#ff0055");
+                            AudioSys.play('error');
+                        }
+
+                        ion.el.remove();
+                        this.ions.splice(idx, 1);
+                    }
+                });
+            }
+
+            spawnBubbles(xPct, yPct) {
+                // Visual only
+                const b = document.createElement('div');
+                b.className = 'bubble';
+                b.style.width = '10px'; b.style.height = '10px';
+                b.style.left = xPct + '%'; b.style.top = yPct + '%';
+                this.tank.appendChild(b);
+                setTimeout(() => b.remove(), 2000);
+            }
+        }
+
+        // --- MAIN GAME LOOP ---
+        const GAME = {
+            chem: new Galvanic(),
+            elec: new Electrolysis(),
+            fx: new FXSystem(),
+
+            score: 0,
+            energy: 50,
+            running: false,
+
+            start() {
+                this.running = true;
+                document.getElementById('start-screen').classList.add('hidden');
+                this.chem.init();
+                this.elec.updateElectrodes();
+                this.loop();
+
+                // Entropy
+                setInterval(() => {
+                    if (this.running) {
+                        this.drainEnergy(0.5);
+                    }
+                }, 100);
+            },
+
+            loop() {
+                if (!this.running) return;
+
+                this.elec.tick();
+                this.fx.update();
+
+                requestAnimationFrame(() => this.loop());
+            },
+
+            addEnergy(n) {
+                this.energy = Math.min(100, this.energy + n);
+                this.updateUI();
+            },
+
+            drainEnergy(n) {
+                this.energy = Math.max(0, this.energy - n);
+                this.updateUI();
+                if (this.energy <= 0) this.end("CRITICAL ENERGY DEPLETION");
+            },
+
+            addScore(n) { this.score += n; this.updateUI(); },
+
+            updateUI() {
+                document.getElementById('score').innerText = Math.floor(this.score);
+                document.getElementById('energy-bar').style.width = this.energy + '%';
+                document.getElementById('energy-txt').innerText = Math.floor(this.energy) + '%';
+
+                const bar = document.getElementById('energy-bar');
+                if (this.energy < 30) bar.style.backgroundColor = 'var(--hex-pink)';
+                else bar.style.backgroundColor = '';
+            },
+
+            end(reason) {
+                this.running = false;
+                document.getElementById('end-screen').classList.remove('hidden');
+                document.getElementById('end-reason').innerText = reason;
+                document.getElementById('final-score').innerText = Math.floor(this.score);
+            }
+        };
+
+    </script>
+</body>
+
+</html>
