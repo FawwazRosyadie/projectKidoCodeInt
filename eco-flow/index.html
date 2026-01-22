@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eco-Flow: Professional Edition</title>
+    <style>
+        :root {
+            --primary: #0ea5e9;
+            --danger: #ef4444;
+            --success: #22c55e;
+            --bg: #020617;
+        }
+        body {
+            background: var(--bg);
+            color: #f8fafc;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0;
+            overflow: hidden;
+        }
+        #ui-layer {
+            width: 1000px;
+            display: flex;
+            justify-content: space-around;
+            padding: 20px;
+            background: #0f172a;
+            border-bottom: 2px solid #1e293b;
+        }
+        .metric { text-align: center; min-width: 120px; }
+        .label { font-size: 0.65rem; color: #94a3b8; text-transform: uppercase; font-weight: bold; }
+        .value { font-size: 1.8rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+        
+        #game-wrapper { position: relative; margin-top: 10px; }
+        canvas { background: #020617; border-radius: 8px; cursor: grab; }
+        canvas:active { cursor: grabbing; }
+
+        #overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(2, 6, 23, 0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+        }
+        .btn {
+            background: var(--primary);
+            color: white;
+            padding: 16px 40px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .btn:hover { transform: scale(1.05); background: #38bdf8; }
+        
+        #difficulty-meter {
+            width: 1000px;
+            height: 4px;
+            background: #1e293b;
+        }
+        #difficulty-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--success), var(--danger));
+            transition: width 0.1s linear;
+        }
+    </style>
+</head>
+<body>
+
+<div id="ui-layer">
+    <div class="metric">
+        <div class="label">Sustain-Score</div>
+        <div id="score" class="value" style="color: var(--success)">0</div>
+    </div>
+    <div class="metric">
+        <div class="label">System Load</div>
+        <div id="load-val" class="value">1.0x</div>
+    </div>
+    <div class="metric">
+        <div class="label">Pollution Level</div>
+        <div id="carbon" class="value" style="color: var(--danger)">0%</div>
+    </div>
+    <div class="metric">
+        <div class="label">Time Active</div>
+        <div id="timer" class="value">00:00</div>
+    </div>
+</div>
+<div id="difficulty-meter"><div id="difficulty-fill"></div></div>
+
+<div id="game-wrapper">
+    <canvas id="gameCanvas" width="1000" height="550"></canvas>
+    <div id="overlay">
+        <h1 id="status-title" style="font-size: 3.5rem; margin: 0;">ECO-COMMAND</h1>
+        <p id="final-stats" style="color: #94a3b8; margin-bottom: 30px; font-size: 1.2rem;">Manage the product lifecycle as speed increases.</p>
+        <button class="btn" onclick="initGame()">START MISSION</button>
+    </div>
+</div>
+
+<script>
+/**
+ * ECO-FLOW
+ * Implements a global difficulty scaler that affects all object systems.
+ */
+
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+// Settings
+const BELT_Y = 420;
+const ITEM_SIZE = 60;
+const INITIAL_SPAWN_RATE = 130; // Frames between spawns
+const MAX_SPAWN_RATE = 25;      // Fast limit
+const INITIAL_SPEED = 0.8;
+const MAX_SPEED = 4.5;
+
+const ZONES = [
+    { id: 'recycle', x: 80, y: 80, w: 220, h: 120, color: '#22c55e', label: '♻️ RECYCLE', sub: 'Plastic & Glass' },
+    { id: 'repair', x: 390, y: 80, w: 220, h: 120, color: '#3b82f6', label: '🛠️ REPAIR', sub: 'E-Waste' },
+    { id: 'neutral', x: 700, y: 80, w: 220, h: 120, color: '#eab308', label: '🧪 NEUTRALIZE', sub: 'Hazmat' }
+];
+
+// State
+let items = [];
+let score = 0;
+let pollution = 0;
+let startTime = 0;
+let gameTime = 0;
+let gameRunning = false;
+let draggedItem = null;
+let spawnCounter = 0;
+let difficultyFactor = 0; // 0 to 1
+
+class WasteItem {
+    constructor(type) {
+        this.type = type;
+        this.x = -ITEM_SIZE;
+        this.y = BELT_Y - ITEM_SIZE/2;
+        this.w = ITEM_SIZE;
+        this.h = ITEM_SIZE;
+        this.isDragged = false;
+        
+        const data = {
+            'plastic': { char: '🍾', zone: 'recycle', color: '#22c55e' },
+            'e-waste': { char: '📱', zone: 'repair', color: '#3b82f6' },
+            'chemical': { char: '☣️', zone: 'neutral', color: '#eab308' }
+        };
+        this.meta = data[type];
+    }
+
+    update(currentSpeed) {
+        if (!this.isDragged) {
+            this.x += currentSpeed;
+        }
+    }
+
+    draw() {
+        ctx.save();
+        // Glow effect
+        ctx.shadowBlur = this.isDragged ? 15 : 5;
+        ctx.shadowColor = this.meta.color;
+
+        // Main body
+        ctx.fillStyle = '#1e293b';
+        ctx.strokeStyle = this.meta.color;
+        ctx.lineWidth = 3;
+        
+        const r = 10; // rounded corners
+        ctx.beginPath();
+        ctx.roundRect(this.x, this.y, this.w, this.h, 10);
+        ctx.stroke();
+        ctx.fill();
+
+        // Icon
+        ctx.shadowBlur = 0;
+        ctx.font = '32px serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(this.meta.char, this.x + this.w/2, this.y + this.h/2);
+        ctx.restore();
+    }
+}
+
+function initGame() {
+    score = 0;
+    pollution = 0;
+    items = [];
+    gameTime = 0;
+    startTime = Date.now();
+    gameRunning = true;
+    document.getElementById('overlay').style.display = 'none';
+    requestAnimationFrame(gameLoop);
+}
+
+// Input logic
+canvas.addEventListener('mousedown', e => {
+    const rect = canvas.getBoundingClientRect();
+    const mx = (e.clientX - rect.left) * (canvas.width / rect.width);
+    const my = (e.clientY - rect.top) * (canvas.height / rect.height);
+
+    for (let i = items.length - 1; i >= 0; i--) {
+        const item = items[i];
+        if (mx > item.x && mx < item.x + item.w && my > item.y && my < item.y + item.h) {
+            item.isDragged = true;
+            draggedItem = item;
+            break;
+        }
+    }
+});
+
+window.addEventListener('mousemove', e => {
+    if (draggedItem) {
+        const rect = canvas.getBoundingClientRect();
+        draggedItem.x = (e.clientX - rect.left) * (canvas.width / rect.width) - ITEM_SIZE/2;
+        draggedItem.y = (e.clientY - rect.top) * (canvas.height / rect.height) - ITEM_SIZE/2;
+    }
+});
+
+window.addEventListener('mouseup', () => {
+    if (draggedItem) {
+        validateDrop(draggedItem);
+        draggedItem.isDragged = false;
+        draggedItem = null;
+    }
+});
+
+function validateDrop(item) {
+    let matched = false;
+    ZONES.forEach(zone => {
+        if (item.x + item.w/2 > zone.x && item.x + item.w/2 < zone.x + zone.w &&
+            item.y + item.h/2 > zone.y && item.y + item.h/2 < zone.y + zone.h) {
+            
+            if (item.meta.zone === zone.id) {
+                score += Math.floor(50 * (1 + difficultyFactor));
+                pollution = Math.max(0, pollution - 2);
+            } else {
+                pollution += 12;
+            }
+            items = items.filter(i => i !== item);
+            matched = true;
+        }
+    });
+}
+
+function drawBackground() {
+    // Conveyor Belt
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, BELT_Y - 30, 1000, 60);
+    
+    // Belt texture
+    ctx.strokeStyle = '#334155';
+    ctx.setLineDash([40, 20]);
+    ctx.lineDashOffset -= (INITIAL_SPEED + (MAX_SPEED - INITIAL_SPEED) * difficultyFactor) * 2;
+    ctx.lineWidth = 4;
+    ctx.strokeRect(-100, BELT_Y - 30, 1200, 60);
+    ctx.setLineDash([]);
+
+    // Zones
+    ZONES.forEach(zone => {
+        const grad = ctx.createLinearGradient(zone.x, zone.y, zone.x, zone.y + zone.h);
+        grad.addColorStop(0, zone.color + '33');
+        grad.addColorStop(1, 'transparent');
+        
+        ctx.fillStyle = grad;
+        ctx.strokeStyle = zone.color;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.roundRect(zone.x, zone.y, zone.w, zone.h, 15);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = zone.color;
+        ctx.font = 'bold 18px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(zone.label, zone.x + zone.w/2, zone.y + 50);
+        ctx.font = '12px sans-serif';
+        ctx.globalAlpha = 0.7;
+        ctx.fillText(zone.sub, zone.x + zone.w/2, zone.y + 75);
+        ctx.globalAlpha = 1.0;
+    });
+
+    // Landfill Danger Zone
+    const landGrad = ctx.createLinearGradient(950, 0, 1000, 0);
+    landGrad.addColorStop(0, 'transparent');
+    landGrad.addColorStop(1, '#ef444455');
+    ctx.fillStyle = landGrad;
+    ctx.fillRect(900, 0, 100, 550);
+}
+
+function update() {
+    // 1. Calculate Difficulty Ramp (Linear over 120 seconds)
+    gameTime = (Date.now() - startTime) / 1000;
+    difficultyFactor = Math.min(1, gameTime / 120); 
+
+    const currentSpeed = INITIAL_SPEED + (MAX_SPEED - INITIAL_SPEED) * difficultyFactor;
+    const currentSpawnRate = INITIAL_SPAWN_RATE - (INITIAL_SPAWN_RATE - MAX_SPAWN_RATE) * difficultyFactor;
+
+    // 2. Spawning
+    spawnCounter++;
+    if (spawnCounter >= currentSpawnRate) {
+        const types = ['plastic', 'e-waste', 'chemical'];
+        items.push(new WasteItem(types[Math.floor(Math.random() * 3)]));
+        spawnCounter = 0;
+    }
+
+    // 3. Update Items
+    items.forEach((item, index) => {
+        item.update(currentSpeed);
+        if (item.x > 1000) {
+            pollution += 15;
+            items.splice(index, 1);
+        }
+    });
+
+    // 4. UI Scaling
+    document.getElementById('score').innerText = score;
+    document.getElementById('carbon').innerText = Math.floor(pollution) + '%';
+    document.getElementById('load-val').innerText = currentSpeed.toFixed(1) + 'x';
+    document.getElementById('difficulty-fill').style.width = (difficultyFactor * 100) + '%';
+    
+    const mins = Math.floor(gameTime / 60);
+    const secs = Math.floor(gameTime % 60);
+    document.getElementById('timer').innerText = `${mins.toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')}`;
+
+    if (pollution >= 100) endGame();
+}
+
+function endGame() {
+    gameRunning = false;
+    document.getElementById('overlay').style.display = 'flex';
+    document.getElementById('status-title').innerText = "ENVIRONMENTAL CRASH";
+    document.getElementById('status-title').style.color = "var(--danger)";
+    document.getElementById('final-stats').innerText = `You sustained the environment for ${Math.floor(gameTime)} seconds with a score of ${score}.`;
+}
+
+function gameLoop() {
+    if (!gameRunning) return;
+    ctx.clearRect(0, 0, 1000, 550);
+    drawBackground();
+    items.forEach(item => item.draw());
+    update();
+    requestAnimationFrame(gameLoop);
+}
+</script>
+</body>
+</html>
