@@ -1,0 +1,1164 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carbon Commander: Molecular Foundry</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap');
+
+        :root {
+            --bg-dark: #050a14;
+            --bg-panel: rgba(16, 33, 60, 0.95);
+            --primary: #00f2ea;
+            --secondary: #ff0055;
+            --accent: #ffea00;
+            --text-glow: 0 0 10px rgba(0, 242, 234, 0.5);
+            --panel-border: 1px solid rgba(0, 242, 234, 0.3);
+            --font-main: 'Rajdhani', sans-serif;
+            --font-head: 'Orbitron', sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-drag: none;
+            cursor: default;
+        }
+
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: var(--bg-dark);
+            color: #fff;
+            font-family: var(--font-main);
+            height: 100vh;
+            width: 100vw;
+            background-image:
+                radial-gradient(circle at 10% 20%, rgba(0, 242, 234, 0.05) 0%, transparent 20%),
+                radial-gradient(circle at 90% 80%, rgba(255, 0, 85, 0.05) 0%, transparent 20%);
+        }
+
+        /* --- UI LAYER --- */
+        #ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 20px;
+            z-index: 10;
+        }
+
+        .hud-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            width: 100%;
+        }
+
+        .stats-panel {
+            background: var(--bg-panel);
+            backdrop-filter: blur(10px);
+            border: var(--panel-border);
+            padding: 15px 25px;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            transform: skewX(-10deg);
+            pointer-events: auto;
+            min-width: 300px;
+        }
+
+        .stats-content {
+            transform: skewX(10deg);
+            display: flex;
+            justify-content: space-around;
+            gap: 20px;
+            text-align: center;
+        }
+
+        .stat-item h3 {
+            margin: 0;
+            font-family: var(--font-head);
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.7);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .stat-item span {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-shadow: var(--text-glow);
+        }
+
+        #timer {
+            color: var(--accent);
+        }
+
+        #score {
+            color: var(--primary);
+        }
+
+        /* Mission Panel */
+        .mission-panel {
+            background: var(--bg-panel);
+            border: var(--panel-border);
+            padding: 20px;
+            border-radius: 12px;
+            width: 350px;
+            pointer-events: auto;
+            position: relative;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .mission-header {
+            font-family: var(--font-head);
+            color: var(--accent);
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 10px;
+        }
+
+        .mission-formula {
+            font-size: 2.2rem;
+            font-weight: 900;
+            text-align: center;
+            margin: 15px 0;
+            color: #fff;
+            letter-spacing: 3px;
+            text-shadow: 0 0 15px rgba(255, 255, 255, 0.4);
+            font-family: var(--font-head);
+        }
+
+        .mission-desc {
+            font-size: 1rem;
+            line-height: 1.5;
+            color: #ccc;
+            margin-bottom: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px;
+            border-radius: 6px;
+        }
+
+        .mission-hint-box {
+            background: rgba(0, 242, 234, 0.1);
+            border-left: 3px solid var(--primary);
+            padding: 10px;
+            font-size: 0.9rem;
+            color: #b0f2ff;
+        }
+
+        /* --- TOOLBAR --- */
+        .toolbar-container {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 20px;
+            align-items: flex-end;
+            pointer-events: none;
+            /* Let clicks pass through gaps */
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 15px;
+            padding: 15px 25px;
+            background: var(--bg-panel);
+            border-radius: 50px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            pointer-events: auto;
+            backdrop-filter: blur(10px);
+            align-items: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .atom-spawner {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .atom-btn {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            border: none;
+            outline: none;
+            cursor: grab;
+            font-family: var(--font-head);
+            font-weight: 900;
+            font-size: 1.5rem;
+            color: white;
+            transition: all 0.2s;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
+        }
+
+        .atom-btn:active {
+            cursor: grabbing;
+            transform: scale(0.95);
+        }
+
+        .atom-btn:hover {
+            transform: scale(1.1) translateY(-5px);
+            z-index: 10;
+        }
+
+        .btn-c {
+            background: radial-gradient(circle at 30% 30%, #555, #111);
+            border: 2px solid #888;
+        }
+
+        .btn-h {
+            background: radial-gradient(circle at 30% 30%, #fff, #bbb);
+            border: 2px solid #ccc;
+            color: #333;
+        }
+
+        .btn-o {
+            background: radial-gradient(circle at 30% 30%, #ff5555, #990000);
+            border: 2px solid #ffaaaa;
+        }
+
+        .key-hint {
+            font-size: 0.7rem;
+            color: #aaa;
+            margin-top: 5px;
+        }
+
+        .tool-separator {
+            width: 1px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.2);
+            margin: 0 10px;
+        }
+
+        .action-btn {
+            background: linear-gradient(135deg, rgba(0, 242, 234, 0.1), rgba(0, 242, 234, 0.05));
+            color: var(--primary);
+            border: 1px solid var(--primary);
+            border-radius: 12px;
+            padding: 12px 30px;
+            font-family: var(--font-head);
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .action-btn:hover {
+            background: var(--primary);
+            color: #000;
+            box-shadow: 0 0 20px var(--primary);
+            transform: translateY(-2px);
+        }
+
+        .action-btn:active {
+            transform: translateY(0);
+        }
+
+        /* --- CONTROLS INFO --- */
+        .controls-info {
+            position: absolute;
+            bottom: 120px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.6);
+            padding: 10px 20px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #ddd;
+            font-size: 0.9rem;
+            display: flex;
+            gap: 20px;
+            pointer-events: none;
+            opacity: 0.8;
+        }
+
+        .control-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .key {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: bold;
+            color: #fff;
+            font-family: monospace;
+        }
+
+        /* --- SCREENS --- */
+        .screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(5, 10, 20, 0.98);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s;
+        }
+
+        .screen.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .title-large {
+            font-family: var(--font-head);
+            font-size: 5rem;
+            margin: 0;
+            background: linear-gradient(to right, #00f2ea, #ff0055);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 50px rgba(0, 242, 234, 0.4);
+            letter-spacing: -2px;
+        }
+
+        .subtitle {
+            font-size: 1.5rem;
+            color: #aaa;
+            margin: 20px 0 40px;
+            max-width: 700px;
+            line-height: 1.6;
+        }
+
+        .btn-start {
+            padding: 20px 60px;
+            font-size: 2rem;
+            background: var(--primary);
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            font-family: var(--font-head);
+            font-weight: 900;
+            cursor: pointer;
+            box-shadow: 0 0 30px rgba(0, 242, 234, 0.5);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn-start:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 50px rgba(0, 242, 234, 0.8);
+        }
+
+        /* --- NOTIFICATIONS --- */
+        #notification-area {
+            position: absolute;
+            top: 20%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 50;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .notification {
+            background: rgba(0, 20, 40, 0.9);
+            border: 2px solid var(--primary);
+            padding: 20px 40px;
+            border-radius: 12px;
+            text-align: center;
+            animation: notif-entrance 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            max-width: 400px;
+        }
+
+        .notification.error {
+            border-color: var(--secondary);
+            background: rgba(40, 0, 10, 0.9);
+        }
+
+        .notification h2 {
+            margin: 0 0 10px 0;
+            font-family: var(--font-head);
+            letter-spacing: 1px;
+        }
+
+        .notification p {
+            margin: 0;
+            font-size: 1.1rem;
+        }
+
+        @keyframes notif-entrance {
+            from {
+                opacity: 0;
+                transform: translateY(50px) scale(0.8);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Canvas -->
+    <canvas id="game-canvas"></canvas>
+
+    <!-- UI -->
+    <div id="ui-layer">
+
+        <!-- Top HUD -->
+        <div class="hud-top">
+            <div class="mission-panel">
+                <div class="mission-header">
+                    <span>ACTIVE CONTRACT</span>
+                    <span id="level-idx" style="color:white; font-size:0.8rem;">1/5</span>
+                </div>
+                <div class="mission-desc" id="level-desc">Loading...</div>
+                <div class="mission-formula" id="target-formula">CH4</div>
+                <div class="mission-hint-box" id="level-hint">Hint: ...</div>
+            </div>
+
+            <div class="stats-panel">
+                <div class="stats-content">
+                    <div class="stat-item">
+                        <h3>Score</h3>
+                        <span id="score-val">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <h3>Time</h3>
+                        <span id="time-val">00:00</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Controls Info -->
+        <div class="controls-info">
+            <div class="control-item"><span class="key">LMB</span> Drag Atom</div>
+            <div class="control-item"><span class="key">HOVER RING</span> + <span class="key">DRAG</span> Create Bond
+            </div>
+            <div class="control-item"><span class="key">RMB</span> Delete Atom</div>
+            <div class="control-item"><span class="key">SPACE</span> Pause</div>
+        </div>
+
+        <!-- Notification Area -->
+        <div id="notification-area"></div>
+
+        <!-- Toolbar -->
+        <div class="toolbar-container">
+            <div class="toolbar">
+                <div class="atom-spawner">
+                    <button class="atom-btn btn-c" id="spawn-c-btn">C</button>
+                    <!-- <div class="key-hint">1</div> -->
+                </div>
+                <div class="atom-spawner">
+                    <button class="atom-btn btn-h" id="spawn-h-btn">H</button>
+                    <!-- <div class="key-hint">2</div> -->
+                </div>
+                <div class="atom-spawner">
+                    <button class="atom-btn btn-o" id="spawn-o-btn">O</button>
+                    <!-- <div class="key-hint">3</div> -->
+                </div>
+
+                <div class="tool-separator"></div>
+
+                <button class="action-btn" onclick="game.clearTable()">Clear</button>
+                <button class="action-btn" onclick="game.submitStructure()">Deliver</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Start Screen -->
+    <div id="start-screen" class="screen active">
+        <h1 class="title-large">CARBON<br>COMMANDER</h1>
+        <p class="subtitle">
+            Welcome to the Molecular Foundry.<br>
+            Your job is to assemble precise carbon compounds against the clock.<br>
+            <br>
+            <span style="color:var(--primary); font-size:1.1rem;">INSTRUCTIONS:</span><br>
+            Drag atoms from the toolbar directly into the workspace.<br>
+            Drag from the <b>outer ring</b> of an atom to bond it to another.
+        </p>
+        <button class="btn-start" onclick="game.start()">START SHIFT</button>
+    </div>
+
+    <!-- End Screen -->
+    <div id="end-screen" class="screen">
+        <h1 class="title-large">SHIFT OVER</h1>
+        <p class="subtitle" id="end-msg">Quota not met.</p>
+        <div style="font-size: 3rem; font-family: var(--font-head); color: var(--primary); margin-bottom: 30px;">
+            SCORE: <span id="final-score">0</span>
+        </div>
+        <button class="btn-start" onclick="location.reload()">NEW SHIFT</button>
+    </div>
+
+    <script>
+        // --- GAME CONFIGURATION ---
+        const ATOM_TYPES = {
+            'C': { color: '#2a2a2a', radius: 30, valency: 4, mass: 12, textColor: '#fff' },
+            'H': { color: '#f0f0f0', radius: 20, valency: 1, mass: 1, textColor: '#333' },
+            'O': { color: '#e63946', radius: 28, valency: 2, mass: 16, textColor: '#fff' } // Updated red for Oxygen
+        };
+
+        const LEVELS = [
+            {
+                name: "Hydrocarbon Training",
+                desc: "Synthesize Methane (CH4).",
+                formulaStr: "CH4",
+                formula: { C: 1, H: 4 },
+                time: 60,
+                hint: "1 C center, 4 H surrounding. Valency C=4, H=1.",
+                customCheck: (comp) => checkValencyStrict(comp) && checkConnectivity(comp, 'STAR', 'C')
+            },
+            {
+                name: "Ethane Production",
+                desc: "Synthesize Ethane (C2H6).",
+                formulaStr: "C2H6",
+                formula: { C: 2, H: 6 },
+                time: 90,
+                hint: "C-C bond in middle.",
+                customCheck: (comp) => checkValencyStrict(comp) && checkConnectivity(comp, 'CHAIN', 2)
+            },
+            {
+                name: "Ethene (Double Bond)",
+                desc: "Synthesize Ethene (C2H4). Double bond required!",
+                formulaStr: "C2H4",
+                formula: { C: 2, H: 4 },
+                time: 90,
+                hint: "Drag bond twice between Carbons.",
+                customCheck: (comp) => checkValencyStrict(comp) && checkSpecificBond(comp, 'C', 'C', 2)
+            },
+            {
+                name: "Ethanol (Alcohol)",
+                desc: "Synthesize Ethanol (C2H5OH).",
+                formulaStr: "C2H5OH",
+                formula: { C: 2, H: 6, O: 1 },
+                time: 120,
+                hint: "C-C-O-H chain.",
+                customCheck: (comp) => checkValencyStrict(comp) && checkSubstructure(comp, ['C-C', 'C-O', 'O-H'])
+            },
+            {
+                name: "Glycerol",
+                desc: "Synthesize Glycerol (C3H8O3).",
+                formulaStr: "C3H8O3",
+                formula: { C: 3, H: 8, O: 3 },
+                time: 150,
+                hint: "3 Carbons, each with an OH.",
+                customCheck: (comp) => checkValencyStrict(comp) && checkGlycerol(comp)
+            }
+        ];
+
+        // --- AUDIO ---
+        const SFX = {
+            ctx: new (window.AudioContext || window.webkitAudioContext)(),
+            play(type) {
+                if (this.ctx.state === 'suspended') this.ctx.resume();
+                const o = this.ctx.createOscillator();
+                const g = this.ctx.createGain();
+                o.connect(g); g.connect(this.ctx.destination);
+
+                const now = this.ctx.currentTime;
+                if (type === 'pop') {
+                    o.type = 'sine'; o.frequency.setValueAtTime(600, now); o.frequency.exponentialRampToValueAtTime(1200, now + 0.1);
+                    g.gain.setValueAtTime(0.1, now); g.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                    o.start(now); o.stop(now + 0.1);
+                } else if (type === 'snap') {
+                    o.type = 'triangle'; o.frequency.setValueAtTime(800, now);
+                    g.gain.setValueAtTime(0.05, now); g.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+                    o.start(now); o.stop(now + 0.05);
+                } else if (type === 'error') {
+                    o.type = 'sawtooth'; o.frequency.setValueAtTime(150, now); o.frequency.linearRampToValueAtTime(100, now + 0.3);
+                    g.gain.setValueAtTime(0.1, now); g.gain.linearRampToValueAtTime(0, now + 0.3);
+                    o.start(now); o.stop(now + 0.3);
+                } else if (type === 'success') {
+                    o.type = 'sine';
+                    o.frequency.setValueAtTime(440, now);
+                    o.frequency.setValueAtTime(554, now + 0.1);
+                    o.frequency.setValueAtTime(659, now + 0.2);
+                    g.gain.setValueAtTime(0.1, now); g.gain.linearRampToValueAtTime(0, now + 0.6);
+                    o.start(now); o.stop(now + 0.6);
+                }
+            }
+        };
+
+        // --- GAME LOGIC ---
+        class CarbonGame {
+            constructor() {
+                this.canvas = document.getElementById('game-canvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.atoms = [];
+                this.bonds = [];
+                this.level = 0;
+                this.score = 0;
+                this.timeLeft = 0;
+                this.state = 'IDLE'; // IDLE, PLAY, PAUSE, OVER
+
+                // Physics
+                this.particles = [];
+
+                // Interaction State
+                this.mouse = { x: 0, y: 0 };
+                this.draggedAtom = null;
+                this.hoveredAtom = null;
+                this.bondSourceAtom = null; // If dragging a bond
+                this.isBondingMode = false; // If currently dragging a wire
+
+                // Bindings
+                window.addEventListener('resize', () => this.resize());
+                window.addEventListener('mousemove', e => this.onMove(e)); // Window for smooth drag over UI
+                this.canvas.addEventListener('mousedown', e => this.onDown(e));
+                window.addEventListener('mouseup', e => this.onUp(e));
+                this.canvas.addEventListener('contextmenu', e => { e.preventDefault(); this.onRightClick(e); });
+                document.addEventListener('keydown', e => this.onKey(e));
+
+                // Spawner Buttons
+                document.getElementById('spawn-c-btn').addEventListener('mousedown', (e) => this.spawnFromUI('C', e));
+                document.getElementById('spawn-h-btn').addEventListener('mousedown', (e) => this.spawnFromUI('H', e));
+                document.getElementById('spawn-o-btn').addEventListener('mousedown', (e) => this.spawnFromUI('O', e));
+
+                this.resize();
+                this.loop = this.loop.bind(this);
+                requestAnimationFrame(this.loop);
+            }
+
+            resize() {
+                this.canvas.width = window.innerWidth;
+                this.canvas.height = window.innerHeight;
+            }
+
+            start() {
+                document.getElementById('start-screen').classList.remove('active');
+                this.level = 0;
+                this.score = 0;
+                this.loadLevel(0);
+                this.state = 'PLAY';
+                this.timerInterval = setInterval(() => {
+                    if (this.state === 'PLAY') {
+                        this.timeLeft--;
+                        this.updateHUD();
+                        if (this.timeLeft <= 0) this.gameOver();
+                    }
+                }, 1000);
+            }
+
+            loadLevel(idx) {
+                if (idx >= LEVELS.length) {
+                    this.gameOver(true);
+                    return;
+                }
+                this.level = idx;
+                const L = LEVELS[idx];
+                this.timeLeft = L.time;
+                this.atoms = [];
+                this.bonds = [];
+                this.updateHUD();
+
+                document.getElementById('level-desc').innerText = L.desc;
+                document.getElementById('target-formula').innerText = L.formulaStr;
+                document.getElementById('level-hint').innerText = L.hint || "Check valency: C=4, H=1, O=2";
+                document.getElementById('level-idx').innerText = `${idx + 1}/${LEVELS.length}`;
+
+                this.notify("START", L.name);
+            }
+
+            spawnFromUI(type, e) { // Interactive spawn
+                if (this.state !== 'PLAY') return;
+                e.preventDefault();
+                const rect = this.canvas.getBoundingClientRect();
+                const ax = e.clientX - rect.left;
+                const ay = e.clientY - rect.top;
+
+                const atom = {
+                    id: Math.random(),
+                    type: type,
+                    x: ax,
+                    y: ay,
+                    vx: 0, vy: 0,
+                    ...ATOM_TYPES[type]
+                };
+                this.atoms.push(atom);
+                this.draggedAtom = atom; // Immediately start dragging
+                SFX.play('pop');
+            }
+
+            // Input Handlers
+            onMove(e) {
+                const rect = this.canvas.getBoundingClientRect();
+                this.mouse.x = e.clientX - rect.left;
+                this.mouse.y = e.clientY - rect.top;
+
+                if (this.draggedAtom) {
+                    // Direct follow with some lag for smoothness? No, direct is better for precision.
+                    this.draggedAtom.x = this.mouse.x;
+                    this.draggedAtom.y = this.mouse.y;
+                    this.draggedAtom.vx = 0; this.draggedAtom.vy = 0;
+                    document.body.style.cursor = 'grabbing';
+                } else {
+                    // Update hover
+                    this.hoveredAtom = null;
+                    document.body.style.cursor = 'default';
+                    // Find closest atom
+                    for (let i = this.atoms.length - 1; i >= 0; i--) {
+                        const a = this.atoms[i];
+                        const d = Math.hypot(this.mouse.x - a.x, this.mouse.y - a.y);
+                        if (d < a.radius + 20) { // +20 for halo hit
+                            this.hoveredAtom = a;
+                            // Cursor hint
+                            if (d < a.radius) document.body.style.cursor = 'move';
+                            else document.body.style.cursor = 'crosshair';
+                            break;
+                        }
+                    }
+                }
+            }
+
+            onDown(e) {
+                if (this.state !== 'PLAY') return;
+                if (e.button !== 0) return; // Left click only
+
+                if (this.hoveredAtom) {
+                    const d = Math.hypot(this.mouse.x - this.hoveredAtom.x, this.mouse.y - this.hoveredAtom.y);
+
+                    // Bonding Zone: If closest to edge (outer ring)
+                    // Radius = r. Halo = r+15.
+                    // If d > r*0.6, assume they want to bond? Or explicit ring?
+                    // Let's use > radius*0.5 as "Ring Zone" for clicking?
+                    // No, that makes moving hard.
+                    // Let's explicitly check if inside Radius (Move) or inside Halo but outside Radius (Bond).
+                    // Actually, let's just use drag from CENTER = Move, drag from EDGE = Bond.
+
+                    if (d < this.hoveredAtom.radius) {
+                        // Core Click = Move
+                        this.draggedAtom = this.hoveredAtom;
+                    } else {
+                        // Halo Click = Bond
+                        this.bondSourceAtom = this.hoveredAtom;
+                        this.isBondingMode = true;
+                    }
+                }
+            }
+
+            onUp(e) {
+                this.draggedAtom = null;
+
+                if (this.isBondingMode && this.bondSourceAtom) {
+                    if (this.hoveredAtom && this.hoveredAtom !== this.bondSourceAtom) {
+                        // Create/Toggle Bond
+                        this.toggleBond(this.bondSourceAtom, this.hoveredAtom);
+                    }
+                }
+                this.isBondingMode = false;
+                this.bondSourceAtom = null;
+            }
+
+            onRightClick(e) {
+                if (this.hoveredAtom) {
+                    this.removeAtom(this.hoveredAtom);
+                    SFX.play('error'); // Delete sound
+                }
+            }
+
+            onKey(e) {
+                if (e.code === 'Space') {
+                    // toggle pause maybe
+                }
+            }
+
+            // Logic
+            toggleBond(a, b) {
+                // Check existing
+                const existingIdx = this.bonds.findIndex(bond =>
+                    (bond.a === a && bond.b === b) || (bond.a === b && bond.b === a)
+                );
+
+                if (existingIdx >= 0) {
+                    const bond = this.bonds[existingIdx];
+                    bond.order++;
+                    if (bond.order > 3) {
+                        this.bonds.splice(existingIdx, 1); // Delete bond
+                    }
+                } else {
+                    this.bonds.push({ a, b, order: 1 });
+                }
+                SFX.play('snap');
+            }
+
+            removeAtom(atom) {
+                this.atoms = this.atoms.filter(a => a !== atom);
+                this.bonds = this.bonds.filter(b => b.a !== atom && b.b !== atom);
+            }
+
+            clearTable() {
+                this.atoms = [];
+                this.bonds = [];
+                SFX.play('error');
+            }
+
+            submitStructure() {
+                const result = checkSubmissionCore();
+                if (result.success) {
+                    this.score += 100 + this.timeLeft * 2;
+                    this.notify("SUCCESS", "Compound Verified! Good job.");
+                    SFX.play('success');
+                    setTimeout(() => this.loadLevel(this.level + 1), 2000);
+                } else {
+                    this.notify("FAILURE", result.reason || "Check structure.");
+                    SFX.play('error');
+                }
+            }
+
+            notify(title, msg) {
+                const area = document.getElementById('notification-area');
+                area.innerHTML = `
+                    <div class="notification ${title === 'FAILURE' ? 'error' : ''}">
+                        <h2>${title}</h2>
+                        <p>${msg}</p>
+                    </div>
+                `;
+                setTimeout(() => {
+                    const n = area.querySelector('.notification');
+                    if (n) n.remove();
+                }, 3000);
+            }
+
+            gameOver(win) {
+                this.state = 'OVER';
+                clearInterval(this.timerInterval);
+                document.getElementById('end-screen').classList.add('active');
+                document.getElementById('end-msg').innerText = win ? "All Contracts Fulfilled." : "Production Timeline Exceeded.";
+                document.getElementById('final-score').innerText = this.score;
+            }
+
+            updateHUD() {
+                document.getElementById('score-val').innerText = this.score;
+                const m = Math.floor(this.timeLeft / 60);
+                const s = this.timeLeft % 60;
+                document.getElementById('time-val').innerText = `${m}:${s < 10 ? '0' + s : s}`;
+            }
+
+            // Game Loop
+            loop() {
+                if (this.state === 'PLAY') {
+                    this.updatePhysics();
+                }
+                this.draw();
+                requestAnimationFrame(this.loop);
+            }
+
+            updatePhysics() {
+                // Simple soft-body repulsion
+                for (let i = 0; i < this.atoms.length; i++) {
+                    const a = this.atoms[i];
+                    for (let j = i + 1; j < this.atoms.length; j++) {
+                        const b = this.atoms[j];
+                        const dx = b.x - a.x;
+                        const dy = b.y - a.y;
+                        const d = Math.sqrt(dx * dx + dy * dy);
+                        const minD = a.radius + b.radius + 10;
+                        if (d < minD && d > 0) {
+                            const f = (minD - d) * 0.05;
+                            const nx = dx / d;
+                            const ny = dy / d;
+                            if (a !== this.draggedAtom) { a.x -= nx * f; a.y -= ny * f; }
+                            if (b !== this.draggedAtom) { b.x += nx * f; b.y += ny * f; }
+                        }
+                    }
+                    // Boundaries
+                    if (a !== this.draggedAtom) {
+                        if (a.x < a.radius) a.x = a.radius;
+                        if (a.x > this.canvas.width - a.radius) a.x = this.canvas.width - a.radius;
+                        if (a.y < a.radius) a.y = a.radius;
+                        if (a.y > this.canvas.height - a.radius) a.y = this.canvas.height - a.radius;
+                    }
+                }
+            }
+
+            draw() {
+                // Clear
+                this.ctx.fillStyle = '#050a14';
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+                // Draw Bonds layer
+                this.ctx.lineCap = 'round';
+                this.bonds.forEach(b => {
+                    const { a, b: atomB, order } = b;
+                    const dx = atomB.x - a.x;
+                    const dy = atomB.y - a.y;
+                    const d = Math.sqrt(dx * dx + dy * dy);
+                    const nx = -dy / d;
+                    const ny = dx / d;
+
+                    this.ctx.strokeStyle = '#888';
+                    this.ctx.lineWidth = 6;
+
+                    if (order === 1) {
+                        this.ctx.beginPath(); this.ctx.moveTo(a.x, a.y); this.ctx.lineTo(atomB.x, atomB.y); this.ctx.stroke();
+                    } else if (order === 2) {
+                        this.ctx.beginPath();
+                        this.ctx.moveTo(a.x + nx * 4, a.y + ny * 4); this.ctx.lineTo(atomB.x + nx * 4, atomB.y + ny * 4);
+                        this.ctx.stroke();
+                        this.ctx.beginPath();
+                        this.ctx.moveTo(a.x - nx * 4, a.y - ny * 4); this.ctx.lineTo(atomB.x - nx * 4, atomB.y - ny * 4);
+                        this.ctx.stroke();
+                    } else if (order === 3) {
+                        // omitted for simplicity but similar
+                    }
+                });
+
+                // Bonding Line (Ghost)
+                if (this.isBondingMode && this.bondSourceAtom) {
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(this.bondSourceAtom.x, this.bondSourceAtom.y);
+                    this.ctx.lineTo(this.mouse.x, this.mouse.y);
+                    this.ctx.strokeStyle = '#00f2ea';
+                    this.ctx.lineWidth = 2;
+                    this.ctx.setLineDash([5, 5]);
+                    this.ctx.stroke();
+                    this.ctx.setLineDash([]);
+                }
+
+                // Draw Atoms
+                this.atoms.forEach(a => {
+                    // Hover Halo
+                    if (a === this.hoveredAtom) {
+                        this.ctx.beginPath();
+                        this.ctx.arc(a.x, a.y, a.radius + 8, 0, Math.PI * 2);
+                        this.ctx.strokeStyle = 'rgba(0, 242, 234, 0.5)';
+                        this.ctx.lineWidth = 2;
+                        this.ctx.stroke();
+
+                        // Interaction hint
+                        this.ctx.fillStyle = '#00f2ea';
+                        this.ctx.font = '10px monospace';
+                        this.ctx.textAlign = 'center';
+                        // this.ctx.fillText("DRAG RING: BOND", a.x, a.y + a.radius + 20);
+                    }
+
+                    // Body
+                    this.ctx.beginPath();
+                    this.ctx.arc(a.x, a.y, a.radius, 0, Math.PI * 2);
+                    const g = this.ctx.createRadialGradient(a.x - 5, a.y - 5, 2, a.x, a.y, a.radius);
+                    g.addColorStop(0, '#fff');
+                    g.addColorStop(0.3, a.color);
+                    g.addColorStop(1, '#000');
+                    this.ctx.fillStyle = g;
+                    this.ctx.fill();
+
+                    // Label
+                    this.ctx.fillStyle = a.textColor;
+                    this.ctx.font = `bold ${a.radius}px Orbitron`;
+                    this.ctx.textAlign = 'center';
+                    this.ctx.textBaseline = 'middle';
+                    this.ctx.fillText(a.type, a.x, a.y);
+
+                    // Valency Markers (dots)
+                    // Calculate current bond sum
+                    const currentBonds = this.bonds.reduce((acc, b) => (b.a === a || b.b === a) ? acc + b.order : acc, 0);
+                    const missing = a.valency - currentBonds;
+
+                    if (missing < 0) {
+                        // Error
+                        this.ctx.strokeStyle = 'red'; this.ctx.lineWidth = 3; this.ctx.stroke();
+                    }
+                });
+            }
+
+        }
+
+        // --- CHECKS ---
+        function checkComposition(atoms, formula) {
+            const counts = { C: 0, H: 0, O: 0 };
+            atoms.forEach(a => counts[a.type]++);
+            return Object.keys(formula).every(k => counts[k] === formula[k]);
+        }
+        function checkBonds(bonds, count) {
+            return bonds.reduce((acc, b) => acc + b.order, 0) >= count; // Rough heuristic, refined below
+        }
+        function checkMaxBonds(atoms) {
+            const badAtoms = atoms.filter(a => {
+                const bCount = game.bonds.reduce((acc, b) => (b.a === a || b.b === a) ? acc + b.order : acc, 0);
+                return bCount !== a.valency;
+            });
+            if (badAtoms.length > 0) {
+                // Return 'false' but we want to know why.
+                // We'll attach the reason to the game object temporarily or return string?
+                // For now, let's just make the check strict for the VALID component only.
+                return false;
+            }
+            return true;
+        }
+        // --- ADVANCED CHECKS ---
+
+        function getComponents(atoms, bonds) {
+            let visited = new Set();
+            let components = [];
+            atoms.forEach(a => {
+                if (!visited.has(a)) {
+                    let group = { atoms: [], bonds: [] };
+                    let q = [a];
+                    visited.add(a);
+                    while (q.length) {
+                        let cur = q.pop();
+                        group.atoms.push(cur);
+                        // find neighbors
+                        bonds.forEach(b => {
+                            let n = (b.a === cur) ? b.b : (b.b === cur) ? b.a : null;
+                            if (n) {
+                                if (!group.bonds.includes(b)) group.bonds.push(b);
+                                if (!visited.has(n)) {
+                                    visited.add(n);
+                                    q.push(n);
+                                }
+                            }
+                        });
+                    }
+                    components.push(group);
+                }
+            });
+            return components;
+        }
+
+        function checkSubmissionCore() {
+            // Find the best matching component
+            const components = getComponents(game.atoms, game.bonds);
+            const level = LEVELS[game.level];
+
+            // Should usually be just one big component if the user is tidy.
+            // But if there's debris, we want to find the ONE that matches.
+
+            for (let comp of components) {
+                // Does this component match the formula?
+                if (checkComposition(comp.atoms, level.formula)) {
+                    // Potential candidate!
+                    // Check specific structural rules
+                    if (level.customCheck(comp)) return { success: true };
+                }
+            }
+
+            // If no component matches exact formula, maybe they have the right atoms but wrong bonds?
+            // Or maybe they merged everything into one blob and the formula is technically correct for the blob?
+
+            // Let's rely on the components loop. If nothing matched, find the closest failure reason.
+            if (components.length === 0) return { success: false, reason: "Workspace empty." };
+            if (components.length > 1) {
+                // Warn about debris if no perfect match found
+                // Check if any component has correct formula but fails structure
+                const formulaMatch = components.find(c => checkComposition(c.atoms, level.formula));
+                if (formulaMatch) return { success: false, reason: "Formula correct, but structure invalid." };
+                return { success: false, reason: "Multiple disconnected parts detected." };
+            }
+
+            return { success: false, reason: "Incorrect formula or valency." };
+        }
+
+        function checkComposition(atoms, formula) {
+            const counts = { C: 0, H: 0, O: 0 };
+            atoms.forEach(a => counts[a.type]++); // formula keys must match
+            // Check exact match
+            for (let k in formula) {
+                if (counts[k] !== formula[k]) return false;
+            }
+            // Check no extras
+            // Actually 'counts' has everything in atoms. 'formula' has target.
+            // If atoms has types not in formula? (e.g. N?) We don't have N yet.
+            // But if formula is C1H4 and we have C1H5, loop 1 fails.
+            // This is safe.
+            return true;
+        }
+
+        function checkValencyStrict(comp) {
+            const bad = comp.atoms.find(a => {
+                const bCount = comp.bonds.reduce((acc, b) => (b.a === a || b.b === a) ? acc + b.order : acc, 0);
+                return bCount !== a.valency;
+            });
+            if (bad) return false;
+            return true;
+        }
+
+        // Helper functions adapted for 'comp' object {atoms, bonds}
+
+        function checkConnectivity(comp, type, param) {
+            if (type === 'STAR') {
+                // Central atom of type param
+                const center = comp.atoms.find(a => a.type === param);
+                if (!center) return false;
+                // All bonds must touch center? No, but for Methane yes.
+                // Actually simpler: Just check if component is fully connected (it is by definition of getComponents)
+                // and has correct valency (checked by checkValencyStrict). 
+                // So if formula is correct and valency is correct, Methane is correct.
+                return true;
+            }
+            if (type === 'CHAIN') {
+                // Check Max Carbon Chain length? Or just that carbons are connected?
+                // For Ethane: 2 Carbons must be connected.
+                const carbons = comp.atoms.filter(a => a.type === 'C');
+                // Check if all carbons are in one sub-graph?
+                // By definition of component, they are connected to *something*.
+                // Are they connected to *each other*?
+                // BFS on Carbons only.
+                if (carbons.length < 2) return false;
+                // It's Ethane, tiny. Just check if C-C bond exists.
+                return comp.bonds.some(b => b.a.type === 'C' && b.b.type === 'C');
+            }
+            return true;
+        }
+
+        function checkSpecificBond(comp, t1, t2, order) {
+            return comp.bonds.some(b =>
+                ((b.a.type === t1 && b.b.type === t2) || (b.a.type === t2 && b.b.type === t1))
+                && b.order === order
+            );
+        }
+
+        function checkSubstructure(comp, patterns) {
+            // Very basic existence check
+            let ok = true;
+            if (patterns.includes('C-C')) ok = ok && comp.bonds.some(b => b.a.type === 'C' && b.b.type === 'C');
+            if (patterns.includes('C-O')) ok = ok && comp.bonds.some(b => (b.a.type === 'C' && b.b.type === 'O') || (b.a.type === 'O' && b.b.type === 'C'));
+            if (patterns.includes('O-H')) ok = ok && comp.bonds.some(b => (b.a.type === 'O' && b.b.type === 'H') || (b.a.type === 'H' && b.b.type === 'O'));
+            return ok;
+        }
+
+        function checkGlycerol(comp) {
+            // C3H8O3
+            // 3 Carbons. Each must have an Oxygen attached.
+            const carbons = comp.atoms.filter(a => a.type === 'C');
+            return carbons.every(c => {
+                return comp.bonds.some(b => (b.a === c && b.b.type === 'O') || (b.b === c && b.a.type === 'O'));
+            });
+        }
+
+        const game = new CarbonGame();
+    </script>
+</body>
+
+</html>
