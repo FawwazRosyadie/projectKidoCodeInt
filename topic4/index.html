@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reaction Rate Rush | Form 5 Science</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <!-- Placeholder for icons if valid, or will use SVG -->
+</head>
+
+<body>
+    <div id="app">
+        <!-- Game HUD -->
+        <header class="hud-header">
+            <div class="stat-box score-box">
+                <span class="label">SCORE</span>
+                <span class="value" id="score-display">0</span>
+            </div>
+            <div class="stat-box level-box">
+                <span class="label">LEVEL</span>
+                <span class="value" id="level-display">1</span>
+            </div>
+            <div class="stat-box timer-box">
+                <span class="label">TIME</span>
+                <span class="value" id="timer-display">60</span>
+            </div>
+        </header>
+
+        <!-- Main Visualization Area -->
+        <main class="game-container">
+            <div class="reactor-wrapper">
+                <canvas id="reaction-canvas"></canvas>
+                <div class="reactor-overlay" id="reactor-overlay">
+                    <!-- Overlay for messages/start button -->
+                    <div class="message-panel" id="start-screen">
+                        <h1>REACTION RATE RUSH</h1>
+                        <p>Master the factors of reaction!</p>
+                        <button class="btn-primary" id="start-btn">START SIMULATION</button>
+                    </div>
+                </div>
+                <!-- Warning Indicators -->
+                <div class="warning-light" id="heat-warning">WARNING: HIGH TEMP</div>
+            </div>
+
+            <!-- Task/Goal Panel -->
+            <div class="goal-panel glass-panel">
+                <h3>CREATE PRODUCT</h3>
+                <div class="progress-container">
+                    <div class="progress-bar" id="product-progress"></div>
+                </div>
+                <div class="goal-text"><span id="product-current">0</span> / <span id="product-target">50</span>
+                    Molecules</div>
+            </div>
+        </main>
+
+        <!-- Control Panel -->
+        <footer class="controls-footer glass-panel">
+
+            <div class="control-group">
+                <label>TEMPERATURE</label>
+                <input type="range" id="temp-slider" min="1" max="100" value="30">
+                <div class="meter-readout" id="temp-readout">30°C</div>
+            </div>
+
+            <div class="control-group actions">
+                <button class="action-btn" id="btn-concentrate" title="Increase Concentration">
+                    <div class="icon">⚗️</div>
+                    <span>ADD REACTANT</span>
+                </button>
+                <button class="action-btn locked" id="btn-crush" title="Increase Surface Area">
+                    <div class="icon">🔨</div>
+                    <span>CRUSH SOLIDS</span>
+                </button>
+                <button class="action-btn locked" id="btn-catalyst" title="Add Catalyst">
+                    <div class="icon">⚡</div>
+                    <span>CATALYST</span>
+                </button>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Educational Popup Modal -->
+    <div id="edu-modal" class="modal hidden">
+        <div class="modal-content glass-panel">
+            <h2 id="edu-title">Level Complete!</h2>
+            <div class="edu-visual" id="edu-visual">
+                <!-- Dynamic Content Here -->
+            </div>
+            <p id="edu-text">Great job! You increased the reaction rate.</p>
+            <div class="stats-summary">
+                <div class="stat">
+                    <div class="val" id="level-score">0</div>
+                    <div class="lbl">Level Score</div>
+                </div>
+                <div class="stat">
+                    <div class="val" id="level-time">0s</div>
+                    <div class="lbl">Time Taken</div>
+                </div>
+            </div>
+            <button class="btn-primary" id="next-level-btn">NEXT LEVEL</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
