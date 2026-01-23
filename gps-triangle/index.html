@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SATELLITE COMMAND: ORBITAL DEFENSE</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --primary: #00f3ff;
+            --alert: #ff0055;
+            --warn: #ffae00;
+            --success: #00ff9d;
+            --bg: #050510;
+        }
+
+        body {
+            margin: 0;
+            background-color: var(--bg);
+            color: #fff;
+            font-family: 'Rajdhani', sans-serif;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            user-select: none;
+        }
+
+        /* LAYOUT & LAYERS */
+        #game-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            cursor: crosshair;
+        }
+
+        /* HUD - Z-Index 20 */
+        #hud-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 20;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .hud-panel {
+            background: rgba(10, 20, 30, 0.85);
+            border: 1px solid rgba(0, 243, 255, 0.3);
+            padding: 10px 20px;
+            border-radius: 4px;
+            transform: skewX(-10deg);
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.1);
+        }
+
+        .hud-content {
+            transform: skewX(10deg);
+        }
+
+        /* Unskew text */
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: #888;
+            letter-spacing: 2px;
+        }
+
+        .stat-val {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2rem;
+            color: var(--primary);
+            text-shadow: 0 0 10px var(--primary);
+        }
+
+        #alert-display {
+            position: absolute;
+            top: 15%;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+        }
+
+        .alert-msg {
+            background: rgba(255, 0, 85, 0.2);
+            border: 1px solid var(--alert);
+            color: var(--alert);
+            padding: 10px 40px;
+            font-family: 'Orbitron';
+            font-size: 1.5rem;
+            animation: pulse-alert 2s infinite;
+            /* Slower pulse */
+            display: none;
+        }
+
+        /* CRT EFFECT - Z-Index 50 */
+        .scanlines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+            z-index: 50;
+            opacity: 0.6;
+        }
+
+        /* MENUS - Z-Index 100 */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(5, 10, 15, 0.95);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .menu-box {
+            border: 2px solid var(--primary);
+            padding: 40px;
+            background: rgba(10, 20, 30, 0.95);
+            max-width: 800px;
+            text-align: center;
+            box-shadow: 0 0 50px rgba(0, 243, 255, 0.2);
+            position: relative;
+        }
+
+        .menu-box::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            right: -5px;
+            width: 20px;
+            height: 20px;
+            border-right: 2px solid var(--primary);
+            border-bottom: 2px solid var(--primary);
+        }
+
+        h1 {
+            font-family: 'Orbitron';
+            font-size: 3.5rem;
+            margin: 0 0 20px 0;
+            color: #fff;
+            text-shadow: 0 0 20px var(--primary);
+            letter-spacing: 5px;
+        }
+
+        .btn {
+            background: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+            padding: 20px 60px;
+            font-family: 'Orbitron';
+            font-size: 1.5rem;
+            cursor: pointer;
+            margin-top: 30px;
+            transition: 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+
+        .btn:hover {
+            background: var(--primary);
+            color: #000;
+            box-shadow: 0 0 30px var(--primary);
+        }
+
+        /* Grid Layout for Tutorial */
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+            text-align: left;
+            opacity: 0.8;
+        }
+
+        .card {
+            border: 1px solid #333;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .card strong {
+            color: var(--primary);
+            display: block;
+            margin-bottom: 5px;
+            font-family: 'Orbitron';
+        }
+
+        @keyframes pulse-alert {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="scanlines"></div>
+
+    <div id="game-layer">
+        <canvas id="gameCanvas"></canvas>
+    </div>
+
+    <!-- HUD -->
+    <div id="hud-layer" class="hidden">
+        <div style="display:flex; justify-content:space-between; width:100%;">
+            <div class="hud-panel">
+                <div class="hud-content">
+                    <div class="stat-label">DATA DECRYPTED</div>
+                    <div class="stat-val" id="score">0000</div>
+                </div>
+            </div>
+
+            <div class="hud-panel" style="min-width: 200px; text-align:center;">
+                <div class="hud-content">
+                    <div class="stat-label">MISSION TIMER</div>
+                    <div class="stat-val" id="time">02:00</div>
+                    <div style="width:100%; height:4px; background:#333; margin-top:5px;">
+                        <div id="time-bar" style="width:100%; height:100%; background:var(--primary);"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="hud-panel">
+                <div class="hud-content">
+                    <div class="stat-label">SYSTEM INTEGRITY</div>
+                    <div class="stat-val" id="health" style="color:var(--success)">100%</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="alert-display">
+            <div id="alert-msg" class="alert-msg">SAT CONNECTION CRITICAL</div>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; width:100%; align-items:flex-end;">
+            <div class="hud-panel">
+                <div class="hud-content" style="font-family:monospace; color:#aaa; font-size:0.8rem;" id="log">
+                    > SYSTEM READY<br>> WAITING FOR INPUT...
+                </div>
+            </div>
+            <div class="hud-panel">
+                <div class="hud-content">
+                    <div class="stat-label">SATELLITES</div>
+                    <div class="stat-val" style="font-size:1.5rem;" id="sat-count">0/6</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- START MENU -->
+    <div id="menu-screen" class="overlay">
+        <div class="menu-box">
+            <h1>SATELLITE COMMAND</h1>
+            <div class="grid">
+                <div class="card">
+                    <strong>1. CONNECT</strong>
+                    Drag satellites to the blue Earth target. Connect 3+ to establish a lock.
+                </div>
+                <div class="card">
+                    <strong>2. DECRYPT</strong>
+                    Data packets travel along the beams. <u>Click them</u> to decrypt and score points.
+                </div>
+                <div class="card">
+                    <strong>3. MAINTAIN</strong>
+                    Satellites drift out of frequency (Turn Yellow). <u>Click them</u> to Re-Tune.
+                </div>
+            </div>
+            <br>
+            <p style="color:#888;">WARNING: Debris will damage your system integrity. Shoot on sight.</p>
+            <button class="btn" onclick="GAME.start()">INITIALIZE</button>
+        </div>
+    </div>
+
+    <!-- GAME OVER -->
+    <div id="end-screen" class="overlay hidden">
+        <div class="menu-box">
+            <h1>MISSION OFFLINE</h1>
+            <h2 style="color:var(--primary); font-size:2rem;" id="end-score">SCORE: 0</h2>
+            <p id="end-reason">Connection Lost</p>
+            <button class="btn" onclick="location.reload()">REBOOT SYSTEM</button>
+        </div>
+    </div>
+
+    <script>
+        // --- AUDIO ENGINE ---
+        const AUDIO = {
+            ctx: null,
+            init: function () {
+                try {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                } catch (e) { console.warn("No Audio"); }
+            },
+            play: function (type) {
+                if (!this.ctx) this.init();
+                if (this.ctx.state === 'suspended') this.ctx.resume();
+
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                const t = this.ctx.currentTime;
+
+                if (type === 'click') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(800, t);
+                    gain.gain.setValueAtTime(0.1, t);
+                    osc.start(t); osc.stop(t + 0.05);
+                }
+                else if (type === 'connect') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(400, t);
+                    osc.frequency.exponentialRampToValueAtTime(800, t + 0.1);
+                    gain.gain.setValueAtTime(0.2, t);
+                    gain.gain.exponentialRampToValueAtTime(0.01, t + 0.2);
+                    osc.start(t); osc.stop(t + 0.2);
+                }
+                else if (type === 'decrypt') {
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(1200, t);
+                    osc.frequency.linearRampToValueAtTime(1800, t + 0.05);
+                    gain.gain.setValueAtTime(0.05, t);
+                    gain.gain.linearRampToValueAtTime(0, t + 0.05);
+                    osc.start(t); osc.stop(t + 0.05);
+                }
+                else if (type === 'alert') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(150, t);
+                    osc.frequency.linearRampToValueAtTime(100, t + 0.2);
+                    gain.gain.setValueAtTime(0.2, t);
+                    gain.gain.linearRampToValueAtTime(0, t + 0.2);
+                    osc.start(t); osc.stop(t + 0.2);
+                }
+            }
+        };
+
+        // --- GAME LOGIC ---
+        const GAME = {
+            state: 'MENU',
+            canvas: null, ctx: null,
+            width: 0, height: 0,
+
+            // Game State
+            score: 0,
+            time: 120,
+            health: 100, // System integrity
+
+            // Entities
+            sats: [],
+            debris: [],
+            packets: [],
+            particles: [],
+
+            mouse: { x: 0, y: 0 },
+            dragStart: null,
+            target: { x: 0, y: 0 }, // Earth center
+
+            init: function () {
+                this.canvas = document.getElementById('gameCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.resize();
+
+                window.addEventListener('resize', () => this.resize());
+                this.canvas.addEventListener('mousedown', e => this.onDown(e));
+                this.canvas.addEventListener('mousemove', e => this.onMove(e));
+                window.addEventListener('mouseup', e => this.onUp(e));
+
+                requestAnimationFrame(t => this.loop(t));
+                console.log("System Initialized");
+            },
+
+            resize: function () {
+                this.width = window.innerWidth;
+                this.height = window.innerHeight;
+                this.canvas.width = this.width;
+                this.canvas.height = this.height;
+                this.target = { x: this.width / 2, y: this.height / 2 };
+            },
+
+            start: function () {
+                document.getElementById('menu-screen').classList.add('hidden');
+                document.getElementById('hud-layer').classList.remove('hidden');
+                AUDIO.play('connect');
+
+                this.state = 'PLAYING';
+                this.score = 0;
+                this.time = 120;
+                this.health = 100;
+
+                // Clear entities
+                this.sats = [];
+                this.debris = [];
+                this.packets = [];
+                this.particles = [];
+
+                // Spawn Satellites (3 Rings) with REDUCED SPEED (0.1 - 0.2 range)
+                const rings = [200, 300, 400];
+                rings.forEach((r, i) => {
+                    // 2 satellites per ring
+                    this.sats.push(this.createSat(r, i * 0.5, 0.15 - (i * 0.02)));
+                    this.sats.push(this.createSat(r, i * 0.5 + 3.14, -(0.12 - (i * 0.02))));
+                });
+
+                this.log("UPLINK ESTABLISHED");
+            },
+
+            createSat: function (orbitR, angle, speed) {
+                return {
+                    x: 0, y: 0, orbitR: orbitR, angle: angle, speed: speed,
+                    connected: false,
+                    drift: 0, // 0-100, if 100 connection breaks
+                    recharging: false,
+                    active: true,
+                    respawn: 0
+                };
+            },
+
+            spawnDebris: function () {
+                const side = Math.floor(Math.random() * 4);
+                let x, y;
+                // Spawn outside screen
+                if (side === 0) { x = Math.random() * this.width; y = -50; }
+                else if (side === 1) { x = this.width + 50; y = Math.random() * this.height; }
+                else if (side === 2) { x = Math.random() * this.width; y = this.height + 50; }
+                else { x = -50; y = Math.random() * this.height; }
+
+                // Aim at centerish
+                const angle = Math.atan2(this.target.y - y, this.target.x - x);
+
+                // REDUCED DEBRIS SPEED (0.3 - 0.8)
+                this.debris.push({
+                    x: x, y: y,
+                    vx: Math.cos(angle) * (Math.random() * 0.5 + 0.3),
+                    vy: Math.sin(angle) * (Math.random() * 0.5 + 0.3),
+                    hp: 1
+                });
+            },
+
+            createExplosion: function (x, y, color) {
+                for (let i = 0; i < 15; i++) {
+                    const a = Math.random() * 6.28;
+                    const s = Math.random() * 3; // Slower particles
+                    this.particles.push({
+                        x: x, y: y, vx: Math.cos(a) * s, vy: Math.sin(a) * s,
+                        life: 1.0, color: color
+                    });
+                }
+            },
+
+            loop: function (t) {
+                if (this.state === 'PLAYING') {
+                    // Time
+                    this.time -= 0.016;
+                    if (this.time <= 0 || this.health <= 0) this.endGame();
+
+                    // Logic
+                    this.updateLogic();
+
+                    // Render
+                    this.draw();
+                    this.updateUI();
+                }
+                requestAnimationFrame(t => this.loop(t));
+            },
+
+            updateLogic: function () {
+                // Sats
+                const dt = 0.016;
+                this.sats.forEach(s => {
+                    if (!s.active) {
+                        s.respawn -= dt;
+                        if (s.respawn <= 0) { s.active = true; s.drift = 0; s.connected = false; }
+                        return;
+                    }
+
+                    // Orbit
+                    s.angle += s.speed * dt;
+                    s.x = this.target.x + Math.cos(s.angle) * s.orbitR;
+                    s.y = this.target.y + Math.sin(s.angle) * s.orbitR;
+
+                    // Drift Mechanic (SLOWER)
+                    if (s.connected) {
+                        s.drift += 0.05; // Was 0.2, now 4x slower time to drift
+                        if (s.drift >= 100) {
+                            s.connected = false;
+                            s.drift = 0;
+                            this.log("CONNECTION LOST - SIGNAL DRIFT", "warn");
+                            AUDIO.play('alert');
+                        }
+                    } else if (s.drift > 0) {
+                        s.drift -= 0.5; // Recover when idle
+                    }
+                });
+
+                // Debris Spawning (LESS FREQUENT)
+                if (Math.random() < 0.005) this.spawnDebris();
+
+                // Debris Logic
+                this.debris.forEach(d => {
+                    d.x += d.vx; d.y += d.vy;
+                    // Hit Earth?
+                    if (this.dist(d.x, d.y, this.target.x, this.target.y) < 60) {
+                        d.hp = 0; this.health -= 10;
+                        this.createExplosion(d.x, d.y, '#f00');
+                        AUDIO.play('alert');
+                        this.log("CORE DAMAGE DETECTED", "alert");
+                    }
+                });
+                this.debris = this.debris.filter(d => d.hp > 0);
+
+                // Packets
+                const connectedSats = this.sats.filter(s => s.connected && s.active);
+                if (connectedSats.length >= 3 && Math.random() < 0.02) { // Less frequent packets
+                    const s = connectedSats[Math.floor(Math.random() * connectedSats.length)];
+                    this.packets.push({
+                        x: s.x, y: s.y, start: { x: s.x, y: s.y },
+                        p: 0,
+                        val: 100
+                    });
+                }
+
+                this.packets.forEach(p => {
+                    p.p += 0.002; // Slower packet travel (was 0.005)
+                    p.x = p.start.x + (this.target.x - p.start.x) * p.p;
+                    p.y = p.start.y + (this.target.y - p.start.y) * p.p;
+                    if (p.p >= 1) p.val = 0; // Missed
+                });
+                this.packets = this.packets.filter(p => p.val > 0);
+
+                // Particles
+                this.particles.forEach(p => {
+                    p.x += p.vx; p.y += p.vy; p.life -= 0.03;
+                });
+                this.particles = this.particles.filter(p => p.life > 0);
+            },
+
+            draw: function () {
+                const ctx = this.ctx;
+                ctx.fillStyle = '#050510';
+                ctx.fillRect(0, 0, this.width, this.height);
+
+                // Earth
+                const grad = ctx.createRadialGradient(this.target.x, this.target.y, 40, this.target.x, this.target.y, 100);
+                grad.addColorStop(0, '#002'); grad.addColorStop(1, '#000');
+                ctx.fillStyle = grad;
+                ctx.beginPath(); ctx.arc(this.target.x, this.target.y, 150, 0, 6.28); ctx.fill();
+
+                // Earth Grid
+                ctx.strokeStyle = 'rgba(0,100,255,0.2)';
+                ctx.beginPath();
+                for (let i = 0; i < 3; i++) ctx.arc(this.target.x, this.target.y, 60 + i * 30, 0, 6.28);
+                ctx.stroke();
+
+                // Connection Lines
+                this.sats.forEach(s => {
+                    if (s.connected && s.active) {
+                        ctx.lineWidth = 3;
+                        // Color changes based on drift (Green -> Yellow -> Red)
+                        const driftColor = s.drift < 50 ? '#00ff9d' : (s.drift < 80 ? '#ffae00' : '#ff0055');
+                        ctx.strokeStyle = driftColor;
+                        ctx.beginPath(); ctx.moveTo(s.x, s.y); ctx.lineTo(this.target.x, this.target.y); ctx.stroke();
+
+                        // Drift Warning Bar
+                        if (s.drift > 50) {
+                            ctx.fillStyle = driftColor;
+                            ctx.fillText("⚠ DRIFT", s.x - 20, s.y - 30);
+                        }
+                    }
+                });
+
+                // Packets
+                this.packets.forEach(p => {
+                    ctx.fillStyle = '#fff';
+                    ctx.shadowColor = '#00f3ff'; ctx.shadowBlur = 10;
+                    ctx.fillRect(p.x - 6, p.y - 6, 12, 12);
+                    ctx.shadowBlur = 0;
+                });
+
+                // Sats
+                this.sats.forEach(s => {
+                    if (!s.active) {
+                        ctx.fillStyle = '#333'; ctx.fillText("REBOOT...", s.x, s.y); return;
+                    }
+                    ctx.fillStyle = s.connected ? '#00f3ff' : '#555';
+                    ctx.beginPath(); ctx.arc(s.x, s.y, 12, 0, 6.28); ctx.fill();
+
+                    // Panels
+                    ctx.fillStyle = '#222'; ctx.fillRect(s.x - 16, s.y - 6, 8, 12); ctx.fillRect(s.x + 8, s.y - 6, 8, 12);
+
+                    // Drift Meter (Mini)
+                    if (s.connected) {
+                        ctx.fillStyle = '#000'; ctx.fillRect(s.x - 10, s.y + 15, 20, 4);
+                        ctx.fillStyle = s.drift > 80 ? '#f00' : '#0f0';
+                        ctx.fillRect(s.x - 10, s.y + 15, 20 * ((100 - s.drift) / 100), 4);
+                    }
+                });
+
+                // Debris
+                ctx.fillStyle = '#888';
+                this.debris.forEach(d => {
+                    ctx.beginPath();
+                    ctx.moveTo(d.x, d.y - 10); ctx.lineTo(d.x + 8, d.y + 5); ctx.lineTo(d.x - 8, d.y + 5);
+                    ctx.fill();
+                });
+
+                // Particles
+                this.particles.forEach(p => {
+                    ctx.fillStyle = p.color; ctx.globalAlpha = p.life;
+                    ctx.beginPath(); ctx.arc(p.x, p.y, 3, 0, 6.28); ctx.fill();
+                    ctx.globalAlpha = 1;
+                });
+
+                // Target Icon
+                ctx.fillStyle = '#004488';
+                ctx.beginPath(); ctx.arc(this.target.x, this.target.y, 50, 0, 6.28); ctx.fill();
+                ctx.strokeStyle = '#00f3ff'; ctx.lineWidth = 2; ctx.stroke();
+
+                // Drag Line
+                if (this.dragStart) {
+                    ctx.strokeStyle = '#fff'; ctx.setLineDash([5, 5]);
+                    ctx.beginPath(); ctx.moveTo(this.dragStart.x, this.dragStart.y); ctx.lineTo(this.mouse.x, this.mouse.y); ctx.stroke();
+                    ctx.setLineDash([]);
+                }
+            },
+
+            updateUI: function () {
+                try {
+                    document.getElementById('score').innerText = this.score.toString().padStart(4, '0');
+                    document.getElementById('time').innerText = Math.floor(Math.max(0, this.time));
+                    document.getElementById('time-bar').style.width = (this.time / 120) * 100 + "%";
+                    document.getElementById('health').innerText = Math.floor(this.health) + "%";
+                    if (this.health < 40) document.getElementById('health').style.color = 'var(--alert)';
+
+                    const activeLinks = this.sats.filter(s => s.connected).length;
+                    document.getElementById('sat-count').innerText = activeLinks + "/6";
+
+                    const alert = document.getElementById('alert-msg');
+                    if (activeLinks < 3) { alert.style.display = 'block'; alert.innerText = "LINK CRITICAL: CONNECT " + (3 - activeLinks) + " MORE"; }
+                    else { alert.style.display = 'none'; }
+                } catch (e) { }
+            },
+
+            onDown: function (e) {
+                const rect = this.canvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+
+                // 1. Packets (Decrypt) - Priority
+                let hitPacket = false;
+                this.packets.forEach(p => {
+                    if (this.dist(x, y, p.x, p.y) < 20) {
+                        p.val = 0; hitPacket = true;
+                        this.score += 100;
+                        AUDIO.play('decrypt');
+                        this.createExplosion(p.x, p.y, '#fff');
+                    }
+                });
+                if (hitPacket) return;
+
+                // 2. Debris (Shoot)
+                let hitDebris = false;
+                this.debris.forEach(d => {
+                    if (this.dist(x, y, d.x, d.y) < 30) {
+                        d.hp = 0; hitDebris = true;
+                        AUDIO.play('click');
+                        this.createExplosion(d.x, d.y, '#aaa');
+                    }
+                });
+                if (hitDebris) return;
+
+                // 3. Satellites (Interact)
+                this.sats.forEach(s => {
+                    if (s.active && this.dist(x, y, s.x, s.y) < 30) {
+                        if (s.connected) {
+                            // TUNE: Reset drift
+                            s.drift = 0;
+                            this.createExplosion(s.x, s.y, '#0f0');
+                            AUDIO.play('click');
+                            this.log("SIGNAL RETUNED");
+                        } else {
+                            this.dragStart = s;
+                            AUDIO.play('click');
+                        }
+                    }
+                });
+            },
+
+            onMove: function (e) {
+                const rect = this.canvas.getBoundingClientRect();
+                this.mouse.x = e.clientX - rect.left;
+                this.mouse.y = e.clientY - rect.top;
+            },
+
+            onUp: function (e) {
+                if (this.dragStart) {
+                    if (this.dist(this.mouse.x, this.mouse.y, this.target.x, this.target.y) < 80) {
+                        this.dragStart.connected = true;
+                        this.createExplosion(this.dragStart.x, this.dragStart.y, '#00f3ff');
+                        AUDIO.play('connect');
+                        this.log("LINK ESTABLISHED", "success");
+                    }
+                    this.dragStart = null;
+                }
+            },
+
+            dist: function (x1, y1, x2, y2) { return Math.hypot(x2 - x1, y2 - y1); },
+
+            log: function (msg, type = '') {
+                const el = document.getElementById('log');
+                if (el) {
+                    const line = `> ${msg}`;
+                    el.innerHTML = line + "<br>" + el.innerHTML;
+                }
+            },
+
+            endGame: function () {
+                this.state = 'GAMEOVER';
+                document.getElementById('hud-layer').classList.add('hidden');
+                document.getElementById('end-screen').classList.remove('hidden');
+                document.getElementById('end-score').innerText = "SCORE: " + this.score;
+                document.getElementById('end-reason').innerText = this.health <= 0 ? "SYSTEM FAILURE: CORE DESTROYED" : "MISSION TIMEOUT";
+            }
+        };
+
+        // BOOT
+        window.onload = function () {
+            GAME.init();
+        };
+
+    </script>
+</body>
+
+</html>
