@@ -1,0 +1,1377 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Legasi Alam Melayu: Trade Tycoon</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700&family=Cinzel:wght@400;700&display=swap');
+
+        :root {
+            --primary: #0f172a;
+            --secondary: #1e293b;
+            --accent: #f59e0b;
+            /* Gold */
+            --accent-glow: #fbbf24;
+            --text-light: #f8fafc;
+            --text-dim: #94a3b8;
+            --success: #10b981;
+            --danger: #ef4444;
+            --ocean-1: #0c4a6e;
+            --ocean-2: #0369a1;
+            --font-main: 'Outfit', sans-serif;
+            --font-header: 'Cinzel', serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-drag: none;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: var(--font-main);
+            background-color: var(--primary);
+            color: var(--text-light);
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* --- Background Animation --- */
+        .ocean-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: linear-gradient(180deg, var(--primary) 20%, var(--ocean-1) 100%);
+            overflow: hidden;
+        }
+
+        .wave {
+            position: absolute;
+            bottom: -50px;
+            left: 0;
+            width: 200%;
+            height: 200px;
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'%3E%3Cpath fill='%230369a1' fill-opacity='0.2' d='M0,192L48,197.3C96,203,192,213,288,229.3C384,245,480,267,576,250.7C672,235,768,181,864,181.3C960,181,1056,235,1152,234.7C1248,235,1344,181,1392,154.7L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z'%3E%3C/path%3E%3C/svg%3E");
+            background-size: 50% 100%;
+            animation: waveFlow 15s linear infinite;
+        }
+
+        .wave:nth-child(2) {
+            bottom: -70px;
+            opacity: 0.5;
+            animation: waveFlow 20s linear infinite reverse;
+        }
+
+        @keyframes waveFlow {
+            0% {
+                transform: translateX(0);
+            }
+
+            100% {
+                transform: translateX(-50%);
+            }
+        }
+
+        /* --- UI Containers --- */
+        #game-container {
+            width: 95%;
+            height: 95%;
+            max-width: 1400px;
+            display: grid;
+            grid-template-rows: 80px 1fr 120px;
+            gap: 1rem;
+            position: relative;
+        }
+
+        /* --- Header --- */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 2rem;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(10px);
+            border-radius: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .game-title h1 {
+            font-family: var(--font-header);
+            margin: 0;
+            font-size: 1.8rem;
+            background: linear-gradient(to right, #fbbf24, #f59e0b);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .stats-bar {
+            display: flex;
+            gap: 2rem;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .icon {
+            font-size: 1.4rem;
+        }
+
+        /* --- Main Area --- */
+        main {
+            display: grid;
+            grid-template-columns: 280px 1fr 300px;
+            gap: 1rem;
+            position: relative;
+            min-height: 0;
+            height: 100%;
+        }
+
+        .panel {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border-radius: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            height: 100%;
+            max-height: 100%;
+            min-height: 0;
+            position: relative;
+        }
+
+        /* --- Left Panel: Kingdom Status --- */
+        .kingdom-info {
+            text-align: center;
+        }
+
+        .kingdom-rank {
+            font-family: var(--font-header);
+            color: var(--accent);
+            font-size: 1.4rem;
+            margin-bottom: 0.5rem;
+        }
+
+        #kingdom-map-visual {
+            width: 100%;
+            height: 180px;
+            background: #0f172a;
+            border-radius: 0.5rem;
+            margin: 1rem 0;
+            position: relative;
+            background-image: radial-gradient(circle at center, #1e293b 1px, transparent 1px);
+            background-size: 20px 20px;
+            overflow: hidden;
+        }
+
+        .map-node {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: var(--text-dim);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: all 0.5s;
+        }
+
+        .map-node.active {
+            background: var(--accent);
+            box-shadow: 0 0 10px var(--accent-glow);
+            width: 16px;
+            height: 16px;
+        }
+
+        .map-connection {
+            position: absolute;
+            height: 2px;
+            background: var(--accent);
+            transform-origin: left center;
+            opacity: 0;
+            transition: opacity 1s;
+        }
+
+        .fact-box {
+            margin-top: auto;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 0.8rem;
+            border-radius: 0.5rem;
+            font-size: 0.9rem;
+            color: var(--text-dim);
+            border-left: 3px solid var(--accent);
+            min-height: 80px;
+        }
+
+        /* --- Center Panel: Port View --- */
+        #port-view {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: url('data:image/svg+xml;utf8,<svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100" fill="%230c4a6e" opacity="0.3"/></svg>');
+            /* Placeholder texture */
+        }
+
+        .ship {
+            width: 200px;
+            height: 180px;
+            position: absolute;
+            bottom: 20%;
+            transition: transform 1s cubic-bezier(0.175, 0.885, 0.32, 1.27), opacity 1s;
+            transform: translateX(200%);
+            /* Start off screen */
+            opacity: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .ship.arrived {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        .ship-body {
+            width: 160px;
+            height: 60px;
+            background: #573a25;
+            border-radius: 0 0 80px 80px;
+            position: relative;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .ship-sail {
+            width: 120px;
+            height: 100px;
+            background: #e2e8f0;
+            border-radius: 10px 60px 10px 10px;
+            margin-bottom: -10px;
+            position: relative;
+            background-size: cover;
+            display: grid;
+            place-items: center;
+            font-size: 2rem;
+            color: #334155;
+            font-weight: bold;
+        }
+
+        .ship-flag {
+            position: absolute;
+            top: -20px;
+            right: 10px;
+            font-size: 24px;
+        }
+
+        .trade-bubble {
+            position: absolute;
+            top: -120px;
+            left: 50%;
+            transform: translateX(-50%) scale(0);
+            background: white;
+            color: #1e293b;
+            padding: 1rem;
+            border-radius: 1rem;
+            width: 240px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            z-index: 10;
+        }
+
+        .ship.arrived .trade-bubble {
+            transform: translateX(-50%) scale(1);
+        }
+
+        .trade-req {
+            font-weight: bold;
+            color: var(--danger);
+            font-size: 1.1rem;
+        }
+
+        .trade-reward {
+            color: var(--success);
+            font-size: 0.9rem;
+            margin-top: 0.2rem;
+        }
+
+        /* --- Right Panel: Trade Log & Upgrades --- */
+        .log-container {
+            flex-grow: 1;
+            overflow-y: auto;
+            font-size: 0.85rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            scrollbar-width: thin;
+            scrollbar-color: var(--accent) rgba(0, 0, 0, 0.2);
+            padding-right: 5px;
+        }
+
+        .log-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .log-container::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 3px;
+        }
+
+        .log-container::-webkit-scrollbar-thumb {
+            background: var(--accent);
+            border-radius: 3px;
+        }
+
+        .log-entry {
+            padding: 0.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 0.25rem;
+            border-left: 2px solid var(--text-dim);
+            animation: slideIn 0.3s ease;
+        }
+
+        .log-entry.success {
+            border-color: var(--success);
+        }
+
+        .log-entry.fail {
+            border-color: var(--danger);
+        }
+
+        .log-entry.info {
+            border-color: var(--accent);
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* --- Footer: Inventory & Actions --- */
+        footer {
+            background: rgba(15, 23, 42, 0.8);
+            border-radius: 1rem;
+            display: flex;
+            align-items: center;
+            padding: 0 2rem;
+            gap: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .inventory-label {
+            font-family: var(--font-header);
+            color: var(--accent);
+            width: 100px;
+            flex-shrink: 0;
+            line-height: 1.2;
+        }
+
+        .inventory-grid {
+            display: flex;
+            gap: 1.5rem;
+            flex-grow: 1;
+            justify-content: center;
+        }
+
+        .resource-card {
+            background: var(--secondary);
+            border: 1px solid var(--text-dim);
+            border-radius: 0.5rem;
+            width: 100px;
+            height: 90px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .resource-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--accent);
+            background: rgba(245, 158, 11, 0.1);
+        }
+
+        .resource-card:active {
+            transform: scale(0.95);
+        }
+
+        .res-icon {
+            font-size: 1.8rem;
+            margin-bottom: 0.2rem;
+        }
+
+        .res-name {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: var(--text-dim);
+        }
+
+        .res-count {
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: var(--text-light);
+        }
+
+        .cooldown-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 0%;
+            background: rgba(0, 0, 0, 0.6);
+            transition: height 0.1s linear;
+            border-radius: 0 0 0.5rem 0.5rem;
+        }
+
+        /* --- Overlays & Modals --- */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s;
+        }
+
+        .overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .modal {
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            padding: 3rem;
+            border-radius: 1.5rem;
+            border: 1px solid var(--accent);
+            text-align: center;
+            max-width: 600px;
+            box-shadow: 0 0 50px rgba(245, 158, 11, 0.2);
+            transform: translateY(20px);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.27);
+        }
+
+        .overlay.active .modal {
+            transform: translateY(0);
+        }
+
+        h2 {
+            color: var(--accent);
+            font-family: var(--font-header);
+            font-size: 2.5rem;
+            margin: 0 0 1rem 0;
+        }
+
+        p {
+            line-height: 1.6;
+            color: var(--text-dim);
+            margin-bottom: 2rem;
+        }
+
+        .btn {
+            background: var(--accent);
+            color: #000;
+            border: none;
+            padding: 1rem 3rem;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-radius: 3rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: var(--font-main);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px var(--accent-glow);
+        }
+
+        .lang-toggle {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: transparent;
+            border: 1px solid var(--text-dim);
+            color: var(--text-light);
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            border-radius: 0.5rem;
+            z-index: 1001;
+        }
+
+        .lang-toggle:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        /* --- Utility --- */
+        .hidden {
+            display: none !important;
+        }
+
+        .text-accent {
+            color: var(--accent);
+        }
+
+        /* Particle Effects */
+        .particle {
+            position: absolute;
+            pointer-events: none;
+            animation: riseAndFade 1.5s forwards;
+            font-size: 1.2rem;
+            font-weight: bold;
+            z-index: 99;
+        }
+
+        @keyframes riseAndFade {
+            0% {
+                transform: translateY(0) scale(1);
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateY(-50px) scale(1.2);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Language Toggle -->
+    <button class="lang-toggle" onclick="toggleLanguage()">EN / BM</button>
+
+    <div class="ocean-bg">
+        <div class="wave"></div>
+        <div class="wave"></div>
+    </div>
+
+    <!-- Start Screen -->
+    <div id="start-screen" class="overlay active">
+        <div class="modal">
+            <h2 data-key="title">LEGASI ALAM MELAYU</h2>
+            <p data-key="intro">Embark on a journey through the Malay Archipelago. Lead your kingdom from a humble port
+                to a majestic empire. Trade with contemporary powers like Rome, China, and India to build your legacy.
+            </p>
+            <div
+                style="margin-bottom: 1.5rem; text-align: left; background: rgba(0,0,0,0.3); padding: 1rem; border-radius: 0.5rem;">
+                <strong class="text-accent" data-key="howToPlay">How to Play:</strong>
+                <ul style="color: var(--text-dim); padding-left: 1.2rem; margin-top: 0.5rem;">
+                    <li data-key="inst1">Click Resource Cards to gather goods (Spices, Rice, etc.).</li>
+                    <li data-key="inst2">Wait for ships from foreign kingdoms (Rome, China, India).</li>
+                    <li data-key="inst3">Click 'ACCEPT' if you have the required goods to trade.</li>
+                    <li data-key="inst4">Manage your time and reputation to become a famous kingdom!</li>
+                </ul>
+            </div>
+            <button class="btn" onclick="startGame()" data-key="startBtn">START JOURNEY</button>
+        </div>
+    </div>
+
+    <!-- Game Over Screen -->
+    <div id="game-over-screen" class="overlay">
+        <div class="modal">
+            <h2 data-key="gameOver">ERA ENDS</h2>
+            <p><span data-key="finalScore">Final Score</span>: <span id="final-score" class="text-accent"
+                    style="font-size: 2rem;">0</span></p>
+            <p id="historical-summary" style="font-style: italic; color: var(--text-light);"></p>
+            <div style="display: flex; justify-content: center; gap: 2rem; margin-bottom: 2rem;">
+                <div>
+                    <div style="font-size: 0.8rem; text-transform: uppercase; color: var(--text-dim);" data-key="stars">
+                        Stars</div>
+                    <div id="final-stars" style="font-size: 2rem; color: var(--accent);">☆☆☆</div>
+                </div>
+                <div>
+                    <div style="font-size: 0.8rem; text-transform: uppercase; color: var(--text-dim);"
+                        data-key="topScore">Top Score</div>
+                    <div id="final-top-score" style="font-size: 2rem;">0</div>
+                </div>
+            </div>
+            <button class="btn" onclick="location.reload()" data-key="restartBtn">PLAY AGAIN</button>
+        </div>
+    </div>
+
+    <!-- Main Game UI -->
+    <div id="game-container">
+
+        <header>
+            <div class="game-title">
+                <h1>Legasi Alam Melayu</h1>
+            </div>
+            <div class="stats-bar">
+                <div class="stat-item">
+                    <span class="icon">⭐</span>
+                    <span id="score-display">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="icon">👑</span>
+                    <span id="rank-display">Settlement</span>
+                </div>
+                <div class="stat-item">
+                    <span class="icon">⏳</span>
+                    <span id="timer-display">03:00</span>
+                </div>
+            </div>
+        </header>
+
+        <main>
+            <!-- Left: Kingdom Status -->
+            <div class="panel">
+                <div class="kingdom-info">
+                    <div style="text-transform: uppercase; font-size: 0.75rem; color: var(--text-dim);"
+                        data-key="currentKingdom">Current Title</div>
+                    <div class="kingdom-rank" id="kingdom-name">Kedah Tua</div>
+                </div>
+
+                <div id="kingdom-map-visual">
+                    <!-- Dynamic map nodes will be injected here -->
+                    <div class="map-node active" style="top:50%; left:50%;" title="Your Port"></div>
+                </div>
+
+                <div class="fact-box">
+                    <strong style="color:var(--text-light); display:block; margin-bottom:0.3rem;">Did you know?</strong>
+                    <span id="fact-text" style="line-height: 1.4;">The Malay World was a strategic center for maritime
+                        trade between East and West.</span>
+                </div>
+            </div>
+
+            <!-- Center: Port Action -->
+            <div class="panel" id="port-view">
+                <div class="ship" id="active-ship">
+                    <div class="trade-bubble">
+                        <div style="font-size: 0.8rem; text-transform: uppercase; color: #64748b; margin-bottom: 0.5rem;"
+                            id="trader-origin">FROM ROME</div>
+                        <div class="trade-req" id="trade-request">Needs: 2 Spices</div>
+                        <div class="trade-reward" id="trade-offer">Offer: 50 Gold</div>
+                        <div style="margin-top: 1rem; display: flex; gap: 0.5rem; justify-content: center;">
+                            <button onclick="acceptTrade()"
+                                style="background:var(--success); color:white; border:none; padding:5px 15px; border-radius:4px; cursor:pointer;"
+                                data-key="accept">ACCEPT</button>
+                            <button onclick="dismissShip()"
+                                style="background:var(--danger); color:white; border:none; padding:5px 15px; border-radius:4px; cursor:pointer;"
+                                data-key="reject">REJECT</button>
+                        </div>
+                    </div>
+                    <div class="ship-flag">🚩</div>
+                    <div class="ship-sail">⛵</div>
+                    <div class="ship-body"></div>
+                </div>
+            </div>
+
+            <!-- Right: Log & Upgrades -->
+            <div class="panel">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                    <h3 style="margin: 0; font-family: var(--font-header); color: var(--text-light); font-size: 1rem;"
+                        data-key="tradeLog">Trade Log</h3>
+                    <button onclick="showUpgrades()" id="upgrade-btn"
+                        style="background: var(--accent); border:none; padding: 4px 10px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; cursor:pointer;"
+                        data-key="upgradesBtn">UPGRADES</button>
+                </div>
+                <div class="log-container" id="game-log">
+                    <div class="log-entry info">Welcome to the port, your Majesty.</div>
+                </div>
+
+                <div id="upgrade-overlay"
+                    style="display:none; position:absolute; top:0; left:0; width:100%; height:100%; background: rgba(15,23,42,0.95); z-index: 20; padding: 1rem; flex-direction: column;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                        <h3 style="margin:0; font-family:var(--font-header); color:var(--accent);"
+                            data-key="upgradesTitle">Port Upgrades</h3>
+                        <button onclick="hideUpgrades()"
+                            style="background:none; border:none; color:white; font-size:1.5rem; cursor:pointer;">&times;</button>
+                    </div>
+                    <div class="upgrade-list" style="display:flex; flex-direction:column; gap:0.5rem; overflow-y:auto;">
+                        <!-- Upgrades will be injected here -->
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <div class="inventory-label">
+                <span data-key="resources">Port Resources</span>
+                <br>
+                <span style="font-size: 0.7rem; color: var(--text-dim);" data-key="clickGather">(Click to Gather)</span>
+            </div>
+            <div class="inventory-grid">
+                <!-- Resource Cards -->
+                <div class="resource-card" onclick="gatherResource('spice')">
+                    <div class="res-icon">🌶️</div>
+                    <div class="res-name" data-key="resSpice">Spices</div>
+                    <div class="res-count" id="res-spice">0</div>
+                    <div class="cooldown-overlay" id="cd-spice"></div>
+                </div>
+                <div class="resource-card" onclick="gatherResource('forest')">
+                    <div class="res-icon">🪵</div>
+                    <div class="res-name" data-key="resForest">Forest</div>
+                    <div class="res-count" id="res-forest">0</div>
+                    <div class="cooldown-overlay" id="cd-forest"></div>
+                </div>
+                <div class="resource-card" onclick="gatherResource('rice')">
+                    <div class="res-icon">🌾</div>
+                    <div class="res-name" data-key="resRice">Rice</div>
+                    <div class="res-count" id="res-rice">0</div>
+                    <div class="cooldown-overlay" id="cd-rice"></div>
+                </div>
+                <div class="resource-card" onclick="gatherResource('tin')">
+                    <div class="res-icon">⛏️</div>
+                    <div class="res-name" data-key="resTin">Tin</div>
+                    <div class="res-count" id="res-tin">0</div>
+                    <div class="cooldown-overlay" id="cd-tin"></div>
+                </div>
+            </div>
+        </footer>
+
+    </div>
+
+    <script>
+        /**
+         * LANGUAGE DATA
+         */
+        const LANG = {
+            en: {
+                title: "LEGACY OF ALAM MELAYU",
+                intro: "Lead your kingdom to glory in the Malay Archipelago. Manage resources, trade with global powers, and build a civilization that stands the test of time.",
+                howToPlay: "How to Play:",
+                inst1: "Gather resources (Spices, Forest Goods, Rice, Tin) by clicking cards below.",
+                inst2: "Ships from China, India, and Rome will arrive with demands.",
+                inst3: "Trade correct goods to earn Score & Fame.",
+                inst4: "Establish the most famous Kingdom in history!",
+                startBtn: "SET SAIL",
+                gameOver: "ERA ENDED",
+                finalScore: "Final Score",
+                stars: "Stars",
+                topScore: "Top Score",
+                restartBtn: "PLAY AGAIN",
+                currentKingdom: "Current Status",
+                tradeLog: "Master's Log",
+                resources: "Resources",
+                clickGather: "(Click to Gather)",
+                resSpice: "Spices",
+                resForest: "Forest",
+                resRice: "Rice",
+                resTin: "Tin",
+                accept: "ACCEPT",
+                reject: "REJECT",
+                ranks: ["Port Settlement", "Rising City", "Trading Hub", "Maritime Kingdom", "Great Empire"],
+                origins: {
+                    china: "China (Han/Tang)",
+                    india: "India (Gupta/Chola)",
+                    rome: "Roman Empire",
+                    arab: "Arab Traders"
+                },
+                reqText: "Needs",
+                rewText: "Offer",
+                logWelcome: "Welcome, Great Ruler.",
+                logArrive: "Ship arrived from",
+                logSuccess: "Trade successful! gained influence.",
+                logFail: "Not enough resources!",
+                logDismiss: "Ship sent away.",
+                facts: [
+                    "Funan (1st-6th cent) was contemporary with the Roman Empire and Han Dynasty.",
+                    "Champa (2nd cent) existed alongside the Kushan Empire in India.",
+                    "Srivijaya (7th-11th cent) traded with the Abbasid Caliphate and Tang Dynasty.",
+                    "Angkor (9th-15th cent) was contemporary with the Song Dynasty and Chola Empire.",
+                    "Majapahit (13th-16th cent) rose as the Mongol Yuan Dynasty was influential.",
+                    "The 'Konsep Alam Melayu' includes shared language, culture, and geographical traits.",
+                    "Kedah Tua was a major producer of iron and a key stop for traders.",
+                    "Gangga Nagara was rich in gold and tin ore.",
+                    "The Malay World was known as 'Suvarnabhumi' (Land of Gold) by Indian traders."
+                ],
+                upgradesBtn: "UPGRADES",
+                upgradesTitle: "Port Upgrades",
+                upgradeMarket: "Royal Market",
+                upgradeMarketDesc: "Attract ships 30% faster.",
+                upgradeWarehouse: "Stone Warehouse",
+                upgradeWarehouseDesc: "Gain +1 resource every 10s.",
+                upgradeLighthouse: "Great Lighthouse",
+                upgradeLighthouseDesc: "Reduces the impact of Monsoon seasons.",
+                cost: "Cost",
+                purchased: "OWNED",
+                eventMonsoon: "Monsoon Season! Shipping is delayed.",
+                eventPirates: "Pirate Raid! You lost some resources.",
+                eventGift: "Tribute from a local chief: +2 all resources!"
+            },
+            bm: {
+                title: "LEGASI ALAM MELAYU",
+                intro: "Pimpin kerajaan anda ke mercu kejayaan di Alam Melayu. Urus sumber, berdagang dengan kuasa besar, dan bina tamadun yang disegani.",
+                howToPlay: "Cara Bermain:",
+                inst1: "Kumpul sumber (Rempah, Hasil Hutan, Padi, Timah) dengan klik kad.",
+                inst2: "Kapal dari China, India, dan Rom akan tiba dengan permintaan.",
+                inst3: "Berdagang barang yang betul untuk mata & kemasyhuran.",
+                inst4: "Bina Kerajaan Alam Melayu yang paling masyhur!",
+                startBtn: "MULA BERLAYAR",
+                gameOver: "ERA TAMAT",
+                finalScore: "Markah Akhir",
+                stars: "Bintang",
+                topScore: "Rekod Tertinggi",
+                restartBtn: "MAIN SEMULA",
+                currentKingdom: "Status Semasa",
+                tradeLog: "Catatan Pedagang",
+                resources: "Sumber Pelabuhan",
+                clickGather: "(Klik untuk Kumpul)",
+                resSpice: "Rempah",
+                resForest: "Hutan",
+                resRice: "Padi",
+                resTin: "Timah",
+                accept: "TERIMA",
+                reject: "TOLAK",
+                ranks: ["Petempatan Kecil", "Bandar Membangun", "Pusat Dagangan", "Kerajaan Maritim", "Empayar Agung"],
+                origins: {
+                    china: "China (Han/Tang)",
+                    india: "India (Gupta/Chola)",
+                    rome: "Empayar Rom",
+                    arab: "Pedagang Arab"
+                },
+                reqText: "Perlu",
+                rewText: "Tawar",
+                logWelcome: "Selamat datang, Tuanku.",
+                logArrive: "Kapal tiba dari",
+                logSuccess: "Dagangan berjaya! Pengaruh meningkat.",
+                logFail: "Sumber tidak mencukupi!",
+                logDismiss: "Kapal beredar.",
+                facts: [
+                    "Funan (Abad 1-6) adalah sezaman dengan Empayar Rom dan Dinasti Han.",
+                    "Champa (Abad 2) wujud bersama Empayar Kushan di India.",
+                    "Srivijaya (Abad 7-11) berdagang dengan Khalifah Abbasiah dan Dinasti Tang.",
+                    "Angkor (Abad 9-15) adalah sezaman dengan Dinasti Song dan Empayar Chola.",
+                    "Majapahit (Abad 13-16) berkembang ketika Dinasti Yuan (Mongol) berpengaruh.",
+                    "Konsep Alam Melayu merangkumi persamaan bahasa, budaya, dan geografi.",
+                    "Kedah Tua adalah pengeluar utama besi dan hentian utama pedagang.",
+                    "Gangga Nagara kaya dengan hasil emas dan bijih timah.",
+                    "Alam Melayu dikenali sebagai 'Suvarnabhumi' (Bumi Emas) oleh pedagang India."
+                ],
+                upgradesBtn: "NAIK TARAF",
+                upgradesTitle: "Naik Taraf Pelabuhan",
+                upgradeMarket: "Pasar Di-Raja",
+                upgradeMarketDesc: "Menarik kapal 30% lebih pantas.",
+                upgradeWarehouse: "Gudang Batu",
+                upgradeWarehouseDesc: "Dapat +1 sumber setiap 10 saat.",
+                upgradeLighthouse: "Rumah Api Besar",
+                upgradeLighthouseDesc: "Mengurangkan kesan musim Monsun.",
+                cost: "Kos",
+                purchased: "DIMILIKI",
+                eventMonsoon: "Musim Monsun! Ketibaan kapal terganggu.",
+                eventPirates: "Serangan Lanun! Anda kehilangan sumber.",
+                eventGift: "Upeti daripada pembesar: +2 semua sumber!"
+            }
+        };
+
+        /**
+         * GAME CONFIGURATION & STATE
+         */
+        let currentLang = 'en';
+        let gameState = {
+            active: false,
+            score: 0,
+            timer: 180, // 3 minutes
+            resources: { spice: 1, forest: 1, rice: 1, tin: 1 },
+            level: 0,
+            shipActive: false,
+            currentRequest: null,
+            upgrades: {
+                market: false,
+                warehouse: false,
+                lighthouse: false
+            },
+            nextEventTime: 170, // timer value when next event happens
+            isMonsoon: false
+        };
+
+        const RESOURCE_TYPES = ['spice', 'forest', 'rice', 'tin'];
+        const SHIP_ORIGINS = ['china', 'india', 'rome', 'arab'];
+        let gameLoopInt;
+        let shipTimer;
+
+        // Sound placeholders (using simple synth/oscillators would be complex, keeping visual)
+
+        /**
+         * INITIALIZATION & UTILS
+         */
+        function toggleLanguage() {
+            currentLang = currentLang === 'en' ? 'bm' : 'en';
+            updateTexts();
+        }
+
+        function updateTexts() {
+            const data = LANG[currentLang];
+            document.querySelectorAll('[data-key]').forEach(el => {
+                const key = el.getAttribute('data-key');
+                if (data[key]) el.textContent = data[key];
+            });
+            // Update dynamic UI elements if game is running
+            if (gameState.active) {
+                updateRankDisplay();
+                updateLogDisplayHeading();
+            }
+        }
+
+        function updateLogDisplayHeading() {
+            // Just a helper to refresh dynamic content if needed
+        }
+
+        function getTopScore() {
+            return parseInt(localStorage.getItem('alamMelayuTopScore') || '0');
+        }
+
+        function saveTopScore(score) {
+            const current = getTopScore();
+            if (score > current) {
+                localStorage.setItem('alamMelayuTopScore', score);
+            }
+        }
+
+        /**
+         * GAME LOGIC
+         */
+        function startGame() {
+            document.getElementById('start-screen').classList.remove('active');
+            document.getElementById('game-over-screen').classList.remove('active');
+
+            // Reset State
+            gameState = {
+                active: true,
+                score: 0,
+                timer: 180,
+                resources: { spice: 2, forest: 2, rice: 2, tin: 2 },
+                level: 0,
+                shipActive: false,
+                currentRequest: null,
+                upgrades: {
+                    market: false,
+                    warehouse: false,
+                    lighthouse: false
+                },
+                nextEventTime: 165,
+                isMonsoon: false
+            };
+
+            updateUI();
+            addLog(LANG[currentLang].logWelcome, 'info');
+            displayFact();
+            hideUpgrades();
+
+            // Start Loops
+            clearInterval(gameLoopInt);
+            gameLoopInt = setInterval(updateGameLoop, 1000);
+
+            // Initial Ship
+            setTimeout(spawnShip, 2000);
+        }
+
+        function updateGameLoop() {
+            if (!gameState.active) return;
+
+            gameState.timer--;
+
+            // Formatted Timer
+            const m = Math.floor(gameState.timer / 60).toString().padStart(2, '0');
+            const s = (gameState.timer % 60).toString().padStart(2, '0');
+            document.getElementById('timer-display').textContent = `${m}:${s}`;
+
+            // Ship Spawning logic
+            if (!gameState.shipActive && gameState.timer > 5) {
+                let spawnChance = gameState.upgrades.market ? 0.45 : 0.3;
+                if (gameState.isMonsoon && !gameState.upgrades.lighthouse) spawnChance = 0.05;
+                if (gameState.isMonsoon && gameState.upgrades.lighthouse) spawnChance = 0.2;
+
+                if (Math.random() < spawnChance) {
+                    spawnShip();
+                }
+            }
+
+            // Warehouse logic
+            if (gameState.upgrades.warehouse && gameState.timer % 10 === 0) {
+                RESOURCE_TYPES.forEach(r => gameState.resources[r]++);
+                updateUI();
+            }
+
+            // Random Events
+            if (gameState.timer === gameState.nextEventTime) {
+                triggerRandomEvent();
+                gameState.nextEventTime -= (15 + Math.floor(Math.random() * 25));
+            }
+
+            // Level Up Check
+            const newLevel = Math.min(4, Math.floor(gameState.score / 500));
+            if (newLevel > gameState.level) {
+                gameState.level = newLevel;
+                updateRankDisplay();
+                playSound('levelup');
+                addLog(`Rank Up: ${LANG[currentLang].ranks[gameState.level]}`, 'info');
+                spawnConfetti();
+            }
+
+            // End Game
+            if (gameState.timer <= 0) {
+                endGame();
+            }
+        }
+
+        function triggerRandomEvent() {
+            const eventNames = ['monsoon', 'pirates', 'gift'];
+            const event = eventNames[Math.floor(Math.random() * eventNames.length)];
+
+            if (event === 'monsoon') {
+                gameState.isMonsoon = true;
+                addLog(LANG[currentLang].eventMonsoon, 'info');
+                document.getElementById('port-view').style.filter = 'brightness(0.5) hue-rotate(200deg)';
+                setTimeout(() => {
+                    gameState.isMonsoon = false;
+                    document.getElementById('port-view').style.filter = 'none';
+                }, 15000);
+            } else if (event === 'pirates') {
+                addLog(LANG[currentLang].eventPirates, 'fail');
+                RESOURCE_TYPES.forEach(r => {
+                    gameState.resources[r] = Math.max(0, gameState.resources[r] - 2);
+                });
+                updateUI();
+            } else if (event === 'gift') {
+                addLog(LANG[currentLang].eventGift, 'success');
+                RESOURCE_TYPES.forEach(r => gameState.resources[r] += 2);
+                updateUI();
+            }
+            playSound('event');
+        }
+
+        function endGame() {
+            gameState.active = false;
+            clearInterval(gameLoopInt);
+            saveTopScore(gameState.score);
+
+            document.getElementById('final-score').textContent = gameState.score;
+            document.getElementById('final-top-score').textContent = getTopScore();
+
+            // Stars calculation
+            let stars = "☆";
+            if (gameState.score > 500) stars = "☆☆";
+            if (gameState.score > 1200) stars = "☆☆☆";
+            document.getElementById('final-stars').textContent = stars;
+
+            // Historical Summary based on performance
+            const summary = gameState.level >= 3
+                ? (currentLang === 'en' ? "You built a glorious Empire remembered forever in history!" : "Anda membina Empayar agung yang dikenang selamanya!")
+                : (currentLang === 'en' ? "Your kingdom was prosperous but faded with time." : "Kerajaan anda makmur namun pudar ditelan zaman.");
+            document.getElementById('historical-summary').textContent = summary;
+
+            document.getElementById('game-over-screen').classList.add('active');
+        }
+
+        /**
+         * RESOURCES & ACTIONS
+         */
+        function gatherResource(type) {
+            if (!gameState.active) return;
+
+            // Basic click cooldown visual
+            const el = document.getElementById(`cd-${type}`);
+            if (el.style.height === "100%") return; // Prevent spam if valid logic (currently visual only)
+
+            // Increment
+            gameState.resources[type]++;
+            updateUI();
+
+            // Floating text
+            const btn = document.querySelector(`.resource-card[onclick="gatherResource('${type}')"]`);
+            showFloatingText("+1", btn.getBoundingClientRect(), 'success');
+
+            // Cooldown animation
+            el.style.height = "100%";
+            setTimeout(() => { el.style.height = "0%"; }, 600); // 600ms cooldown
+        }
+
+        function spawnShip() {
+            if (gameState.shipActive) return;
+            gameState.shipActive = true;
+
+            // Generate Request
+            const origin = SHIP_ORIGINS[Math.floor(Math.random() * SHIP_ORIGINS.length)];
+            const reqType = RESOURCE_TYPES[Math.floor(Math.random() * RESOURCE_TYPES.length)];
+
+            // Difficulty scales with level
+            const amount = 1 + Math.floor(Math.random() * (gameState.level + 2));
+            const reward = amount * 50 + (gameState.level * 20);
+
+            gameState.currentRequest = { origin, reqType, amount, reward };
+
+            // UI Update
+            const originText = LANG[currentLang].origins[origin];
+            const reqDisplay = LANG[currentLang][`res${reqType.charAt(0).toUpperCase() + reqType.slice(1)}`];
+
+            document.getElementById('trader-origin').textContent = `${LANG[currentLang].logArrive} ${originText}`; // Reuse 'logArrive' text part or full
+            document.getElementById('trader-origin').textContent = originText;
+            document.getElementById('trade-request').textContent = `${LANG[currentLang].reqText}: ${amount} ${reqDisplay}`;
+            document.getElementById('trade-offer').textContent = `${LANG[currentLang].rewText}: ${reward} Pts`;
+
+            // Animate Ship In
+            const ship = document.getElementById('active-ship');
+            ship.classList.add('arrived');
+
+            addLog(`${LANG[currentLang].logArrive} ${originText}`, 'info');
+            playSound('bell');
+        }
+
+        function dismissShip() {
+            const ship = document.getElementById('active-ship');
+            ship.classList.remove('arrived');
+
+            addLog(LANG[currentLang].logDismiss, 'fail');
+
+            setTimeout(() => {
+                gameState.shipActive = false;
+                gameState.currentRequest = null;
+            }, 1000);
+        }
+
+        function acceptTrade() {
+            if (!gameState.currentRequest || !gameState.active) return;
+
+            const req = gameState.currentRequest;
+
+            if (gameState.resources[req.reqType] >= req.amount) {
+                // Success
+                gameState.resources[req.reqType] -= req.amount;
+                gameState.score += req.reward;
+
+                addLog(LANG[currentLang].logSuccess, 'success');
+                showFloatingText(`+${req.reward}`, document.getElementById('active-ship').getBoundingClientRect(), 'gold');
+
+                // Historical fact trigger chance
+                if (Math.random() > 0.6) displayFact();
+
+                // Draw map line
+                drawMapConnection(req.origin);
+
+                updateUI();
+
+                // Ship leaves
+                const ship = document.getElementById('active-ship');
+                ship.classList.remove('arrived');
+                setTimeout(() => {
+                    gameState.shipActive = false;
+                    gameState.currentRequest = null;
+                }, 1000);
+
+            } else {
+                // Fail
+                addLog(LANG[currentLang].logFail, 'fail');
+                showFloatingText("Not Enough!", document.getElementById('active-ship').getBoundingClientRect(), 'danger');
+            }
+        }
+
+        /**
+         * VISUALS & UI
+         */
+        function updateUI() {
+            document.getElementById('score-display').textContent = gameState.score;
+            document.getElementById('res-spice').textContent = gameState.resources.spice;
+            document.getElementById('res-forest').textContent = gameState.resources.forest;
+            document.getElementById('res-rice').textContent = gameState.resources.rice;
+            document.getElementById('res-tin').textContent = gameState.resources.tin;
+        }
+
+        function updateRankDisplay() {
+            const titles = LANG[currentLang].ranks;
+            const rank = titles[gameState.level] || titles[titles.length - 1];
+            document.getElementById('rank-display').textContent = rank;
+            document.getElementById('kingdom-name').textContent = rank;
+        }
+
+        function addLog(msg, type) {
+            const log = document.getElementById('game-log');
+            const div = document.createElement('div');
+
+            // In-game "Time" simulation or real time? Let's use real time for log feel
+            const now = new Date();
+            const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+
+            div.className = `log-entry ${type}`;
+            div.innerHTML = `<span style="color:var(--text-dim); font-size:0.75em; margin-right:0.5em;">[${timeStr}]</span> ${msg}`;
+
+            log.prepend(div);
+            // Limit log size (increased for scrolling capability)
+            if (log.children.length > 50) log.lastChild.remove();
+        }
+
+        function showFloatingText(text, rect, colorType) {
+            const el = document.createElement('div');
+            el.className = 'particle';
+            el.textContent = text;
+
+            const color = colorType === 'success' ? '#10b981' :
+                colorType === 'fail' || colorType === 'danger' ? '#ef4444' :
+                    '#fbbf24';
+
+            el.style.color = color;
+            el.style.left = (rect.left + rect.width / 2) + 'px';
+            el.style.top = (rect.top) + 'px';
+
+            document.body.appendChild(el);
+            setTimeout(() => el.remove(), 1500);
+        }
+
+        function displayFact() {
+            const facts = LANG[currentLang].facts;
+            const rnd = Math.floor(Math.random() * facts.length);
+            document.getElementById('fact-text').textContent = facts[rnd];
+
+            const box = document.querySelector('.fact-box');
+            box.style.animation = 'none';
+            box.offsetHeight; /* trigger reflow */
+            box.style.animation = 'slideIn 0.5s ease';
+        }
+
+        function drawMapConnection(origin) {
+            const map = document.getElementById('kingdom-map-visual');
+            // Simplified coordinates for visual flair
+            const coords = {
+                china: { top: '20%', left: '80%' },
+                india: { top: '30%', left: '10%' },
+                rome: { top: '10%', left: '5%' },
+                arab: { top: '40%', left: '15%' }
+            };
+
+            const target = coords[origin];
+            if (!target) return;
+
+            // Create dot
+            const node = document.createElement('div');
+            node.className = 'map-node';
+            node.style.top = target.top;
+            node.style.left = target.left;
+            map.appendChild(node);
+
+            // Animate line (simplified as a growing div)
+            // Center is 50%, 50%
+            // Calculate angle and distance would be complex in pure JS without SVG, 
+            // so we will just fade in the node to show "Connection Established".
+
+            setTimeout(() => {
+                node.classList.add('active');
+            }, 100);
+        }
+
+        function spawnConfetti() {
+            // Simple visual burst
+            for (let i = 0; i < 10; i++) {
+                const colors = ['#f59e0b', '#10b981', '#3b82f6'];
+                const c = colors[Math.floor(Math.random() * colors.length)];
+                showFloatingText("✨", {
+                    left: window.innerWidth / 2 + (Math.random() * 200 - 100),
+                    top: window.innerHeight / 2 + (Math.random() * 200 - 100),
+                    width: 0
+                }, 'gold');
+            }
+        }
+
+        function playSound(type) {
+            // Placeholder for sound integration
+            // console.log(`Playing sound: ${type}`);
+        }
+
+        /**
+         * UPGRADE SYSTEM
+         */
+        function showUpgrades() {
+            const overlay = document.getElementById('upgrade-overlay');
+            const list = overlay.querySelector('.upgrade-list');
+            list.innerHTML = '';
+
+            const upgrades = [
+                { id: 'market', key: 'upgradeMarket', desc: 'upgradeMarketDesc', cost: 200 },
+                { id: 'warehouse', key: 'upgradeWarehouse', desc: 'upgradeWarehouseDesc', cost: 500 },
+                { id: 'lighthouse', key: 'upgradeLighthouse', desc: 'upgradeLighthouseDesc', cost: 800 }
+            ];
+
+            upgrades.forEach(u => {
+                const isOwned = gameState.upgrades[u.id];
+                const div = document.createElement('div');
+                div.style.background = 'rgba(255,255,255,0.05)';
+                div.style.padding = '0.8rem';
+                div.style.borderRadius = '0.5rem';
+                div.style.display = 'flex';
+                div.style.justifyContent = 'space-between';
+                div.style.alignItems = 'center';
+                div.style.border = isOwned ? '1px solid var(--success)' : '1px solid rgba(255,255,255,0.1)';
+
+                div.innerHTML = `
+                    <div>
+                        <div style="font-weight:bold; color: ${isOwned ? 'var(--success)' : 'var(--text-light)'}">${LANG[currentLang][u.key]}</div>
+                        <div style="font-size:0.7rem; color:var(--text-dim);">${LANG[currentLang][u.desc]}</div>
+                    </div>
+                    <button ${isOwned || gameState.score < u.cost ? 'disabled' : ''} 
+                            onclick="buyUpgrade('${u.id}', ${u.cost})"
+                            style="background:${isOwned ? 'var(--success)' : (gameState.score >= u.cost ? 'var(--accent)' : '#475569')}; 
+                                   color:${isOwned || gameState.score < u.cost ? 'white' : 'black'}; border:none; padding:5px 10px; border-radius:4px; font-size:0.7rem; font-weight:bold; cursor:${isOwned || gameState.score < u.cost ? 'default' : 'pointer'};">
+                        ${isOwned ? LANG[currentLang].purchased : (LANG[currentLang].cost + ': ' + u.cost)}
+                    </button>
+                `;
+                list.appendChild(div);
+            });
+
+            overlay.style.display = 'flex';
+        }
+
+        function hideUpgrades() {
+            document.getElementById('upgrade-overlay').style.display = 'none';
+        }
+
+        function buyUpgrade(id, cost) {
+            if (gameState.score >= cost && !gameState.upgrades[id]) {
+                gameState.score -= cost;
+                gameState.upgrades[id] = true;
+                updateUI();
+                showUpgrades(); // refresh
+                addLog(`Upgraded: ${LANG[currentLang]['upgrade' + id.charAt(0).toUpperCase() + id.slice(1)]}`, 'success');
+                playSound('buy');
+            }
+        }
+
+        // Initialize language
+        updateTexts();
+
+    </script>
+</body>
+
+</html>
