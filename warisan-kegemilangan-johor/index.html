@@ -1,0 +1,1149 @@
+<!DOCTYPE html>
+<html lang="ms">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Empire of Johor Riau | Warisan Kegemilangan</title>
+    <!-- Premium Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Inter:wght@300;400;600;800;900&family=Outfit:wght@300;500;800&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --primary-gold: #ffd700;
+            --secondary-gold: #b8860b;
+            --royal-purple: #2c003e;
+            --deep-sea: #001f3f;
+            --accent-glow: rgba(255, 215, 0, 0.4);
+            --glass-bg: rgba(255, 255, 255, 0.08);
+            --text-light: #ffffff;
+            --text-dark: #1a1a1a;
+            --danger: #ff4d4d;
+            --success: #4dff4d;
+            --info: #00d2ff;
+            --warning: #ffa500;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--royal-purple);
+            color: var(--text-light);
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(circle at center, #3a0052 0%, #1a0026 100%);
+        }
+
+        /* --- PRE-LOADER STYLES --- */
+        #loader {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            background: radial-gradient(circle at center, var(--royal-purple), #000);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .loader-logo {
+            font-family: 'Cinzel', serif;
+            font-size: 3.5rem;
+            font-weight: 900;
+            color: var(--primary-gold);
+            text-shadow: 0 0 30px var(--primary-gold);
+            margin-bottom: 25px;
+            animation: logo-pulse 2.5s infinite alternate ease-in-out;
+            letter-spacing: 12px;
+        }
+
+        @keyframes logo-pulse {
+            from {
+                opacity: 0.4;
+                transform: scale(0.92);
+                filter: blur(2px);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1.05);
+                filter: blur(0);
+            }
+        }
+
+        .loader-bar {
+            width: 250px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .loader-progress {
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 0%;
+            background: var(--primary-gold);
+            box-shadow: 0 0 15px var(--primary-gold);
+            animation: progress-fill 2s forwards ease-in-out;
+        }
+
+        @keyframes progress-fill {
+            to {
+                width: 100%;
+            }
+        }
+
+        /* --- UI OVERLAY --- */
+        #ui-layer {
+            position: absolute;
+            top: 25px;
+            width: 94%;
+            max-width: 1500px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            z-index: 100;
+            pointer-events: none;
+        }
+
+        .ui-group {
+            display: flex;
+            gap: 18px;
+            pointer-events: auto;
+        }
+
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 215, 0, 0.15);
+            border-radius: 20px;
+            padding: 14px 28px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+            transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        .glass-panel:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary-gold);
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        .stat-label {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 2.5px;
+            color: var(--primary-gold);
+            font-weight: 800;
+            margin-bottom: 2px;
+        }
+
+        .stat-value {
+            font-family: 'Cinzel', serif;
+            font-size: 1.9rem;
+            font-weight: 900;
+            color: #fff;
+            line-height: 1.1;
+        }
+
+        /* Language Switcher */
+        #lang-toggle {
+            background: linear-gradient(135deg, var(--primary-gold), #ffd000);
+            color: var(--royal-purple);
+            border: none;
+            padding: 12px 24px;
+            border-radius: 40px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 800;
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+        }
+
+        #lang-toggle:hover {
+            transform: scale(1.1) rotate(2deg);
+            background: #fff;
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.4);
+        }
+
+        /* --- COMBO SYSTEM --- */
+        #combo-wrap {
+            position: absolute;
+            left: 50%;
+            top: 130px;
+            transform: translateX(-50%);
+            text-align: center;
+            opacity: 0;
+            transition: all 0.3s;
+            pointer-events: none;
+            z-index: 90;
+        }
+
+        #combo-num {
+            font-family: 'Cinzel', serif;
+            font-size: 5rem;
+            font-weight: 900;
+            color: var(--primary-gold);
+            text-shadow: 0 0 40px rgba(255, 215, 0, 0.6);
+            line-height: 1;
+        }
+
+        #combo-txt {
+            font-size: 1rem;
+            font-weight: 800;
+            letter-spacing: 6px;
+            color: #fff;
+            text-transform: uppercase;
+        }
+
+        /* --- GAME ENGINE ELEMENTS --- */
+        #game-view {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, #001f3f, #000c19 80%);
+            overflow: hidden;
+            cursor: none;
+        }
+
+        /* Parallax Backgrounds */
+        .decor-layer {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+        }
+
+        .starfish {
+            position: absolute;
+            opacity: 0.15;
+            animation: slow-float 30s linear infinite;
+        }
+
+        @keyframes slow-float {
+            from {
+                transform: translateY(100vh) rotate(0);
+            }
+
+            to {
+                transform: translateY(-100px) rotate(360deg);
+            }
+        }
+
+        /* The Ship (Player) */
+        #ship {
+            position: absolute;
+            width: 100px;
+            height: 140px;
+            transform: translate(-50%, -50%);
+            z-index: 500;
+            pointer-events: none;
+            transition: filter 0.3s;
+        }
+
+        .ship-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.3));
+        }
+
+        .hull {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 50px;
+            background: #4e342e;
+            clip-path: polygon(5% 0%, 95% 0%, 100% 40%, 80% 100%, 20% 100%, 0% 40%);
+            border-bottom: 5px solid #3e2723;
+        }
+
+        .hull-detail {
+            position: absolute;
+            top: 5px;
+            left: 15%;
+            width: 70%;
+            height: 4px;
+            background: var(--primary-gold);
+            border-radius: 10px;
+            opacity: 0.6;
+        }
+
+        .mast {
+            position: absolute;
+            top: 10%;
+            left: 50%;
+            width: 6px;
+            height: 70%;
+            background: #3e2723;
+            transform: translateX(-50%);
+        }
+
+        .main-sail {
+            position: absolute;
+            top: 15%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90px;
+            height: 70px;
+            background: #fff;
+            clip-path: polygon(10% 0%, 90% 0%, 100% 90%, 50% 100%, 0% 90%);
+            box-shadow: inset 0 -10px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .royal-shield {
+            position: absolute;
+            width: 180%;
+            height: 180%;
+            top: -40%;
+            left: -40%;
+            border: 4px solid var(--info);
+            border-radius: 50%;
+            opacity: 0;
+            transition: all 0.4s;
+            box-shadow: 0 0 30px var(--info), inset 0 0 20px var(--info);
+            animation: shield-wave 2s infinite;
+        }
+
+        @keyframes shield-wave {
+            0% {
+                transform: scale(1);
+                opacity: 0.2;
+            }
+
+            50% {
+                transform: scale(1.05);
+                opacity: 0.6;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 0.2;
+            }
+        }
+
+        /* Entities Visuals */
+        .entity {
+            position: absolute;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+
+        .ent-glow {
+            position: absolute;
+            inset: -20px;
+            background: radial-gradient(circle, var(--ent-color) 0%, transparent 75%);
+            opacity: 0.4;
+            animation: pulse-ent 2s infinite;
+        }
+
+        @keyframes pulse-ent {
+            0% {
+                transform: scale(0.8);
+                opacity: 0.3;
+            }
+
+            50% {
+                transform: scale(1.2);
+                opacity: 0.5;
+            }
+
+            100% {
+                transform: scale(0.8);
+                opacity: 0.3;
+            }
+        }
+
+        .ent-icon {
+            font-size: 3rem;
+            filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.4));
+            z-index: 2;
+        }
+
+        .ent-tag {
+            margin-top: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid var(--primary-gold);
+            padding: 2px 10px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            white-space: nowrap;
+            opacity: 0.9;
+            color: #fff;
+        }
+
+        /* --- SCREEN OVERLAYS --- */
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(10, 0, 20, 0.95);
+            backdrop-filter: blur(30px);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            text-align: center;
+            visibility: hidden;
+            opacity: 0;
+            transition: all 0.8s cubic-bezier(0.19, 1, 0.22, 1);
+        }
+
+        .modal.open {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .modal h1 {
+            font-family: 'Cinzel', serif;
+            font-size: 4.5rem;
+            font-weight: 900;
+            background: linear-gradient(to bottom, #fff 30%, var(--primary-gold));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 20px;
+            letter-spacing: 5px;
+        }
+
+        .modal p {
+            max-width: 800px;
+            font-size: 1.25rem;
+            line-height: 1.8;
+            color: #ccc;
+            margin-bottom: 40px;
+        }
+
+        /* Results Display */
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+            width: 100%;
+            max-width: 1000px;
+            margin: 40px 0;
+        }
+
+        .result-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 25px;
+            border-radius: 24px;
+            border: 1px solid rgba(255, 215, 0, 0.1);
+            transition: transform 0.3s;
+        }
+
+        .result-val {
+            font-family: 'Cinzel', serif;
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: var(--primary-gold);
+        }
+
+        /* --- BUTTONS --- */
+        .btn-gold {
+            background: linear-gradient(135deg, var(--primary-gold), var(--secondary-gold));
+            color: var(--royal-purple);
+            border: none;
+            padding: 22px 60px;
+            font-family: 'Cinzel', serif;
+            font-size: 1.5rem;
+            font-weight: 900;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+
+        .btn-gold:hover {
+            transform: translateY(-10px) scale(1.05);
+            box-shadow: 0 25px 50px rgba(255, 215, 0, 0.4);
+            filter: brightness(1.1);
+        }
+
+        /* --- HISTORY LOG (LOWER LEFT) --- */
+        #history-log {
+            position: absolute;
+            left: 30px;
+            bottom: 40px;
+            width: 320px;
+            max-height: 250px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: none;
+            flex-direction: column;
+            gap: 12px;
+            overflow-y: auto;
+            pointer-events: auto;
+            z-index: 200;
+        }
+
+        .log-entry {
+            font-size: 0.85rem;
+            line-height: 1.4;
+            color: #ddd;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            animation: slide-in-log 0.5s ease;
+        }
+
+        @keyframes slide-in-log {
+            from {
+                transform: translateX(-20px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .log-label {
+            color: var(--primary-gold);
+            font-weight: 800;
+            font-size: 0.6rem;
+            letter-spacing: 2px;
+            margin-bottom: 4px;
+        }
+
+        /* Health Bar (Bottom Center) */
+        #stability-cont {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 450px;
+            text-align: center;
+            pointer-events: none;
+        }
+
+        .progress-track {
+            height: 16px;
+            background: rgba(0, 0, 0, 0.6);
+            border-radius: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+
+        #stability-bar {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, #ff416c, #ff4b2b);
+            transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 0 20px rgba(255, 65, 108, 0.4);
+        }
+
+        /* Damage Flash */
+        #damage-overlay {
+            position: fixed;
+            inset: 0;
+            box-shadow: inset 0 0 200px rgba(255, 0, 0, 0);
+            z-index: 2000;
+            pointer-events: none;
+            transition: box-shadow 0.2s;
+        }
+
+        /* Particles */
+        .particle {
+            position: absolute;
+            background: var(--primary-gold);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 80;
+        }
+
+        /* Knowledge Snippet Pool */
+        #knowledge-popup {
+            position: absolute;
+            top: 40%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            padding: 30px;
+            border-radius: 30px;
+            border: 2px solid var(--primary-gold);
+            max-width: 500px;
+            text-align: center;
+            z-index: 600;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.5s;
+        }
+
+        #knowledge-popup.active {
+            opacity: 1;
+            transform: translate(-50%, -60%);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="damage-overlay"></div>
+
+    <!-- PRE-LOADER -->
+    <div id="loader">
+        <div class="loader-logo">JOHOR RIAU</div>
+        <div class="loader-bar">
+            <div class="loader-progress"></div>
+        </div>
+        <div style="margin-top: 20px; opacity: 0.6; letter-spacing: 5px; font-size: 0.7rem;">GATHERING ANCIENT MAPS...
+        </div>
+    </div>
+
+    <!-- MAIN UI -->
+    <div id="ui-layer">
+        <div class="ui-group">
+            <div class="glass-panel">
+                <span class="stat-label" data-tr="wealth">Prosperity</span>
+                <span id="score-val" class="stat-value">0</span>
+            </div>
+            <div class="glass-panel">
+                <span class="stat-label" data-tr="record">High Empire</span>
+                <span id="best-val" class="stat-value">0</span>
+            </div>
+        </div>
+
+        <div class="glass-panel" style="align-items: center; min-width: 250px;">
+            <span class="stat-label" data-tr="days">Era Progression</span>
+            <span id="timer-val" class="stat-value">60</span>
+        </div>
+
+        <div class="ui-group">
+            <button id="lang-toggle">English Version</button>
+        </div>
+    </div>
+
+    <!-- COMBO -->
+    <div id="combo-wrap">
+        <div id="combo-num">0</div>
+        <div id="combo-txt">MULTIPLIER</div>
+    </div>
+
+    <!-- GAME VIEW -->
+    <div id="game-view">
+        <div class="decor-layer" id="stars-layer"></div>
+        <div id="ship">
+            <div class="ship-container">
+                <div class="royal-shield" id="shield-fx"></div>
+                <div class="mast"></div>
+                <div class="main-sail"></div>
+                <div class="hull">
+                    <div class="hull-detail"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- BOTTOM ELEMENTS -->
+    <div id="stability-cont">
+        <div class="progress-track">
+            <div id="stability-bar"></div>
+        </div>
+        <span class="stat-label" data-tr="stability">Sultanate Stability</span>
+    </div>
+
+    <div id="history-log">
+        <div class="log-label">EMPIRE ARCHIVES</div>
+        <div id="log-list"></div>
+    </div>
+
+    <div id="knowledge-popup">
+        <div class="log-label">NEW DISCOVERY</div>
+        <p id="kp-text" style="margin: 10px 0; font-size: 1.1rem; color: #fff;"></p>
+    </div>
+
+    <!-- MODAL SCREENS -->
+    <div id="start-modal" class="modal open">
+        <h1 data-tr="title">Johor Riau Empire</h1>
+        <p data-tr="desc">
+            Step into the shoes of the legacy of Melaka. The year is 1528. Sultan Alauddin Riayat Shah II has founded a
+            new power. Build your trade, manage strategic fortifications, and defend the straits against the Portuguese
+            and Acehnese.
+        </p>
+
+        <div style="display: flex; gap: 30px; margin-bottom: 50px; justify-content: center;">
+            <div
+                style="background: rgba(255,215,0,0.1); padding: 25px; border-radius: 20px; border: 1px solid var(--primary-gold);">
+                <div style="color: var(--primary-gold); font-weight: 900; margin-bottom: 10px;">FOUNDING (1528)</div>
+                <span style="font-size: 0.9rem;" data-tr="p1-desc">Establish centers at Pekan Tua & Johor Lama.</span>
+            </div>
+            <div
+                style="background: rgba(0,210,255,0.1); padding: 25px; border-radius: 20px; border: 1px solid var(--info);">
+                <div style="color: var(--info); font-weight: 900; margin-bottom: 10px;">GOLDEN AGE</div>
+                <span style="font-size: 0.9rem;" data-tr="p2-desc">Dominance in trade & Malay literature.</span>
+            </div>
+        </div>
+
+        <button class="btn-gold" id="btn-start" data-tr="play">Lancar Armada</button>
+    </div>
+
+    <div id="end-modal" class="modal">
+        <h1 id="end-title" data-tr="end-title">Grand Result</h1>
+
+        <div style="display: flex; gap: 20px; margin: 30px 0;">
+            <div id="s-1" style="font-size: 4.5rem; color: rgba(255,255,255,0.1);">★</div>
+            <div id="s-2" style="font-size: 4.5rem; color: rgba(255,255,255,0.1);">★</div>
+            <div id="s-3" style="font-size: 4.5rem; color: rgba(255,255,255,0.1);">★</div>
+        </div>
+
+        <div class="results-grid">
+            <div class="result-item">
+                <span class="stat-label">Total Prosperity</span>
+                <div id="final-score" class="result-val">0</div>
+            </div>
+            <div class="result-item">
+                <span class="stat-label">Peak Multiplier</span>
+                <div id="final-combo" class="result-val">0</div>
+            </div>
+            <div class="result-item">
+                <span class="stat-label">Empire Rank</span>
+                <div id="final-rank" class="result-val" style="font-size: 1.5rem; padding-top: 10px;">Laksamana</div>
+            </div>
+        </div>
+
+        <div id="game-fact"
+            style="background: var(--glass-bg); padding: 30px; border-radius: 20px; margin-bottom: 40px; border: 1px solid rgba(255,255,255,0.1); max-width: 700px;">
+            The relocation of the capital to Batu Sawar and Lingga was a strategic move to survive the Triangle
+            Conflict.
+        </div>
+
+        <div style="display: flex; gap: 25px;">
+            <button class="btn-gold" id="btn-replay" data-tr="replay">Sail Again</button>
+            <button class="btn-gold" id="btn-view-archive" style="background: #222; color: #fff;"
+                data-tr="view-archive">View Archive</button>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * EMPIRE OF JOHOR RIAU: THE IMMORTAL LEGACY
+         * Form 5 Sejarah - Topics 6.1 & 6.2 Implementation
+         * Total lines predicted: 750+
+         */
+
+        const GAME_DATA = {
+            en: {
+                title: "Johor Riau Empire",
+                desc: "Relive the epic formation and dominance of the Johor-Riau Sultanate. Navigate the Straits of Melaka, gather precious spices, and outmaneuver the European and regional rivals to cement your legacy.",
+                wealth: "Wealth & Prosperity",
+                record: "Empire Record",
+                days: "Era Duration",
+                play: "Launch Fleet",
+                replay: "Re-establish Glory",
+                stability: "Empire Stability",
+                "p1-desc": "Establish centers at Pekan Tua & Johor Lama.",
+                "p2-desc": "Dominance in trade & Malay literature.",
+                "view-archive": "Review Archives",
+                "end-title": "Empire Results",
+                "win": "Glory Immortalized!",
+                "loss": "Sultanate Retreated!",
+                rankings: ["Deckhand", "Nakhoda", "Laksamana Gagah", "Bendahara Utama", "Sultan Berdaulat"],
+                events: {
+                    FOUNDING: "Sultan Alauddin Riayat Shah II founded Johor Riau in 1528 at Pekan Tua.",
+                    KARA: "Kota Kara was built as a defensive front near the river mouth.",
+                    PEPPER: "Johor became the global center for black pepper trade from Jambi.",
+                    LIT: "Works like Sejarah Melayu & Tuhfat al-Nafis were written here.",
+                    TRIAD: "The Triangle War (Johor, Aceh, Portugal) lasted nearly 100 years.",
+                    BATU: "Batu Sawar was chosen for its strategic deep-river defense.",
+                    PORT: "Riau ports were preferred by traders due to low taxes and security.",
+                    LINGGA: "Lingga became a secondary administrative center during invasions."
+                }
+            },
+            ms: {
+                title: "Empayar Johor Riau",
+                desc: "Alami sendiri kebangkitan dan kegemilangan Kesultanan Johor Riau. Kemudikan armada di Selat Melaka, kumpul rempah berharga, dan harungi cabaran perang Tiga Segi demi kedaulatan warisan Melaka.",
+                wealth: "Kekayaan & Makmur",
+                record: "Rekod Empayar",
+                days: "Tempoh Era",
+                play: "Lancar Armada",
+                replay: "Bina Semula Kegemilangan",
+                stability: "Kestabilan Empayar",
+                "p1-desc": "Asaskan pusat di Pekan Tua & Johor Lama.",
+                "p2-desc": "Penguasaan perdagangan & persuratan.",
+                "view-archive": "Semak Arkib",
+                "end-title": "Keputusan Empayar",
+                "win": "Kegemilangan Abadi!",
+                "loss": "Kesultanan Berundur!",
+                rankings: ["Pelaut Muda", "Nakhoda", "Laksamana Gagah", "Bendahara Utama", "Sultan Berdaulat"],
+                events: {
+                    FOUNDING: "Sultan Alauddin Riayat Shah II mengasaskan Johor Riau pada 1528 di Pekan Tua.",
+                    KARA: "Kota Kara dibina sebagai benteng pertahanan utama di pesisir sungai.",
+                    PEPPER: "Johor menjadi pusat global perdagangan lada hitam dari Jambi.",
+                    LIT: "Karya agung seperti Sejarah Melayu & Tuhfat al-Nafis dihasilkan di sini.",
+                    TRIAD: "Perang Tiga Segi melibatkan Johor, Acheh, dan Portugis selama 100 tahun.",
+                    BATU: "Batu Sawar dipilih kerana pertahanan strategik di hulu sungai.",
+                    PORT: "Pelabuhan Riau menjadi tumpuan kerana cukai rendah dan keselamatan.",
+                    LINGGA: "Pulau Lingga menjadi pusat pemerintahan semasa ancaman musuh."
+                }
+            }
+        };
+
+        class ParticleSystem {
+            constructor(container) {
+                this.cont = container;
+            }
+            create(x, y, color) {
+                for (let i = 0; i < 8; i++) {
+                    const p = document.createElement('div');
+                    p.className = 'particle';
+                    const size = Math.random() * 6 + 2;
+                    p.style.width = size + 'px';
+                    p.style.height = size + 'px';
+                    p.style.backgroundColor = color || 'var(--primary-gold)';
+                    p.style.left = x + 'px';
+                    p.style.top = y + 'px';
+                    this.cont.appendChild(p);
+
+                    const angle = Math.random() * Math.PI * 2;
+                    const dist = Math.random() * 100 + 50;
+                    p.animate([
+                        { transform: 'translate(0,0) scale(1)', opacity: 1 },
+                        { transform: `translate(${Math.cos(angle) * dist}px, ${Math.sin(angle) * dist}px) scale(0)`, opacity: 0 }
+                    ], { duration: 800, easing: 'ease-out' }).onfinish = () => p.remove();
+                }
+            }
+        }
+
+        class GameEntity {
+            constructor(type, config, game) {
+                this.type = type;
+                this.cfg = config;
+                this.game = game;
+                this.x = Math.random() * (window.innerWidth - 100) + 50;
+                this.y = -100;
+                this.speed = config.speed + (game.difficulty * 0.8);
+                this.createDOM();
+            }
+
+            createDOM() {
+                this.el = document.createElement('div');
+                this.el.className = 'entity';
+                this.el.style.setProperty('--ent-color', this.cfg.color);
+                this.el.innerHTML = `
+                    <div class="ent-glow"></div>
+                    <div class="ent-icon">${this.cfg.icon}</div>
+                    <div class="ent-tag">${this.cfg.label[this.game.lang]}</div>
+                `;
+                this.game.view.appendChild(this.el);
+            }
+
+            update() {
+                this.y += this.speed;
+                this.el.style.transform = `translate(${this.x}px, ${this.y}px)`;
+                if (this.y > window.innerHeight + 100) this.destroy();
+            }
+
+            destroy() {
+                this.el.remove();
+                this.game.entities = this.game.entities.filter(e => e !== this);
+            }
+        }
+
+        class EmpireEngine {
+            constructor() {
+                this.lang = 'ms';
+                this.playing = false;
+                this.score = 0;
+                this.best = parseInt(localStorage.getItem('johor_best')) || 0;
+                this.health = 100;
+                this.combo = 0;
+                this.timer = 60;
+                this.difficulty = 1;
+                this.shielded = false;
+                this.entities = [];
+                this.history = new Set();
+
+                this.initDOM();
+                this.setupInputs();
+                this.updateUI();
+                this.startLoop();
+            }
+
+            initDOM() {
+                this.view = document.getElementById('game-view');
+                this.ship = document.getElementById('ship');
+                this.pBar = document.getElementById('stability-bar');
+                this.scoreVal = document.getElementById('score-val');
+                this.bestVal = document.getElementById('best-val');
+                this.timerVal = document.getElementById('timer-val');
+                this.comboWrap = document.getElementById('combo-wrap');
+                this.comboNum = document.getElementById('combo-num');
+                this.logList = document.getElementById('log-list');
+                this.particles = new ParticleSystem(this.view);
+
+                this.modals = {
+                    start: document.getElementById('start-modal'),
+                    end: document.getElementById('end-modal'),
+                    loader: document.getElementById('loader')
+                };
+            }
+
+            setupInputs() {
+                document.getElementById('lang-toggle').onclick = () => {
+                    this.lang = this.lang === 'en' ? 'ms' : 'en';
+                    this.updateLang();
+                };
+
+                document.getElementById('btn-start').onclick = () => this.start();
+                document.getElementById('btn-replay').onclick = () => this.start();
+                document.getElementById('btn-view-archive').onclick = () => {
+                    document.getElementById('history-log').style.display = 'flex';
+                };
+
+                window.onmousemove = (e) => this.handleMove(e.clientX, e.clientY);
+                window.ontouchmove = (e) => this.handleMove(e.touches[0].clientX, e.touches[0].clientY);
+
+                // Parallax stars
+                const sl = document.getElementById('stars-layer');
+                for (let i = 0; i < 30; i++) {
+                    const s = document.createElement('div');
+                    s.className = 'starfish';
+                    s.innerHTML = '✧';
+                    s.style.left = Math.random() * 100 + '%';
+                    s.style.fontSize = (Math.random() * 20 + 5) + 'px';
+                    s.style.animationDelay = (Math.random() * 30) + 's';
+                    sl.appendChild(s);
+                }
+            }
+
+            handleMove(x, y) {
+                if (!this.playing) return;
+                this.targetX = Math.max(50, Math.min(window.innerWidth - 50, x));
+                this.targetY = Math.max(100, Math.min(window.innerHeight - 100, y));
+            }
+
+            updateLang() {
+                const data = GAME_DATA[this.lang];
+                document.querySelectorAll('[data-tr]').forEach(el => {
+                    const key = el.getAttribute('data-tr');
+                    el.innerText = data[key] || key;
+                });
+                document.getElementById('lang-toggle').innerText = this.lang === 'ms' ? 'English Version' : 'Versi Melayu';
+            }
+
+            start() {
+                this.score = 0;
+                this.health = 100;
+                this.combo = 0;
+                this.timer = 60;
+                this.difficulty = 1;
+                this.shielded = false;
+                this.history.clear();
+                this.logList.innerHTML = '';
+                this.entities.forEach(e => e.el.remove());
+                this.entities = [];
+
+                this.modals.start.classList.remove('open');
+                this.modals.end.classList.remove('open');
+                document.getElementById('history-log').style.display = 'none';
+
+                this.playing = true;
+                this.updateUI();
+
+                this.gameInterval = setInterval(() => {
+                    this.timer--;
+                    this.timerVal.innerText = this.timer;
+                    this.difficulty = 1 + (60 - this.timer) / 20;
+                    if (this.timer <= 0) this.gameOver(true);
+                }, 1000);
+            }
+
+            gameOver(win) {
+                this.playing = false;
+                clearInterval(this.gameInterval);
+
+                if (this.score > this.best) {
+                    this.best = this.score;
+                    localStorage.setItem('johor_best', this.best);
+                }
+
+                document.getElementById('final-score').innerText = Math.floor(this.score);
+                document.getElementById('final-combo').innerText = this.maxCombo || this.combo;
+
+                const rankIdx = Math.min(4, Math.floor(this.score / 1000));
+                document.getElementById('final-rank').innerText = GAME_DATA[this.lang].rankings[rankIdx];
+
+                document.getElementById('end-title').innerText = win ? GAME_DATA[this.lang].win : GAME_DATA[this.lang].loss;
+
+                this.showStars(rankIdx);
+                this.modals.end.classList.add('open');
+            }
+
+            showStars(idx) {
+                [1, 2, 3].forEach(i => {
+                    const s = document.getElementById('s-' + i);
+                    s.style.color = (idx >= i) ? 'var(--primary-gold)' : 'rgba(255,255,255,0.1)';
+                    s.style.textShadow = (idx >= i) ? '0 0 20px var(--primary-gold)' : 'none';
+                });
+            }
+
+            spawn() {
+                const pool = [
+                    { type: 'good', icon: '🌿', speed: 3, color: 'rgba(0,255,0,0.5)', value: 50, fact: 'PEPPER', label: { en: 'Pepper', ms: 'Lada Hitam' } },
+                    { type: 'good', icon: '💰', speed: 4, color: 'rgba(255,215,0,0.5)', value: 100, fact: 'PORT', label: { en: 'Gold Coin', ms: 'Syiling Emas' } },
+                    { type: 'good', icon: '📜', speed: 2, color: 'rgba(255,100,0,0.5)', value: 200, fact: 'LIT', label: { en: 'Manuscript', ms: 'Manuskrip' } },
+                    { type: 'bad', icon: '🚢', speed: 5, color: 'rgba(255,0,0,0.5)', value: -20, fact: 'TRIAD', label: { en: 'Portuguese', ms: 'Portugis' } },
+                    { type: 'bad', icon: '⚔️', speed: 6, color: 'rgba(150,0,255,0.5)', value: -25, fact: 'TRIAD', label: { en: 'Aceh Fleet', ms: 'Armada Acheh' } },
+                    { type: 'buff', icon: '🛡️', speed: 4, color: 'rgba(0,210,255,0.5)', value: 0, fact: 'KARA', label: { en: 'Fortification', ms: 'Pertahanan' } }
+                ];
+
+                const r = Math.random();
+                let picked;
+                if (r < 0.6) picked = pool[Math.floor(Math.random() * 3)];
+                else if (r < 0.9) picked = pool[3 + Math.floor(Math.random() * 2)];
+                else picked = pool[5];
+
+                this.entities.push(new GameEntity(picked.type, picked, this));
+            }
+
+            handleCollision(e) {
+                if (e.type === 'good') {
+                    this.combo++;
+                    const gain = e.cfg.value * (1 + Math.floor(this.combo / 5) * 0.5);
+                    this.score += gain;
+                    this.particles.create(e.x, e.y, e.cfg.color);
+                    this.addLog(e.cfg.fact);
+                } else if (e.type === 'bad') {
+                    if (this.shielded) {
+                        this.shielded = false;
+                        this.ship.querySelector('.royal-shield').style.opacity = '0';
+                    } else {
+                        this.health += e.cfg.value;
+                        this.combo = 0;
+                        this.flashDamage();
+                    }
+                    this.particles.create(e.x, e.y, '#ff0000');
+                } else if (e.type === 'buff') {
+                    this.shielded = true;
+                    this.ship.querySelector('.royal-shield').style.opacity = '1';
+                    this.addLog(e.cfg.fact);
+                }
+
+                if (this.health <= 0) this.gameOver(false);
+                this.updateUI();
+                e.destroy();
+            }
+
+            addLog(key) {
+                if (this.history.has(key)) return;
+                this.history.add(key);
+                const txt = GAME_DATA[this.lang].events[key];
+
+                const el = document.createElement('div');
+                el.className = 'log-entry';
+                el.innerHTML = `<div class="log-label">ARCHIVE UNLOCKED</div>${txt}`;
+                this.logList.prepend(el);
+
+                // Quick popup
+                const kp = document.getElementById('knowledge-popup');
+                document.getElementById('kp-text').innerText = txt;
+                kp.classList.add('active');
+                setTimeout(() => kp.classList.remove('active'), 3000);
+            }
+
+            flashDamage() {
+                const d = document.getElementById('damage-overlay');
+                d.style.boxShadow = 'inset 0 0 200px rgba(255,0,0,0.8)';
+                setTimeout(() => d.style.boxShadow = 'inset 0 0 200px rgba(255,0,0,0)', 150);
+            }
+
+            updateUI() {
+                this.scoreVal.innerText = Math.floor(this.score);
+                this.bestVal.innerText = this.best;
+                this.pBar.style.width = this.health + '%';
+
+                if (this.combo > 2) {
+                    this.comboWrap.style.opacity = '1';
+                    this.comboNum.innerText = this.combo;
+                    this.comboWrap.style.transform = `translateX(-50%) scale(${1 + this.combo / 20})`;
+                } else {
+                    this.comboWrap.style.opacity = '0';
+                }
+            }
+
+            startLoop() {
+                let lastSpawn = 0;
+
+                const run = (t) => {
+                    if (this.playing) {
+                        // Move Ship
+                        if (this.targetX) {
+                            const curX = parseFloat(this.ship.style.left || window.innerWidth / 2);
+                            const curY = parseFloat(this.ship.style.top || window.innerHeight - 200);
+                            this.ship.style.left = (curX + (this.targetX - curX) * 0.12) + 'px';
+                            this.ship.style.top = (curY + (this.targetY - curY) * 0.12) + 'px';
+                            this.ship.style.transform = `translate(-50%, -50%) rotate(${(this.targetX - curX) * 0.1}deg)`;
+                        }
+
+                        // Spawning
+                        if (t - lastSpawn > (1100 / this.difficulty)) {
+                            this.spawn();
+                            lastSpawn = t;
+                        }
+
+                        // Entities
+                        const sRect = this.ship.getBoundingClientRect();
+                        [...this.entities].forEach(e => {
+                            e.update();
+                            const eRect = e.el.getBoundingClientRect();
+                            if (sRect.left < eRect.right && sRect.right > eRect.left && sRect.top < eRect.bottom && sRect.bottom > eRect.top) {
+                                this.handleCollision(e);
+                            }
+                        });
+                    }
+                    requestAnimationFrame(run);
+                };
+
+                setTimeout(() => {
+                    this.modals.loader.style.opacity = '0';
+                    setTimeout(() => this.modals.loader.style.display = 'none', 1000);
+                }, 2200);
+
+                requestAnimationFrame(run);
+            }
+        }
+
+        window.onload = () => {
+            const game = new EmpireEngine();
+        };
+
+    </script>
+</body>
+
+</html>
