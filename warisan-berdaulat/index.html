@@ -1,0 +1,1331 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Warisan Berdaulat - The Four Sultanates</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Playfair+Display:ital,wght@0,700;0,900;1,700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --royal-gold: #D4AF37;
+            --deep-gold: #B8860B;
+            --royal-yellow: #FFD700;
+            --royal-red: #8B0000;
+            --royal-black: #1A1A1A;
+            --glass-bg: rgba(26, 26, 26, 0.85);
+            --glass-border: rgba(212, 175, 55, 0.3);
+            --text-light: #F5F5F5;
+            --pahang-color: #2c3e50;
+            --perak-color: #f1c40f;
+            --terengganu-color: #27ae60;
+            --selangor-color: #c0392b;
+            --transition-speed: 0.4s;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: #0a0a0a;
+            color: var(--text-light);
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #game-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            max-width: 1200px;
+            max-height: 800px;
+            background: radial-gradient(circle at center, #2c3e50 0%, #000 100%);
+            border: 2px solid var(--royal-gold);
+            box-shadow: 0 0 50px rgba(212, 175, 55, 0.2);
+            overflow: hidden;
+        }
+
+        /* Background Pattern */
+        .pattern-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('https://www.transparenttextures.com/patterns/carbon-fibre.png'),
+                linear-gradient(45deg, rgba(212, 175, 55, 0.05) 0%, transparent 100%);
+            opacity: 0.3;
+            pointer-events: none;
+        }
+
+        /* Screens */
+        .screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+            transition: transform var(--transition-speed) ease-in-out, opacity var(--transition-speed) ease;
+            z-index: 10;
+        }
+
+        .screen.hidden {
+            transform: translateY(100%);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* Start Screen */
+        .title-box {
+            text-align: center;
+            margin-bottom: 40px;
+            animation: fadeInDown 1s ease-out;
+        }
+
+        h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 4.5rem;
+            color: var(--royal-gold);
+            text-shadow: 3px 3px 10px rgba(0, 0, 0, 0.5);
+            margin-bottom: 10px;
+            letter-spacing: 2px;
+        }
+
+        .subtitle {
+            font-size: 1.4rem;
+            color: #ccc;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+        }
+
+        .menu-btns {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            width: 300px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, var(--royal-gold), var(--deep-gold));
+            color: var(--royal-black);
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            font-weight: 800;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px var(--royal-gold);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 2px solid var(--royal-gold);
+            color: var(--royal-gold);
+        }
+
+        .lang-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: var(--glass-bg);
+            border: 2px solid var(--royal-gold);
+            color: var(--royal-gold);
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 30px;
+            font-weight: 800;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .lang-toggle:hover {
+            background: var(--royal-gold);
+            color: var(--royal-black);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(212, 175, 55, 0.4);
+        }
+
+        /* HUD */
+        .hud {
+            position: absolute;
+            top: 15px;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: space-around;
+            padding: 0 20px;
+            z-index: 20;
+            pointer-events: none;
+        }
+
+        .stat-item {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            padding: 10px 25px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--royal-gold);
+            text-transform: uppercase;
+            font-weight: 800;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        /* Game Board */
+        .state-shelves {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            width: 95%;
+            height: 380px;
+            margin-top: 100px;
+            position: relative;
+            z-index: 5;
+        }
+
+        .shelf {
+            background: rgba(255, 255, 255, 0.03);
+            border: 2px dashed rgba(212, 175, 55, 0.2);
+            border-radius: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            padding-bottom: 20px;
+            position: relative;
+            transition: background 0.3s;
+        }
+
+        .shelf.active {
+            background: rgba(212, 175, 55, 0.1);
+            border-style: solid;
+        }
+
+        .shelf-title {
+            position: absolute;
+            top: 15px;
+            font-weight: 800;
+            font-size: 1.2rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--royal-gold);
+            text-align: center;
+            width: 100%;
+        }
+
+        .shelf-icon {
+            font-size: 3rem;
+            margin-bottom: 50px;
+            opacity: 0.5;
+        }
+
+        /* Orbs Area */
+        .orbs-container {
+            position: absolute;
+            top: 130px;
+            left: 0;
+            width: 100%;
+            height: 300px;
+            pointer-events: none;
+        }
+
+        .orb {
+            position: absolute;
+            width: 120px;
+            height: 120px;
+            background: var(--glass-bg);
+            border: 2px solid var(--royal-gold);
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 10px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            pointer-events: auto;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5), inset 0 0 10px var(--royal-gold);
+            animation: float 3s ease-in-out infinite;
+            z-index: 30;
+        }
+
+        .orb:hover {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .orb-text {
+            word-wrap: break-word;
+            line-height: 1.2;
+        }
+
+        /* Drag and Drop Visuals */
+        .dragging {
+            opacity: 0.8 !important;
+            scale: 0.9 !important;
+            z-index: 1000 !important;
+        }
+
+        /* Effects */
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0) rotate(0);
+            }
+
+            50% {
+                transform: translateY(-15px) rotate(2deg);
+            }
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .pulse {
+            animation: pulse-gold 0.5s ease-in-out;
+        }
+
+        @keyframes pulse-gold {
+            0% {
+                box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.7);
+            }
+
+            100% {
+                box-shadow: 0 0 0 20px rgba(212, 175, 55, 0);
+            }
+        }
+
+        .shake {
+            animation: shake 0.3s ease-in-out;
+        }
+
+        @keyframes shake {
+            0% {
+                transform: translateX(0);
+            }
+
+            25% {
+                transform: translateX(10px);
+            }
+
+            50% {
+                transform: translateX(-10px);
+            }
+
+            75% {
+                transform: translateX(10px);
+            }
+
+            100% {
+                transform: translateX(0);
+            }
+        }
+
+        /* High Score & End Screen */
+        .end-box {
+            background: var(--glass-bg);
+            border: 2px solid var(--royal-gold);
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+            animation: zoomIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes zoomIn {
+            from {
+                scale: 0.5;
+                opacity: 0;
+            }
+
+            to {
+                scale: 1;
+                opacity: 1;
+            }
+        }
+
+        .stars {
+            font-size: 3rem;
+            color: var(--royal-yellow);
+            margin: 20px 0;
+            letter-spacing: 10px;
+        }
+
+        .final-score {
+            font-size: 4rem;
+            font-weight: 800;
+            color: white;
+            margin-bottom: 10px;
+        }
+
+        .high-score-tag {
+            font-size: 1rem;
+            color: var(--royal-gold);
+            margin-bottom: 30px;
+            text-transform: uppercase;
+        }
+
+        /* Tooltip/Info */
+        .info-panel {
+            position: absolute;
+            bottom: 20px;
+            width: calc(100% - 40px);
+            background: rgba(0, 0, 0, 0.6);
+            border-top: 1px solid var(--glass-border);
+            padding: 15px;
+            text-align: center;
+            font-style: italic;
+            color: #ddd;
+            font-size: 0.95rem;
+        }
+
+        /* Multiplier Progress Bar */
+        .combo-meter {
+            position: absolute;
+            bottom: 30px;
+            right: 40px;
+            width: 250px;
+            height: 12px;
+            background: rgba(0, 0, 0, 0.7);
+            border: 2px solid var(--royal-gold);
+            border-radius: 6px;
+            overflow: hidden;
+            z-index: 20;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+        }
+
+        .combo-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(to right, var(--royal-gold), var(--royal-red));
+            transition: width 0.3s ease;
+        }
+
+        /* History Log */
+        .log-panel {
+            position: absolute;
+            left: -350px;
+            top: 10%;
+            width: 320px;
+            height: 80%;
+            background: var(--glass-bg);
+            border: 2px solid var(--royal-gold);
+            border-left: none;
+            border-radius: 0 20px 20px 0;
+            z-index: 100;
+            padding: 20px;
+            transition: left 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            flex-direction: column;
+            backdrop-filter: blur(10px);
+        }
+
+        .log-panel.open {
+            left: 0;
+        }
+
+        .log-toggle-btn {
+            position: absolute;
+            right: -55px;
+            top: 50%;
+            transform: translateY(-50%) rotate(-90deg);
+            background: var(--royal-gold);
+            color: black;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 0 0 15px 15px;
+            cursor: pointer;
+            font-weight: 800;
+            font-size: 0.9rem;
+            box-shadow: 4px 0 10px rgba(0, 0, 0, 0.3);
+            text-transform: uppercase;
+        }
+
+        .log-content {
+            flex: 1;
+            overflow-y: auto;
+            margin-top: 10px;
+            padding-right: 5px;
+        }
+
+        .log-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 10px;
+            margin-bottom: 8px;
+            border-left: 4px solid var(--royal-gold);
+            font-size: 0.85rem;
+            animation: slideInRight 0.3s ease-out;
+        }
+
+        .log-item span {
+            color: var(--royal-gold);
+            font-weight: 800;
+            display: block;
+            margin-bottom: 2px;
+            font-size: 0.7rem;
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(-100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* Scrollbar customization */
+        .log-content::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .log-content::-webkit-scrollbar-thumb {
+            background: var(--royal-gold);
+            border-radius: 10px;
+        }
+
+        /* Power-up Effects */
+        .power-up-notice {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 4rem;
+            font-weight: 900;
+            color: gold;
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
+            pointer-events: none;
+            z-index: 50;
+            opacity: 0;
+            text-align: center;
+        }
+
+        .power-up-notice.active {
+            animation: powerUpPop 1.5s forwards;
+        }
+
+        @keyframes powerUpPop {
+            0% {
+                transform: translate(-50%, -50%) scale(0.5);
+                opacity: 0;
+            }
+
+            20% {
+                transform: translate(-50%, -50%) scale(1.2);
+                opacity: 1;
+            }
+
+            80% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 1;
+            }
+
+            100% {
+                transform: translate(-50%, -150%) scale(0.8);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="game-container">
+        <div class="pattern-overlay"></div>
+
+        <button class="lang-toggle" onclick="window.game.toggleLanguage()" id="lang-btn">BAHASA: MS</button>
+
+        <!-- Start Screen -->
+        <div id="start-screen" class="screen">
+            <div class="title-box">
+                <h1 id="title-text">WARISAN BERDAULAT</h1>
+                <div class="subtitle" id="subtitle-text">LEGACY OF THE FOUR SULTANATES</div>
+            </div>
+            <div class="menu-btns">
+                <button class="btn" onclick="window.game.start()" id="start-btn">MEMULAKAN PERMAINAN</button>
+                <button class="btn btn-secondary" onclick="window.game.showInstructions()" id="how-to-btn">CARA
+                    BERMAIN</button>
+            </div>
+            <div class="info-panel" id="hint-text">
+                Kuasai sejarah pengasasan Pahang, Perak, Terengganu, dan Selangor.
+            </div>
+        </div>
+
+        <!-- Instruction Screen -->
+        <div id="instruction-screen" class="screen hidden">
+            <div class="end-box">
+                <h2 style="color: var(--royal-gold); margin-bottom: 20px;" id="instr-title">CARA BERMAIN</h2>
+                <p style="margin-bottom: 20px; line-height: 1.6; text-align: left;" id="instr-body">
+                    1. Seret "Lencana Sejarah" ke negeri yang betul.<br>
+                    2. Kumpulkan mata untuk setiap jawapan yang betul.<br>
+                    3. Berwaspada dengan masa! Anda mempunyai 90 saat.<br>
+                    4. Dapatkan kombo untuk bonus mata.<br>
+                    5. Pelajari tentang pengasasan dan warisan Melaka di setiap negeri.
+                </p>
+                <button class="btn" onclick="window.game.showScreen('start-screen')" id="back-btn">KEMBALI</button>
+            </div>
+        </div>
+
+        <!-- Game Screen -->
+        <div id="game-screen" class="screen hidden">
+            <div class="hud">
+                <div class="stat-item">
+                    <div>
+                        <div class="stat-label" id="score-label">SKOR</div>
+                        <div class="stat-value" id="score-val">0</div>
+                    </div>
+                </div>
+                <div class="stat-item">
+                    <div>
+                        <div class="stat-label" id="time-label">MASA</div>
+                        <div class="stat-value" id="timer-val">90</div>
+                    </div>
+                </div>
+                <div class="stat-item">
+                    <div>
+                        <div class="stat-label" id="best-label">TERBAIK</div>
+                        <div class="stat-value" id="best-val">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="log-panel" id="log-panel">
+                <button class="log-toggle-btn" onclick="game.toggleLog()" id="log-toggle-text">LOG SEJARAH</button>
+                <h3 style="color: var(--royal-gold); border-bottom: 1px solid var(--royal-gold); padding-bottom: 5px;"
+                    id="log-title">WARISAN ANDA</h3>
+                <div class="log-content" id="log-content">
+                    <!-- Log items added here -->
+                </div>
+            </div>
+
+            <div id="orbs-area" class="orbs-container">
+                <!-- Orbs will be spawned here -->
+            </div>
+
+            <div class="state-shelves">
+                <div class="shelf" id="shelf-pahang" data-state="pahang" ondragover="event.preventDefault()"
+                    ondrop="game.handleDrop(event)">
+                    <div class="shelf-title">PAHANG</div>
+                    <div class="shelf-icon">🕌</div>
+                </div>
+                <div class="shelf" id="shelf-perak" data-state="perak" ondragover="event.preventDefault()"
+                    ondrop="game.handleDrop(event)">
+                    <div class="shelf-title">PERAK</div>
+                    <div class="shelf-icon">⚔️</div>
+                </div>
+                <div class="shelf" id="shelf-terengganu" data-state="terengganu" ondragover="event.preventDefault()"
+                    ondrop="game.handleDrop(event)">
+                    <div class="shelf-title">TERENGGANU</div>
+                    <div class="shelf-icon">🌙</div>
+                </div>
+                <div class="shelf" id="shelf-selangor" data-state="selangor" ondragover="event.preventDefault()"
+                    ondrop="game.handleDrop(event)">
+                    <div class="shelf-title">SELANGOR</div>
+                    <div class="shelf-icon">👑</div>
+                </div>
+            </div>
+
+            <div class="combo-meter">
+                <div class="combo-fill" id="combo-fill"></div>
+            </div>
+
+            <div id="combo-counter">X2</div>
+            <div id="power-up-notice" class="power-up-notice">LEGACY RUSH!</div>
+
+            <div class="info-panel" id="fact-ticker">
+                Sedia? Seret fakta ke negeri yang sepadan!
+            </div>
+        </div>
+
+        <!-- End Screen -->
+        <div id="end-screen" class="screen hidden">
+            <div class="end-box">
+                <h2 id="end-title">TAHNIAH!</h2>
+                <div class="stars" id="star-rating">⭐⭐⭐</div>
+                <div class="final-score" id="final-score-val">1500</div>
+                <div class="high-score-tag" id="high-score-msg">REKOD BARU!</div>
+                <div class="menu-btns" style="width: 100%;">
+                    <button class="btn" onclick="window.game.start()" id="replay-btn">MAIN SEMULA</button>
+                    <button class="btn btn-secondary" onclick="window.game.showScreen('start-screen')"
+                        id="home-btn">MENU
+                        UTAMA</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const gameData = {
+            en: {
+                title: "SOVEREIGN LEGACY",
+                subtitle: "THE FOUR SULTANATES",
+                start: "START GAME",
+                howTo: "HOW TO PLAY",
+                instrTitle: "HOW TO PLAY",
+                instrBody: "1. Drag 'History Orbs' to the correct state.<br>2. Collect points for every correct match.<br>3. Watch out for the timer! You have 90 seconds.<br>4. Get combos for bonus points.<br>5. Learn about the founding and Melaka heritage of each state.",
+                back: "BACK",
+                score: "SCORE",
+                time: "TIME",
+                best: "BEST",
+                pahang: "PAHANG",
+                perak: "PERAK",
+                terengganu: "TERENGGANU",
+                selangor: "SELANGOR",
+                congrats: "CONGRATULATIONS!",
+                replay: "PLAY AGAIN",
+                home: "MAIN MENU",
+                highScore: "NEW HIGH SCORE!",
+                factInit: "Ready? Drag facts to the matching state!",
+                hint: "Master the history of Pahang, Perak, Terengganu, and Selangor.",
+                states: {
+                    pahang: {
+                        items: [
+                            "Sultan Muhammad Shah (Founder)",
+                            "Sultan Mansur Shah (KMM Lineage)",
+                            "Hukum Kanun Pahang",
+                            "Keris Panjang Diraja (Regalia)",
+                            "Founded in 1470",
+                            "Nobat Traditions",
+                            "Pelantikan Protocol from KMM",
+                            "Formerly ruled by Seri Bija Diraja",
+                            "Pekan (Royal Capital)",
+                            "Raja Ahmad (First Heir)",
+                            "Influence of Tun Perak",
+                            "Legitimacy from Sultan Melaka",
+                            "Territory: Sedili to Terengganu",
+                            "Administrative hierarchy: Orang Besar 4, 8, 16",
+                            "Royal Wedding Protocols (Adat Rapati)",
+                            "Symbol: White Flag",
+                            "Sultan Abdul Jamil Shah (Strengthened state)",
+                            "Ulama's role in the palace",
+                            "Gong and Gendang Nobat",
+                            "Protocol: Pelantikan Sultan at Grave",
+                            "State Seal: Cap Mohor Pahang",
+                            "Uda and Dara Traditional Roots",
+                            "Influence of Islamic jurisprudence",
+                            "Relation to Sultan Mahmud Shah",
+                            "Control of Inland Trade Paths",
+                            "Defense: Fortress of Pekan Lama"
+                        ]
+                    },
+                    perak: {
+                        items: [
+                            "Sultan Muzaffar Shah (Founder)",
+                            "Sultan Mahmud Shah (KMM Lineage)",
+                            "Undang-undang 99 Perak",
+                            "Pedang Cura Si Manjakini",
+                            "Founded in 1528",
+                            "Tanah Abang (Initial Capital)",
+                            "Nobat Heritage",
+                            "Sejarah Melayu Mentions",
+                            "Tun Saban (Invited the Sultan)",
+                            "Regalia: Mestika Embun",
+                            "Regalia: Cap Halilintar",
+                            "Kuala Kangsar (Royal City)",
+                            "Sultan Alaudin Mansur Shah",
+                            "Sultan Ahmad Tajuddin",
+                            "System: Sultan, Raja Muda, Raja Di-Hilir",
+                            "Mining of Tin heritage",
+                            "Keris Berdiri (Legendary Regalia)",
+                            "Protocol of No-Shoes in Palace",
+                            "Regalia: Pontoh Bernaga (Armlets)",
+                            "Regalia: Kamarubanda (Waistband)",
+                            "Symbol: Yellow/White/Black Flag",
+                            "Royal Protocol: Tabal Jin",
+                            "Relation to Johor-Riau Empire",
+                            "Upholding KMM Sovereignty",
+                            "Sultan Idris Shah Heritage",
+                            "Defense: Kota Ngah Ibrahim"
+                        ]
+                    },
+                    terengganu: {
+                        items: [
+                            "Sultan Zainal Abidin I (Founder)",
+                            "Tun Habib Abdul Majid (Lineage)",
+                            "Johor-Riau Connection",
+                            "Founded in 1708",
+                            "Keris Panjang (Regalia)",
+                            "Strong Islamic Heritage",
+                            "Golden Deer Currency",
+                            "Tanjung Baru (First Capital)",
+                            "Sultan Mansur Shah I",
+                            "Sultan Baginda Omar",
+                            "Connection to Bendahara Paduka Raja",
+                            "Religious education focus",
+                            "Jawi script prominence",
+                            "Boat building heritage",
+                            "Sumbang Palace (Palace of Gold)",
+                            "Syariah Law implementation",
+                            "Diplomacy with Siam",
+                            "Trade central at Kuala Terengganu",
+                            "Regalia: Cogan Alam",
+                            "Regalia: Keris Panjang Diraja",
+                            "Influence of Tok Ku Paloh",
+                            "State Symbol: White Crescent/Star",
+                            "Kupang (Gold Coins)",
+                            "Bunga Emas Protocol with Siam",
+                            "Royal Library: Kitab Heritage",
+                            "Defense: Fort of Bukit Puteri"
+                        ]
+                    },
+                    selangor: {
+                        items: [
+                            "Sultan Salehuddin Shah (Founder)",
+                            "Raja Lumu (Original Name)",
+                            "Daeng Chelak (Lineage)",
+                            "Bugis Lineage Connection",
+                            "Founded in 1766",
+                            "Nobat Recognition from Perak",
+                            "Kuala Selangor Capital",
+                            "Keris Diraja Selangor",
+                            "Bukit Malawati Fort",
+                            "Sultan Ibrahim Shah",
+                            "Daeng Merewah influence",
+                            "Bugis warrior traditions",
+                            "Klang (Heritage city)",
+                            "Sultan Muhammad Shah (Selangor)",
+                            "Mining districts: Ampang, Lukut",
+                            "Protocol of 'Daulat' (Sovereignty)",
+                            "Yellow and Red colors",
+                            "Customary law of Bugis origin",
+                            "Regalia: Keris Terapang Gabus",
+                            "Role of Raja Jumaat",
+                            "Control of Bernam River",
+                            "Trade: Selangor Tin Trade",
+                            "Treaty with the Dutch (1786)",
+                            "Royal Symbol: Yellow Umbrella",
+                            "Palace: Istana Alam Shah Heritage",
+                            "Defense: Kota Tanjong Keramat"
+                        ]
+                    }
+                }
+            },
+            ms: {
+                title: "WARISAN BERDAULAT",
+                subtitle: "EMPAYAR EMPAT NEGERI",
+                start: "MEMULAKAN PERMAINAN",
+                howTo: "CARA BERMAIN",
+                instrTitle: "CARA BERMAIN",
+                instrBody: "1. Seret 'Orb Sejarah' ke negeri yang betul.<br>2. Kumpulkan mata untuk setiap padanan yang betul.<br>3. Perhatikan pemasa! Anda mempunyai 90 saat.<br>4. Dapatkan kombo untuk mata bonus.<br>5. Pelajari tentang pengasasan dan warisan Melaka di setiap negeri.",
+                back: "KEMBALI",
+                score: "SKOR",
+                time: "MASA",
+                best: "TERBAIK",
+                pahang: "PAHANG",
+                perak: "PERAK",
+                terengganu: "TERENGGANU",
+                selangor: "SELANGOR",
+                congrats: "TAHNIAH!",
+                replay: "MAIN SEMULA",
+                home: "MENU UTAMA",
+                highScore: "REKOD BARU!",
+                factInit: "Sedia? Seret fakta ke negeri yang sepadan!",
+                hint: "Kuasai sejarah pengasasan Pahang, Perak, Terengganu, dan Selangor.",
+                states: {
+                    pahang: {
+                        items: [
+                            "Sultan Muhammad Shah (Pengasas)",
+                            "Putera Sultan Mansur Shah (KMM)",
+                            "Hukum Kanun Pahang",
+                            "Keris Panjang Diraja",
+                            "Diasaskan pada 1470",
+                            "Tradisi Nobat",
+                            "Protokol Pelantikan KMM",
+                            "Ditadbir Seri Bija Diraja sebelumnya",
+                            "Pekan (Pusat Pemerintahan)",
+                            "Raja Ahmad (Pewaris Pertama)",
+                            "Pengaruh Tun Perak",
+                            "Legitimasi Sultan Melaka",
+                            "Wilayah: Sedili ke Terengganu",
+                            "Sistem Orang Besar 4, 8, 16",
+                            "Adat Rapati (Perkahwinan Diraja)",
+                            "Panji-panji Putih",
+                            "Sultan Abdul Jamil Shah (Memperkukuh)",
+                            "Peranan Ulama dalam istana",
+                            "Gong dan Gendang Nobat",
+                            "Protokol: Pelantikan di Makam",
+                            "Cap Mohor Pahang",
+                            "Akar Tradisi Uda dan Dara",
+                            "Pengaruh Yurisprudensi Islam",
+                            "Hubungan dengan Sultan Mahmud Shah",
+                            "Kawalan Laluan Perdagangan Dalaman",
+                            "Pertahanan: Kota Pekan Lama"
+                        ]
+                    },
+                    perak: {
+                        items: [
+                            "Sultan Muzaffar Shah (Pengasas)",
+                            "Putera Sultan Mahmud Shah (KMM)",
+                            "Undang-undang 99 Perak",
+                            "Pedang Cura Si Manjakini",
+                            "Diasaskan pada 1528",
+                            "Tanah Abang (Pusat Pemerintahan)",
+                            "Warisan Nobat",
+                            "Disebut dalam Sejarah Melayu",
+                            "Tun Saban (Menjemput Sultan)",
+                            "Alat Kebesaran: Mestika Embun",
+                            "Alat Kebesaran: Cap Halilintar",
+                            "Kuala Kangsar (Bandar Diraja)",
+                            "Sultan Alaudin Mansur Shah",
+                            "Sultan Ahmad Tajuddin",
+                            "Sultan, Raja Muda, Raja Di-Hilir",
+                            "Kegiatan perlombongan bijih timah",
+                            "Keris Beristiadat",
+                            "Protokol Berjalan Tanpa Kasut",
+                            "Alat Kebesaran: Pontoh Bernaga",
+                            "Alat Kebesaran: Kamarubanda",
+                            "Bendera Kuning/Putih/Hitam",
+                            "Protokol Diraja: Tabal Jin",
+                            "Hubungan dengan Empayar Johor-Riau",
+                            "Menjunjung Kedaulatan KMM",
+                            "Warisan Sultan Idris Shah",
+                            "Pertahanan: Kota Ngah Ibrahim"
+                        ]
+                    },
+                    terengganu: {
+                        items: [
+                            "Sultan Zainal Abidin I (Pengasas)",
+                            "Tun Habib Abdul Majid (Zuriat)",
+                            "Hubungan Johor-Riau",
+                            "Diasaskan pada 1708",
+                            "Keris Panjang (Alat Kebesaran)",
+                            "Warisan Islam yang Kuat",
+                            "Mata Wang Kijang Emas",
+                            "Tanjung Baru (Pusat Awal)",
+                            "Sultan Mansur Shah I",
+                            "Sultan Baginda Omar",
+                            "Hubungan Bendahara Paduka Raja",
+                            "Fokus pendidikan agama",
+                            "Kepentingan tulisan Jawi",
+                            "Warisan pembuatan bot",
+                            "Istana Kolam (Sumbang)",
+                            "Pelaksanaan Hukum Syariah",
+                            "Diplomasi dengan Siam",
+                            "Pusat perdagangan Kuala Terengganu",
+                            "Alat Kebesaran: Cogan Alam",
+                            "Keretapi Kuda Diraja",
+                            "Pengaruh Tok Ku Paloh",
+                            "Simbol: Bulan Bintang Putih",
+                            "Mata Wang Kupang (Emas)",
+                            "Protokol Bunga Emas (Siam)",
+                            "Perpustakaan Diraja: Warisan Kitab",
+                            "Pertahanan: Kota Bukit Puteri"
+                        ]
+                    },
+                    selangor: {
+                        items: [
+                            "Sultan Salehuddin Shah (Pengasas)",
+                            "Raja Lumu (Nama Asal)",
+                            "Daeng Chelak (Zuriat)",
+                            "Hubungan Keturunan Bugis",
+                            "Diasaskan pada 1766",
+                            "Pengiktirafan Nobat dari Perak",
+                            "Kuala Selangor sebagai Pusat",
+                            "Keris Diraja Selangor",
+                            "Kota Bukit Malawati",
+                            "Sultan Ibrahim Shah",
+                            "Pengaruh Daeng Merewah",
+                            "Tradisi Pahlawan Bugis",
+                            "Klang (Pusat Warisan)",
+                            "Sultan Muhammad Shah (Selangor)",
+                            "Kawasan lombong: Ampang, Lukut",
+                            "Konsep Daulat dan Berdaulat",
+                            "Warna Kuning dan Merah",
+                            "Undang-undang Adat Bugis",
+                            "Keris Terapang Gabus",
+                            "Peranan Raja Jumaat",
+                            "Kawalan Sungai Bernam",
+                            "Perniagaan Bijih Timah Selangor",
+                            "Perjanjian dengan Belanda (1786)",
+                            "Simbol Diraja: Payung Kuning",
+                            "Istana Alam Shah (Warisan)",
+                            "Pertahanan: Kota Tanjong Keramat"
+                        ]
+                    }
+                }
+            }
+        };
+
+        class Game {
+            constructor() {
+                this.lang = 'ms';
+                this.score = 0;
+                this.timer = 90;
+                this.bestScore = localStorage.getItem('sultanateBest') || 0;
+                this.gameActive = false;
+                this.timerInterval = null;
+                this.orbSpawnInterval = null;
+                this.combo = 0;
+                this.comboMax = 10;
+                this.lastMatchTime = 0;
+                this.currentOrbs = [];
+                this.isLogOpen = false;
+                this.powerUpActive = false;
+                this.spawnSpeed = 2500;
+
+                this.init();
+            }
+
+            init() {
+                document.getElementById('best-val').innerText = this.bestScore;
+                this.updateUI();
+
+                // Keyboard shortcuts
+                window.addEventListener('keydown', (e) => {
+                    if (e.key === 'l' || e.key === 'L') this.toggleLog();
+                });
+            }
+
+            toggleLanguage() {
+                this.lang = this.lang === 'ms' ? 'en' : 'ms';
+                this.updateUI();
+
+                // Update log labels if they exist
+                const logEntries = document.querySelectorAll('.log-item');
+                logEntries.forEach(entry => {
+                    const state = entry.dataset.state;
+                    entry.querySelector('span').innerText = gameData[this.lang][state].toUpperCase();
+                });
+            }
+
+            updateUI() {
+                const text = gameData[this.lang];
+                document.getElementById('title-text').innerText = text.title;
+                document.getElementById('subtitle-text').innerText = text.subtitle;
+                document.getElementById('start-btn').innerText = text.start;
+                document.getElementById('how-to-btn').innerText = text.howTo;
+                document.getElementById('instr-title').innerText = text.instrTitle;
+                document.getElementById('instr-body').innerHTML = text.instrBody;
+                document.getElementById('back-btn').innerText = text.back;
+                document.getElementById('score-label').innerText = text.score;
+                document.getElementById('time-label').innerText = text.time;
+                document.getElementById('best-label').innerText = text.best;
+                document.getElementById('end-title').innerText = text.congrats;
+                document.getElementById('replay-btn').innerText = text.replay;
+                document.getElementById('home-btn').innerText = text.home;
+                document.querySelector('.lang-toggle').innerText = `BAHASA: ${this.lang.toUpperCase()}`;
+
+                document.getElementById('shelf-pahang').querySelector('.shelf-title').innerText = text.pahang;
+                document.getElementById('shelf-perak').querySelector('.shelf-title').innerText = text.perak;
+                document.getElementById('shelf-terengganu').querySelector('.shelf-title').innerText = text.terengganu;
+                document.getElementById('shelf-selangor').querySelector('.shelf-title').innerText = text.selangor;
+
+                document.getElementById('fact-ticker').innerText = text.factInit;
+                document.getElementById('hint-text').innerText = text.hint;
+                document.getElementById('log-title').innerText = this.lang === 'ms' ? "WARISAN ANDA" : "YOUR HERITAGE";
+                document.getElementById('log-toggle-text').innerText = this.lang === 'ms' ? "LOG SEJARAH" : "HISTORY LOG";
+            }
+
+            showScreen(id) {
+                document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+                document.getElementById(id).classList.remove('hidden');
+                if (id === 'game-screen') {
+                    this.isLogOpen = false;
+                    document.getElementById('log-panel').classList.remove('open');
+                }
+            }
+
+            showInstructions() {
+                this.showScreen('instruction-screen');
+            }
+
+            toggleLog() {
+                this.isLogOpen = !this.isLogOpen;
+                const panel = document.getElementById('log-panel');
+                if (this.isLogOpen) panel.classList.add('open');
+                else panel.classList.remove('open');
+            }
+
+            start() {
+                this.score = 0;
+                this.timer = 90;
+                this.combo = 0;
+                this.spawnSpeed = 2500;
+                this.gameActive = true;
+                this.currentOrbs = [];
+                this.powerUpActive = false;
+
+                document.getElementById('score-val').innerText = '0';
+                document.getElementById('timer-val').innerText = '90';
+                document.getElementById('orbs-area').innerHTML = '';
+                document.getElementById('log-content').innerHTML = '';
+                document.getElementById('combo-fill').style.width = '0%';
+
+                this.showScreen('game-screen');
+                this.startTimer();
+                this.startSpawning();
+            }
+
+            startTimer() {
+                if (this.timerInterval) clearInterval(this.timerInterval);
+                this.timerInterval = setInterval(() => {
+                    this.timer--;
+                    document.getElementById('timer-val').innerText = this.timer;
+
+                    // Difficulty scaling every 20 seconds
+                    if (this.timer > 0 && this.timer % 20 === 0 && this.spawnSpeed > 1000) {
+                        this.spawnSpeed -= 300;
+                        this.startSpawning();
+                    }
+
+                    if (this.timer <= 10) {
+                        document.getElementById('timer-val').style.color = 'var(--royal-red)';
+                        document.getElementById('timer-val').classList.add('pulse');
+                    } else {
+                        document.getElementById('timer-val').style.color = 'white';
+                        document.getElementById('timer-val').classList.remove('pulse');
+                    }
+
+                    if (this.timer <= 0) {
+                        this.end();
+                    }
+                }, 1000);
+            }
+
+            startSpawning() {
+                if (this.orbSpawnInterval) clearInterval(this.orbSpawnInterval);
+                this.spawnOrb();
+                this.orbSpawnInterval = setInterval(() => {
+                    if (this.currentOrbs.length < 6) {
+                        this.spawnOrb();
+                    }
+                }, this.spawnSpeed);
+            }
+
+            spawnOrb() {
+                const states = ['pahang', 'perak', 'terengganu', 'selangor'];
+                const randomState = states[Math.floor(Math.random() * states.length)];
+                const items = gameData[this.lang].states[randomState].items;
+                const randomItem = items[Math.floor(Math.random() * items.length)];
+
+                // Check for duplicates
+                const area = document.getElementById('orbs-area');
+                const existingOrbs = Array.from(area.querySelectorAll('.orb-text')).map(o => o.innerText);
+                if (existingOrbs.includes(randomItem)) return;
+
+                const orb = document.createElement('div');
+                orb.className = 'orb';
+                orb.id = 'orb-' + Math.random().toString(36).substr(2, 9);
+                orb.draggable = true;
+                orb.innerHTML = `<div class="orb-text">${randomItem}</div>`;
+                orb.dataset.state = randomState;
+
+                const x = 50 + Math.random() * (area.offsetWidth - 170);
+                const y = 20 + Math.random() * (area.offsetHeight - 140);
+
+                orb.style.left = x + 'px';
+                orb.style.top = y + 'px';
+                orb.style.animationDelay = (Math.random() * 2) + 's';
+
+                orb.ondragstart = (e) => {
+                    e.dataTransfer.setData('text/plain', orb.id);
+                    orb.classList.add('dragging');
+                };
+                orb.ondragend = () => orb.classList.remove('dragging');
+
+                area.appendChild(orb);
+                this.currentOrbs.push(orb);
+            }
+
+            handleDrop(event) {
+                event.preventDefault();
+                const orbId = event.dataTransfer.getData('text/plain');
+                const orb = document.getElementById(orbId);
+                const shelf = event.currentTarget;
+                const targetState = shelf.dataset.state;
+
+                if (!orb) return;
+
+                if (orb.dataset.state === targetState) {
+                    this.matchSuccess(orb, shelf);
+                } else {
+                    this.matchFail(shelf);
+                }
+            }
+
+            matchSuccess(orb, shelf) {
+                const factText = orb.querySelector('.orb-text').innerText;
+                const state = orb.dataset.state;
+
+                // Remove orb with animation
+                this.currentOrbs = this.currentOrbs.filter(o => o.id !== orb.id);
+                orb.style.pointerEvents = 'none';
+                orb.style.transform = 'scale(1.5) rotate(15deg)';
+                orb.style.opacity = '0';
+                orb.style.transition = '0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+                setTimeout(() => orb.remove(), 300);
+
+                // Add to Log
+                this.addToLog(state, factText);
+
+                // Points & Combo
+                let points = 100;
+                const now = Date.now();
+                if (now - this.lastMatchTime < 4000) {
+                    this.combo = Math.min(this.combo + 1, 10);
+                    points += this.combo * 50;
+                    this.showCombo();
+                } else {
+                    this.combo = 0;
+                }
+                this.lastMatchTime = now;
+
+                // Power up trigger
+                if (this.combo >= 5 && !this.powerUpActive) {
+                    this.triggerLegacyRush();
+                }
+
+                if (this.powerUpActive) points *= 2;
+
+                this.score += points;
+                document.getElementById('score-val').innerText = this.score;
+
+                // Progress bar
+                const fillPercent = (this.combo / 10) * 100;
+                document.getElementById('combo-fill').style.width = fillPercent + '%';
+
+                shelf.classList.add('active');
+                shelf.classList.add('pulse');
+                setTimeout(() => {
+                    shelf.classList.remove('active');
+                    shelf.classList.remove('pulse');
+                }, 500);
+
+                const ticker = document.getElementById('fact-ticker');
+                ticker.innerText = factText + " ✅";
+                ticker.style.color = "#2ecc71";
+            }
+
+            matchFail(shelf) {
+                this.combo = 0;
+                this.score = Math.max(0, this.score - 50);
+                document.getElementById('score-val').innerText = this.score;
+                document.getElementById('combo-fill').style.width = '0%';
+
+                shelf.classList.add('shake');
+                setTimeout(() => shelf.classList.remove('shake'), 400);
+
+                const ticker = document.getElementById('fact-ticker');
+                ticker.innerText = this.lang === 'ms' ? "Salah! Semak fakta dalam Log Sejarah." : "Wrong! Check history log for help.";
+                ticker.style.color = "#e74c3c";
+            }
+
+            addToLog(state, fact) {
+                const log = document.getElementById('log-content');
+                const item = document.createElement('div');
+                item.className = 'log-item';
+                item.dataset.state = state;
+                item.innerHTML = `<span>${gameData[this.lang][state].toUpperCase()}</span>${fact}`;
+                log.prepend(item);
+            }
+
+            triggerLegacyRush() {
+                this.powerUpActive = true;
+                const notice = document.getElementById('power-up-notice');
+                notice.innerText = this.lang === 'ms' ? "SEMARAK WARISAN!" : "LEGACY RUSH!";
+                notice.classList.add('active');
+                this.timer += 10;
+
+                setTimeout(() => {
+                    this.powerUpActive = false;
+                    notice.classList.remove('active');
+                    this.combo = 0;
+                    document.getElementById('combo-fill').style.width = '0%';
+                }, 10000);
+            }
+
+            showCombo() {
+                const comboEl = document.getElementById('combo-counter');
+                comboEl.innerText = `X${this.combo + 1}`;
+                comboEl.classList.add('show');
+                setTimeout(() => comboEl.classList.remove('show'), 800);
+            }
+
+            end() {
+                this.gameActive = false;
+                clearInterval(this.timerInterval);
+                clearInterval(this.orbSpawnInterval);
+
+                document.getElementById('final-score-val').innerText = this.score;
+
+                let stars = '⭐';
+                if (this.score > 2000) stars = '⭐⭐';
+                if (this.score > 5000) stars = '⭐⭐⭐';
+                if (this.score > 8000) stars = '⭐⭐⭐ 🏆';
+                document.getElementById('star-rating').innerText = stars;
+
+                if (this.score > this.bestScore) {
+                    this.bestScore = this.score;
+                    localStorage.setItem('sultanateBest', this.bestScore);
+                    document.getElementById('high-score-msg').innerText = gameData[this.lang].highScore;
+                    document.getElementById('best-val').innerText = this.bestScore;
+                } else {
+                    document.getElementById('high-score-msg').innerText = "";
+                }
+
+                this.showScreen('end-screen');
+            }
+        }
+
+        window.game = new Game();
+    </script>
+</body>
+
+</html>
