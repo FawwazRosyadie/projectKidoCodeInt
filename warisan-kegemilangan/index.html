@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="ms">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Warisan Berdaulat - Sejarah Tingkatan 5</title>
+    <!-- SEO Meta Tags -->
+    <meta name="description"
+        content="Permainan interaktif mengenai warisan kerajaan Kedah, Kelantan, Negeri Sembilan dan Perlis untuk Sejarah Tingkatan 5.">
+    <meta name="keywords"
+        content="Sejarah, Tingkatan 5, Warisan, Kedah, Kelantan, Negeri Sembilan, Perlis, Adat Perpatih">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Playfair+Display:wght@700;900&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --primary-gold: #FFD700;
+            --accent-gold: #FDB813;
+            --royal-yellow: #FFEF00;
+            --deep-maroon: #5D0E11;
+            --rich-black: #1A1A1A;
+            --glass: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --state-kedah: #e67e22;
+            --state-kelantan: #c0392b;
+            --state-perlis: #2c3e50;
+            --state-ns: #27ae60;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--rich-black);
+            color: white;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            background: linear-gradient(135deg, #1A1A1A 0%, #3D0000 100%);
+        }
+
+        #app {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Background Pattern */
+        .pattern-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('https://www.transparenttextures.com/patterns/black-paper.png'),
+                radial-gradient(circle at center, transparent 0%, rgba(0, 0, 0, 0.4) 100%);
+            opacity: 0.5;
+            z-index: -1;
+        }
+
+        /* UI Panels */
+        .panel {
+            background: var(--glass);
+            backdrop-filter: blur(15px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            max-width: 90%;
+            width: 600px;
+            z-index: 100;
+            transition: var(--transition);
+        }
+
+        .hide {
+            display: none !important;
+            opacity: 0;
+            transform: scale(0.95);
+        }
+
+        /* Typography */
+        h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(to bottom, var(--primary-gold), var(--accent-gold));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        p {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 2rem;
+            color: #ccc;
+        }
+
+        /* Buttons */
+        .btn {
+            background: linear-gradient(45deg, var(--deep-maroon), #8B0000);
+            border: 2px solid var(--primary-gold);
+            color: var(--primary-gold);
+            padding: 1rem 2.5rem;
+            font-size: 1.2rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            margin: 0.5rem;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 0 25px rgba(255, 215, 0, 0.4);
+            background: var(--primary-gold);
+            color: var(--deep-maroon);
+        }
+
+        /* Lang Switcher */
+        #lang-toggle {
+            position: absolute;
+            top: 120px;
+            /* Positioned below the HUD */
+            left: 95%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            color: white;
+            padding: 0.6rem 1.2rem;
+            border-radius: 12px;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            font-weight: 600;
+            font-size: 0.9rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            transition: var(--transition);
+        }
+
+        #lang-toggle:hover {
+            background: var(--primary-gold);
+            color: var(--deep-maroon);
+            transform: translateX(-50%) scale(1.05);
+        }
+
+        /* Game HUD */
+        #hud {
+            position: absolute;
+            top: 30px;
+            left: 0;
+            width: 100%;
+            padding: 0 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 50;
+            pointer-events: none;
+        }
+
+        .stat-box {
+            background: var(--glass);
+            padding: 0.8rem 1.5rem;
+            border-radius: 15px;
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(5px);
+            pointer-events: auto;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            color: var(--accent-gold);
+            margin-bottom: 2px;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 800;
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* Game Scene */
+        #game-scene {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        /* Pillars (Drop Zones) */
+        .pillar-container {
+            position: absolute;
+            bottom: 20px;
+            width: 100%;
+            display: flex;
+            justify-content: space-around;
+            padding: 0 50px;
+        }
+
+        .pillar {
+            width: 180px;
+            height: 220px;
+            background: var(--glass);
+            border: 2px solid var(--glass-border);
+            border-radius: 20px 20px 10px 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            padding-bottom: 20px;
+            position: relative;
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        .pillar::before {
+            content: '';
+            position: absolute;
+            top: -10px;
+            width: 90%;
+            height: 10px;
+            background: var(--glass-border);
+            border-radius: 5px;
+        }
+
+        .pillar.active {
+            transform: scale(1.05);
+            background: rgba(255, 215, 0, 0.2);
+            border-color: var(--primary-gold);
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.3);
+        }
+
+        .pillar-name {
+            font-weight: 800;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            color: var(--primary-gold);
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+            text-align: center;
+        }
+
+        .pillar-icon {
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+
+        /* Floating Items */
+        .heritage-item {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            background: radial-gradient(circle at 30% 30%, #fff, transparent),
+                linear-gradient(45deg, var(--primary-gold), var(--accent-gold));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4), inset 0 0 10px rgba(255, 255, 255, 0.5);
+            cursor: grab;
+            z-index: 60;
+            transition: transform 0.1s;
+            border: 3px solid white;
+        }
+
+        .heritage-item span {
+            font-size: 0.75rem;
+            color: var(--deep-maroon);
+            font-weight: 900;
+            text-align: center;
+            padding: 5px;
+            word-wrap: break-word;
+            line-height: 1;
+        }
+
+        .heritage-item.dragging {
+            opacity: 0.8;
+            transform: scale(1.1);
+            cursor: grabbing;
+        }
+
+        /* Particles & Feedback */
+        .score-popup {
+            position: absolute;
+            color: var(--primary-gold);
+            font-weight: 900;
+            font-size: 2rem;
+            pointer-events: none;
+            animation: floatUp 0.8s ease-out forwards;
+            z-index: 1000;
+        }
+
+        @keyframes floatUp {
+            0% {
+                transform: translateY(0);
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateY(-100px);
+                opacity: 0;
+            }
+        }
+
+        /* End Screen */
+        .stars {
+            font-size: 3rem;
+            color: var(--primary-gold);
+            margin: 1rem 0;
+            letter-spacing: 5px;
+        }
+
+        .summary-list {
+            text-align: left;
+            margin: 1rem 0;
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .summary-item {
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 5px;
+        }
+
+        /* Helper Classes */
+        .kedah {
+            border-bottom: 8px solid var(--state-kedah);
+        }
+
+        .kelantan {
+            border-bottom: 8px solid var(--state-kelantan);
+        }
+
+        .perlis {
+            border-bottom: 8px solid var(--state-perlis);
+        }
+
+        .ns {
+            border-bottom: 8px solid var(--state-ns);
+        }
+
+        /* Multiplier Meter */
+        #combo-meter {
+            position: absolute;
+            left: 40px;
+            bottom: 260px;
+            width: 10px;
+            height: 150px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        #combo-fill {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 0%;
+            background: linear-gradient(to top, #ff4e50, #f9d423);
+            transition: height 0.3s;
+        }
+
+        /* Custom Cursor */
+        .cursor-trail {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background: var(--primary-gold);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            opacity: 0.5;
+        }
+
+        #tutorial-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+        }
+
+        /* Mobile responsiveness */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+
+            .pillar {
+                width: 80px;
+                height: 120px;
+            }
+
+            .pillar-icon {
+                font-size: 1.5rem;
+            }
+
+            .pillar-name {
+                font-size: 0.6rem;
+            }
+
+            .heritage-item {
+                width: 60px;
+                height: 60px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="app">
+        <div class="pattern-overlay"></div>
+        <button id="lang-toggle">English</button>
+
+        <!-- Start Screen -->
+        <div id="start-screen" class="panel">
+            <h1 data-i18n="title">Warisan Berdaulat</h1>
+            <p data-i18n="subtitle">Kekalkan kegemilangan warisan Kedah, Kelantan, Perlis, dan Negeri Sembilan dalam
+                arkib sejarah.</p>
+            <div class="btn-group">
+                <button class="btn" id="start-btn" data-i18n="start">Mula Mengarkib</button>
+            </div>
+            <p style="font-size: 0.8rem; margin-top: 1rem;" data-i18n="instructions">Seret item ke negeri yang betul
+                untuk mengumpul markah!</p>
+        </div>
+
+        <!-- HUD -->
+        <div id="hud" class="hide">
+            <div class="stat-box">
+                <div class="stat-label" data-i18n="score">Markah</div>
+                <div class="stat-value" id="score-val">0</div>
+            </div>
+            <div class="stat-box" style="text-align: center;">
+                <div class="stat-label" data-i18n="timer">Masa</div>
+                <div class="stat-value" id="timer-val">60</div>
+            </div>
+            <div class="stat-box" style="text-align: right;">
+                <div class="stat-label" data-i18n="top_score">Rekod</div>
+                <div class="stat-value" id="top-val">0</div>
+            </div>
+        </div>
+
+        <!-- Combo Meter -->
+        <div id="combo-meter" class="hide">
+            <div id="combo-fill"></div>
+        </div>
+
+        <!-- Game Scene -->
+        <div id="game-scene" class="hide">
+            <div class="pillar-container">
+                <div class="pillar kedah" data-state="kedah">
+                    <div class="pillar-icon">🌾</div>
+                    <div class="pillar-name">KEDAH</div>
+                </div>
+                <div class="pillar perlis" data-state="perlis">
+                    <div class="pillar-icon">🏛️</div>
+                    <div class="pillar-name">PERLIS</div>
+                </div>
+                <div class="pillar kelantan" data-state="kelantan">
+                    <div class="pillar-icon">🪁</div>
+                    <div class="pillar-name">KELANTAN</div>
+                </div>
+                <div class="pillar ns" data-state="ns">
+                    <div class="pillar-icon">🐃</div>
+                    <div class="pillar-name">N. SEMBILAN</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- End Screen -->
+        <div id="end-screen" class="panel hide">
+            <h1 data-i18n="well_done">Syabas!</h1>
+            <div class="stars" id="end-stars">⭐⭐⭐</div>
+            <p id="end-message"></p>
+            <div class="stat-box" style="display:inline-block; margin-bottom: 1rem;">
+                <div class="stat-label" data-i18n="final_score">Markah Akhir</div>
+                <div class="stat-value" id="final-score">0</div>
+            </div>
+            <div class="summary-list" id="knowledge-summary">
+                <!-- Learning points injected here -->
+            </div>
+            <button class="btn" id="restart-btn" data-i18n="restart">Main Lagi</button>
+        </div>
+    </div>
+
+    <script>
+        // --- Data & Localization ---
+        const i18n = {
+            ms: {
+                title: "Warisan Berdaulat",
+                subtitle: "Kekalkan kegemilangan warisan Kedah, Kelantan, Perlis, dan Negeri Sembilan.",
+                start: "Mula Bermain",
+                instructions: "Susun warisan ke negeri yang betul sebelum masa tamat!",
+                score: "Markah",
+                timer: "Masa",
+                top_score: "Terbaik",
+                well_done: "Tamat!",
+                final_score: "Markah Akhir",
+                restart: "Cuba Lagi",
+                lang: "English",
+                learned: "Pengetahuan Warisan:",
+                msg_perfect: "Anda seorang Pakar Arkib Warisan!",
+                msg_good: "Hebat! Teruskan memelihara warisan kita.",
+                msg_ok: "Boleh diperbaiki lagi. Terus belajar!",
+                kedah: "KEDAH",
+                perlis: "PERLIS",
+                kelantan: "KELANTAN",
+                ns: "N. SEMBILAN"
+            },
+            en: {
+                title: "Sovereign Heritage",
+                subtitle: "Preserve the glorious heritage of Kedah, Kelantan, Perlis, and Negeri Sembilan.",
+                start: "Start Game",
+                instructions: "Sort the heritage items to the correct states before time runs out!",
+                score: "Score",
+                timer: "Time",
+                top_score: "Best",
+                well_done: "Game Over!",
+                final_score: "Final Score",
+                restart: "Play Again",
+                lang: "Bahasa Melayu",
+                learned: "Heritage Knowledge:",
+                msg_perfect: "You are a Heritage Archive Expert!",
+                msg_good: "Great job! Keep preserving our heritage.",
+                msg_ok: "You can do better. Keep learning!",
+                kedah: "KEDAH",
+                perlis: "PERLIS",
+                kelantan: "KELANTAN",
+                ns: "NEGERI SEMBILAN"
+            }
+        };
+
+        const heritageData = [
+            { id: 1, ms: "Bunga Emas", en: "Golden Flower", states: ['kedah', 'kelantan', 'perlis'], fact: "Kedah, Kelantan, and Perlis sent Bunga Emas to Siam as a token of friendship." },
+            { id: 2, ms: "Nobat", en: "Royal Orchestra", states: ['kedah', 'kelantan'], fact: "Nobat is the royal orchestra used in installations of the Sultan in Kedah and Kelantan." },
+            { id: 3, ms: "Terusan Wan Mat Saman", en: "Wan Mat Saman Canal", states: ['kedah'], fact: "Built by Wan Mat Saman, it transformed Kedah into the 'Rice Bowl of Malaysia'." },
+            { id: 4, ms: "Adat Perpatih", en: "Perpatih Custom", states: ['ns'], fact: "Negeri Sembilan is unique for its Adat Perpatih which follows the matrilineal line (ibu)." },
+            { id: 5, ms: "Yamtuan Besar", en: "Supreme Ruler", states: ['ns'], fact: "The head of Negeri Sembilan is the Yang di-Pertuan Besar, elected by the Undangs." },
+            { id: 6, ms: "Undang", en: "Undang (Lawgiver)", states: ['ns'], fact: "Undang are the leaders of Luak who choose the Yamtuan Besar in Negeri Sembilan." },
+            { id: 7, ms: "Lembaga", en: "Lembaga", states: ['ns'], fact: "Lembaga are clan chiefs in the Adat Perpatih hierarchy below the Undang." },
+            { id: 8, ms: "Buapak", en: "Buapak", states: ['ns'], fact: "Buapak is the head of the branch family and referent for Adat Perpatih matters." },
+            { id: 9, ms: "Ukiran Kayu", en: "Wood Carving", states: ['kelantan'], fact: "Kelantan is famous for its intricate wood carvings found in palaces and homes." },
+            { id: 10, ms: "Sultan", en: "Sultan", states: ['kedah', 'kelantan'], fact: "Kedah and Kelantan are headed by a Sultan who holds sovereign power." },
+            { id: 11, ms: "Raja", en: "Raja", states: ['perlis'], fact: "Perlis is unique because its ruler is titled 'Raja' instead of Sultan." },
+            { id: 12, ms: "Wau & Gasing", en: "Kite & Top", states: ['kelantan'], fact: "Wau and Gasing are iconic cultural games widely associated with Kelantan." },
+            { id: 13, ms: "Padi", en: "Paddy", states: ['kedah', 'perlis'], fact: "Paddy cultivation has been the economic backbone of Kedah and Perlis heritage." },
+            { id: 14, ms: "Luak", en: "Luak (District)", states: ['ns'], fact: "Negeri Sembilan is divided into Luaks (Districts) led by an Undang." },
+            { id: 15, ms: "Balai Besar", en: "Grand Hall", states: ['kedah'], fact: "The Balai Besar of Kedah is a historical site for royal ceremonies and audiences." },
+            { id: 16, ms: "Keunikan Adat", en: "Custom Uniqueness", states: ['ns'], fact: "Adat Perpatih promotes consensus (musyawarah) in its administration." }
+        ];
+
+        // --- State & Constants ---
+        let currentLang = 'ms';
+        let score = 0;
+        let timer = 60;
+        let gameActive = false;
+        let combo = 0;
+        let topScore = localStorage.getItem('warisan_top_score') || 0;
+        let itemsOnScreen = [];
+        let gameInterval, itemSpawnInterval, timerInterval;
+        let learnedFacts = new Set();
+
+        // --- DOM Elements ---
+        const screens = {
+            start: document.getElementById('start-screen'),
+            game: document.getElementById('game-scene'),
+            end: document.getElementById('end-screen'),
+            hud: document.getElementById('hud'),
+            combo: document.getElementById('combo-meter')
+        };
+
+        // --- Initialization ---
+        function init() {
+            updateLocalization();
+            document.getElementById('top-val').innerText = topScore;
+
+            // Event Listeners
+            document.getElementById('lang-toggle').addEventListener('click', toggleLang);
+            document.getElementById('start-btn').addEventListener('click', startGame);
+            document.getElementById('restart-btn').addEventListener('click', () => location.reload());
+
+            // Pillar Drops
+            const pillars = document.querySelectorAll('.pillar');
+            pillars.forEach(p => {
+                p.addEventListener('dragover', (e) => e.preventDefault());
+                p.addEventListener('drop', handleDrop);
+                // Click support for mobile
+                p.addEventListener('click', handlePillarClick);
+            });
+
+            // Mouse Trail
+            window.addEventListener('mousemove', createTrail);
+        }
+
+        function toggleLang() {
+            currentLang = currentLang === 'ms' ? 'en' : 'ms';
+            updateLocalization();
+        }
+
+        function updateLocalization() {
+            const texts = i18n[currentLang];
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (texts[key]) el.innerText = texts[key];
+            });
+            document.getElementById('lang-toggle').innerText = texts.lang;
+
+            // Update pillars names
+            document.querySelectorAll('.pillar').forEach(p => {
+                const state = p.getAttribute('data-state');
+                p.querySelector('.pillar-name').innerText = texts[state];
+            });
+        }
+
+        // --- Game Logic ---
+        function startGame() {
+            screens.start.classList.add('hide');
+            screens.game.classList.remove('hide');
+            screens.hud.classList.remove('hide');
+            screens.combo.classList.remove('hide');
+
+            gameActive = true;
+            score = 0;
+            timer = 60;
+            combo = 0;
+            learnedFacts.clear();
+
+            updateHUD();
+
+            timerInterval = setInterval(() => {
+                timer--;
+                updateHUD();
+                if (timer <= 0) endGame();
+            }, 1000);
+
+            spawnItem();
+            itemSpawnInterval = setInterval(spawnItem, 2000);
+
+            // Item physics/falling
+            gameInterval = setInterval(updatePhysics, 20);
+        }
+
+        function spawnItem() {
+            if (!gameActive) return;
+
+            const data = heritageData[Math.floor(Math.random() * heritageData.length)];
+            const item = document.createElement('div');
+            item.className = 'heritage-item';
+            item.draggable = true;
+            item.dataset.id = data.id;
+
+            const label = document.createElement('span');
+            label.innerText = data[currentLang];
+            item.appendChild(label);
+
+            // Random horizontal pos
+            const x = 100 + Math.random() * (window.innerWidth - 200);
+            item.style.left = x + 'px';
+            item.style.top = '-100px';
+
+            item.addEventListener('dragstart', handleDragStart);
+            item.addEventListener('dragend', handleDragEnd);
+            item.addEventListener('touchstart', handleTouchStart);
+
+            screens.game.appendChild(item);
+
+            itemsOnScreen.push({
+                el: item,
+                y: -100,
+                speed: 1 + Math.random() * 1.5 + (60 - timer) / 20, // Increases over time
+                data: data
+            });
+        }
+
+        function updatePhysics() {
+            for (let i = itemsOnScreen.length - 1; i >= 0; i--) {
+                const obj = itemsOnScreen[i];
+                if (obj.dragging) continue;
+
+                obj.y += obj.speed;
+                obj.el.style.top = obj.y + 'px';
+
+                // Hit ground
+                if (obj.y > window.innerHeight - 250) {
+                    obj.el.style.opacity = '0';
+                    setTimeout(() => obj.el.remove(), 500);
+                    itemsOnScreen.splice(i, 1);
+                    resetCombo();
+                }
+            }
+        }
+
+        let draggedObject = null;
+
+        function handleDragStart(e) {
+            draggedObject = itemsOnScreen.find(o => o.el === e.target);
+            e.target.classList.add('dragging');
+        }
+
+        function handleDragEnd(e) {
+            e.target.classList.remove('dragging');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            const pillar = e.currentTarget;
+            const state = pillar.getAttribute('data-state');
+
+            if (draggedObject) {
+                checkMatch(draggedObject, state, pillar);
+            }
+        }
+
+        // Touch support for mobile
+        let selectedItem = null;
+        function handleTouchStart(e) {
+            const el = e.currentTarget;
+            selectedItem = itemsOnScreen.find(o => o.el === el);
+            el.style.border = "4px solid white";
+            el.style.boxShadow = "0 0 20px white";
+        }
+
+        function handlePillarClick(e) {
+            if (!selectedItem) return;
+            const state = e.currentTarget.getAttribute('data-state');
+            checkMatch(selectedItem, state, e.currentTarget);
+            selectedItem = null;
+        }
+
+        function checkMatch(obj, state, pillarEl) {
+            const isCorrect = obj.data.states.includes(state);
+
+            if (isCorrect) {
+                // Success
+                const points = 10 * (1 + Math.floor(combo / 5));
+                score += points;
+                combo++;
+                learnedFacts.add(obj.data.fact);
+
+                showPopup(`+${points}`, obj.el.offsetLeft, obj.el.offsetTop);
+                pillarEl.classList.add('active');
+                setTimeout(() => pillarEl.classList.remove('active'), 300);
+
+                // Remove item
+                obj.el.remove();
+                itemsOnScreen = itemsOnScreen.filter(o => o !== obj);
+                updateHUD();
+            } else {
+                // Fail
+                resetCombo();
+                obj.el.style.background = 'linear-gradient(45deg, #ff0000, #aa0000)';
+                setTimeout(() => {
+                    if (obj.el.parentNode) {
+                        obj.el.remove();
+                        itemsOnScreen = itemsOnScreen.filter(o => o !== obj);
+                    }
+                }, 300);
+            }
+            updateComboMeter();
+        }
+
+        function resetCombo() {
+            combo = 0;
+            updateComboMeter();
+        }
+
+        function updateHUD() {
+            document.getElementById('score-val').innerText = score;
+            document.getElementById('timer-val').innerText = timer;
+            if (timer < 10) document.getElementById('timer-val').style.color = '#ff4e50';
+        }
+
+        function updateComboMeter() {
+            const fill = document.getElementById('combo-fill');
+            const level = Math.min(combo * 10, 100);
+            fill.style.height = level + '%';
+        }
+
+        function showPopup(text, x, y) {
+            const p = document.createElement('div');
+            p.className = 'score-popup';
+            p.innerText = text;
+            p.style.left = x + 'px';
+            p.style.top = y + 'px';
+            document.body.appendChild(p);
+            setTimeout(() => p.remove(), 800);
+        }
+
+        function endGame() {
+            gameActive = false;
+            clearInterval(timerInterval);
+            clearInterval(itemSpawnInterval);
+            clearInterval(gameInterval);
+
+            // Clear items
+            itemsOnScreen.forEach(o => o.el.remove());
+            itemsOnScreen = [];
+
+            // Save Top Score
+            if (score > topScore) {
+                topScore = score;
+                localStorage.setItem('warisan_top_score', topScore);
+            }
+
+            // Show Result
+            screens.game.classList.add('hide');
+            screens.hud.classList.add('hide');
+            screens.combo.classList.add('hide');
+            screens.end.classList.remove('hide');
+
+            document.getElementById('final-score').innerText = score;
+
+            // Stars calculation
+            let stars = "⭐";
+            if (score > 100) stars = "⭐⭐";
+            if (score > 300) stars = "⭐⭐⭐";
+            if (score > 500) stars = "⭐⭐⭐⭐";
+            if (score > 800) stars = "⭐⭐⭐⭐⭐";
+            document.getElementById('end-stars').innerText = stars;
+
+            const msg = score > 500 ? i18n[currentLang].msg_perfect : (score > 200 ? i18n[currentLang].msg_good : i18n[currentLang].msg_ok);
+            document.getElementById('end-message').innerText = msg;
+
+            // Facts summary
+            const summary = document.getElementById('knowledge-summary');
+            summary.innerHTML = `<h3>${i18n[currentLang].learned}</h3>`;
+            if (learnedFacts.size === 0) {
+                summary.innerHTML += `<p>Tiada data arkib dikumpul.</p>`;
+            } else {
+                learnedFacts.forEach(fact => {
+                    summary.innerHTML += `<div class="summary-item">• ${fact}</div>`;
+                });
+            }
+        }
+
+        // --- Visual Effects ---
+        function createTrail(e) {
+            const trail = document.createElement('div');
+            trail.className = 'cursor-trail';
+            trail.style.left = e.pageX + 'px';
+            trail.style.top = e.pageY + 'px';
+            document.body.appendChild(trail);
+
+            setTimeout(() => {
+                trail.style.opacity = '0';
+                trail.style.transform = 'scale(0.5)';
+                setTimeout(() => trail.remove(), 500);
+            }, 50);
+        }
+
+        // --- Start ---
+        window.onload = init;
+    </script>
+
+</body>
+
+</html>

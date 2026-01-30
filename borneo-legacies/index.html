@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Borneo Legacies: Sarawak & Sabah | Form 5 Sejarah</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Playfair+Display:ital,wght@0,700;1,700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --primary: #fbbf24;
+            --sarawak-red: #ef4444;
+            --sarawak-yellow: #fbbf24;
+            --sabah-blue: #0ea5e9;
+            --sabah-green: #10b981;
+            --glass: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --text-light: #f8fafc;
+            --bg-dark: #0f172a;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-light);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
+        }
+
+        #game-view {
+            width: 100%;
+            height: 100vh;
+            max-width: 1200px;
+            position: relative;
+            background: url('https://images.unsplash.com/photo-1501785888041-af3ef285b470?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80') center/cover no-repeat;
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #game-view::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(15, 23, 42, 0.8) 0%, rgba(15, 23, 42, 0.4) 50%, rgba(15, 23, 42, 0.9) 100%);
+            z-index: 1;
+        }
+
+        /* UI Overlays */
+        .overlay {
+            position: absolute;
+            inset: 0;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(10px);
+            transition: opacity 0.5s ease;
+        }
+
+        .overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .glass-panel {
+            background: var(--glass);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 2.5rem;
+            text-align: center;
+            max-width: 600px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(to right, var(--primary), #fff, var(--sabah-blue));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .btn {
+            background: white;
+            color: var(--bg-dark);
+            border: none;
+            padding: 1rem 2.5rem;
+            font-size: 1.2rem;
+            font-weight: 600;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 0.5rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 10px 20px rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-lang {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+        }
+
+        /* Top Bar stats */
+        #top-bar {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            justify-content: space-between;
+            padding: 20px 40px;
+            align-items: center;
+        }
+
+        .stat-box {
+            background: var(--glass);
+            padding: 10px 20px;
+            border-radius: 15px;
+            border: 1px solid var(--glass-border);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.7;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--primary);
+        }
+
+        /* Game Area */
+        #game-canvas {
+            flex: 1;
+            position: relative;
+            z-index: 2;
+        }
+
+        .catcher {
+            position: absolute;
+            bottom: 40px;
+            width: 150px;
+            height: 110px;
+            border-radius: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: transform 0.1s ease;
+            cursor: pointer;
+            border: 2px solid transparent;
+            z-index: 5;
+        }
+
+        .catcher.sarawak {
+            left: 40px;
+            background: linear-gradient(135deg, var(--sarawak-red), var(--sarawak-yellow));
+            box-shadow: 0 10px 30px rgba(239, 68, 68, 0.4);
+        }
+
+        .catcher.sabah {
+            right: 40px;
+            background: linear-gradient(135deg, var(--sabah-blue), var(--sabah-green));
+            box-shadow: 0 10px 30px rgba(14, 165, 233, 0.4);
+        }
+
+        .catcher-icon {
+            font-size: 2rem;
+            margin-bottom: 5px;
+        }
+
+        .catcher-label {
+            font-weight: 800;
+            font-size: 1rem;
+            text-transform: uppercase;
+        }
+
+        /* Falling Items */
+        .item {
+            position: absolute;
+            padding: 15px 25px;
+            background: rgba(255, 255, 255, 0.95);
+            color: #0f172a;
+            border-radius: 12px;
+            font-weight: 700;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            animation: float 3s infinite ease-in-out;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            min-width: 120px;
+            text-align: center;
+            border-bottom: 4px solid var(--primary);
+        }
+
+        .item.selected {
+            border: 3px solid var(--primary);
+            background: white;
+            box-shadow: 0 0 20px var(--primary);
+            z-index: 50;
+        }
+
+        .item-category {
+            font-size: 0.6rem;
+            text-transform: uppercase;
+            color: #64748b;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        /* History Log */
+        #history-log {
+            position: absolute;
+            bottom: 25px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 45%;
+            min-width: 350px;
+            max-width: 650px;
+            height: 140px;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 15px 20px;
+            overflow-y: auto;
+            z-index: 15;
+            font-size: 0.9rem;
+            scrollbar-width: thin;
+            backdrop-filter: blur(15px);
+        }
+
+        #history-log h3 {
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+            border-bottom: 1px solid var(--glass-border);
+            padding-bottom: 5px;
+            color: var(--primary);
+        }
+
+        .log-entry {
+            margin-bottom: 8px;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            border-left: 3px solid var(--primary);
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* Combos & Stars */
+        #combo-display {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 6rem;
+            font-weight: 900;
+            color: white;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 50;
+        }
+
+        .star-particle {
+            position: absolute;
+            pointer-events: none;
+            z-index: 100;
+            color: var(--primary);
+            font-size: 1.5rem;
+        }
+
+        /* Mobile controls for dragging (Optional, we'll use click for simplicity/speed) */
+
+        .timer-warning {
+            color: #ef4444 !important;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.1);
+            }
+        }
+
+        footer {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 5;
+            font-size: 0.7rem;
+            opacity: 0.5;
+        }
+
+        .instructions {
+            margin: 20px 0;
+            text-align: left;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        .instructions li {
+            margin-bottom: 10px;
+            list-style: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .instructions li::before {
+            content: '✦';
+            color: var(--primary);
+        }
+    </style>
+</head>
+
+<body>
+
+    <button class="btn btn-lang" onclick="toggleLanguage()">English / Malay</button>
+
+    <div id="game-view">
+        <div id="top-bar">
+            <div class="stat-box">
+                <div>
+                    <div class="stat-label" data-key="score">Score</div>
+                    <div id="score-val" class="stat-value">0</div>
+                </div>
+            </div>
+            <div class="stat-box">
+                <div>
+                    <div class="stat-label" data-key="high_score">High Score</div>
+                    <div id="high-score-val" class="stat-value">0</div>
+                </div>
+            </div>
+            <div class="stat-box">
+                <div>
+                    <div class="stat-label" data-key="timer">Time Left</div>
+                    <div id="timer-val" class="stat-value">60s</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="game-canvas">
+            <div class="catcher sarawak" id="catcher-sarawak">
+                <span class="catcher-icon">🏝️</span>
+                <span class="catcher-label">Sarawak</span>
+            </div>
+            <div class="catcher sabah" id="catcher-sabah">
+                <span class="catcher-icon">⛰️</span>
+                <span class="catcher-label">Sabah</span>
+            </div>
+        </div>
+
+        <div id="history-log">
+            <h3 data-key="archive">Knowledge Archive</h3>
+            <div id="log-content"></div>
+        </div>
+
+        <footer>&copy; 2026 Sejarah Form 5 - Sarawak & Sabah Legacy</footer>
+    </div>
+
+    <!-- Start Overlay -->
+    <div id="start-overlay" class="overlay">
+        <div class="glass-panel">
+            <h1 data-key="title">Borneo Legacies</h1>
+            <p data-key="description">Master the history of Sarawak and Sabah through cultural prosperity.</p>
+
+            <div class="instructions">
+                <ul>
+                    <li data-key="rule1">Items representing history will descend from the rainforest.</li>
+                    <li data-key="rule2">Click an item, then click the correct region hub (Sarawak or Sabah).</li>
+                    <li data-key="rule3">Earn stars for combos and unlock historical facts.</li>
+                    <li data-key="rule4">Incorrect sorting reduces your time!</li>
+                </ul>
+            </div>
+
+            <button class="btn" onclick="startGame()">
+                <span data-key="start_btn">Begin Expedition</span> 🏹
+            </button>
+        </div>
+    </div>
+
+    <!-- Result Overlay -->
+    <div id="result-overlay" class="overlay hidden">
+        <div class="glass-panel">
+            <h1 data-key="expedition_complete">Expedition Complete</h1>
+            <div style="font-size: 1.2rem; margin: 20px 0;">
+                <div data-key="final_score">Final Score</div>
+                <div id="final-score-val" style="font-size: 4rem; font-weight: 800; color: var(--primary);">0</div>
+            </div>
+            <div id="stars-display" style="font-size: 2.5rem; margin-bottom: 20px;">
+                ⭐⭐⭐
+            </div>
+            <p id="rank-text" style="font-style: italic; margin-bottom: 20px;"></p>
+            <button class="btn" onclick="location.reload()">
+                <span data-key="restart_btn">Try Again</span> 🔄
+            </button>
+        </div>
+    </div>
+
+    <div id="combo-display">X2</div>
+
+    <script>
+        /**
+         * BORNEO LEGACIES: SARAWAK & SABAH
+         * A Form 5 Sejarah Interactive Learning Module
+         * 
+         * Developed with 700+ lines of code to provide a premium, 
+         * interactive educational experience.
+         */
+
+        // --- EXTENDED GAME DATA (40+ ITEMS) ---
+        const ALL_ITEMS = [
+            // --- SARAWAK: Governance ---
+            { id: 'sw1', name: 'Sistem Kedatuan', category: 'Governance', region: 'sarawak', en: 'A local governance system in Sarawak (SR).', ms: 'Sistem pemerintahan tempatan di Sarawak.' },
+            { id: 'sw10', name: 'Pemimpin OYONG', category: 'Governance', region: 'sarawak', en: 'Local leadership roles in riverine areas.', ms: 'Gelaran pemimpin di kawasan sungai/pedalaman.' },
+            { id: 'sw11', name: 'Sistem Ketua Masyarakat', category: 'Governance', region: 'sarawak', en: 'Traditional council of elders managing longhouses.', ms: 'Sistem ketua yang menguruskan rumah panjang.' },
+            { id: 'sw12', name: 'Tuai Rumah', category: 'Governance', region: 'sarawak', en: 'Leader of an Iban longhouse community.', ms: 'Ketua dalam sesebuah rumah panjang Iban.' },
+            { id: 'sw13', name: 'Sistem Kesukuan', category: 'Governance', region: 'sarawak', en: 'Tribal-based governance prior to foreign influence.', ms: 'Pemerintahan berasaskan suku kaum di Sarawak.' },
+
+            // --- SARAWAK: Economy ---
+            { id: 'sw2', name: 'Sagu', category: 'Economy', region: 'sarawak', en: 'Key forest product and staple of Melanau.', ms: 'Hasil hutan utama dan makanan ruji kaum Melanau.' },
+            { id: 'sw3', name: 'Lada Hitam', category: 'Economy', region: 'sarawak', en: 'Pepper cultivation prominent in Sarawak history.', ms: 'Penanaman lada hitam yang terkenal di Sarawak.' },
+            { id: 'sw9', name: 'Perusahaan Kayu', category: 'Economy', region: 'sarawak', en: 'Timber industry flourished in the interior.', ms: 'Industri balak berkembang di kawasan pedalaman.' },
+            { id: 'sw14', name: 'Kapur Barus', category: 'Economy', region: 'sarawak', en: 'High-value forest export in ancient Sarawak.', ms: 'Hasil hutan bernilai tinggi dieksport ke China.' },
+            { id: 'sw15', name: 'Sarang Burung (SR)', category: 'Economy', region: 'sarawak', en: 'Edible bird nests found in Niah Caves.', ms: 'Sarang burung yang ditemui di Gua Niah.' },
+            { id: 'sw16', name: 'Emas (Bau)', category: 'Economy', region: 'sarawak', en: 'Gold mining activities in Bau region.', ms: 'Aktiviti perlombongan emas di kawasan Bau.' },
+            { id: 'sw17', name: 'Antimoni', category: 'Economy', region: 'sarawak', en: 'Valuable mineral that attracted foreign trade.', ms: 'Galian berharga yang menarik minat pedagang luar.' },
+
+            // --- SARAWAK: Culture & Society ---
+            { id: 'sw4', name: 'Iban', category: 'Culture', region: 'sarawak', en: 'Indigenous group famous for Tuai Rumah.', ms: 'Kumpulan etnik yang terkenal dengan Tuai Rumah.' },
+            { id: 'sw5', name: 'Bidayuh', category: 'Culture', region: 'sarawak', en: 'The Land Dayaks of Sarawak.', ms: 'Dikenali sebagai Dayak Darat di Sarawak.' },
+            { id: 'sw6', name: 'Pua Kumbu', category: 'Culture', region: 'sarawak', en: 'Traditional woven cloth of the Iban.', ms: 'Kain tenunan tradisional masyarakat Iban.' },
+            { id: 'sw7', name: 'Gawai Dayak', category: 'Culture', region: 'sarawak', en: 'Harvest festival celebrated by Sarawak tribes.', ms: 'Pesta menuai yang disambut di Sarawak.' },
+            { id: 'sw18', name: 'Orang Ulu', category: 'Culture', region: 'sarawak', en: 'Known for artistic murals and Sape music.', ms: 'Terkenal dengan lukisan mural dan muzik Sape.' },
+            { id: 'sw19', name: 'Melanau', category: 'Culture', region: 'sarawak', en: 'Fisheries and sago experts of coastal Sarawak.', ms: 'Pakar menangkap ikan dan sago di pesisir pantai.' },
+            { id: 'sw20', name: 'Longhouse', category: 'Culture', region: 'sarawak', en: 'Iconic multi-family dwellings of Borneo.', ms: 'Kediaman ikonik pelbagai keluarga di Borneo.' },
+
+            // --- SARAWAK: Alam Melayu ---
+            { id: 'sw8', name: 'Sungai Sarawak', category: 'Alam Melayu', region: 'sarawak', en: 'Linked Sarawak to traditional trading routes.', ms: 'Menghubungkan Sarawak dengan laluan perdagangan.' },
+            { id: 'sw21', name: 'Santubong', category: 'Alam Melayu', region: 'sarawak', en: 'Ancient trading port and metal-working site.', ms: 'Pelabuhan kuno dan tapak pemprosesan logam.' },
+            { id: 'sw22', name: 'Hubungan Brunei', category: 'Alam Melayu', region: 'sarawak', en: 'Sarawak was under Brunei Sultanate influence.', ms: 'Sarawak pernah berada di bawah pengaruh Brunei.' },
+
+            // --- SABAH: Governance ---
+            { id: 'sb1', name: 'Ketua Bebas', category: 'Governance', region: 'sabah', en: 'Independent leaders in Sabah areas.', ms: 'Pemimpin yang memerintah kawasan secara bebas.' },
+            { id: 'sb8', name: 'Sistem Ketua', category: 'Governance', region: 'sabah', en: 'Regional Chiefs who mediated local laws.', ms: 'Ketua-ketua yang menjadi pengantara undang-undang.' },
+            { id: 'sb11', name: 'Majlis Orang Tua', category: 'Governance', region: 'sabah', en: 'Council that advised on tribal law (Adat).', ms: 'Majlis penasihat dalam penguatkuasaan adat.' },
+            { id: 'sb12', name: 'Orang Kaya', category: 'Governance', region: 'sabah', en: 'Title for leaders under the Sultanate system.', ms: 'Gelaran pemimpin di bawah sistem Kesultanan.' },
+            { id: 'sb13', name: 'Pemerintahan Kesultanan', category: 'Governance', region: 'sabah', en: 'Brunei and Sulu influence in coastal Sabah.', ms: 'Sistem pemerintahan Kesultanan Brunei dan Sulu.' },
+
+            // --- SABAH: Economy ---
+            { id: 'sb2', name: 'Sarang Burung (SB)', category: 'Economy', region: 'sabah', en: 'Valuable trade product from Gomantong Caves.', ms: 'Hasil eksport berharga dari Gua Gomantong.' },
+            { id: 'sb7', name: 'Mutiara', category: 'Economy', region: 'sabah', en: 'Sea products harvested off Sabah coasts.', ms: 'Hasil laut yang dituai di pesisir pantai Sabah.' },
+            { id: 'sb10', name: 'Tamu', category: 'Economy', region: 'sabah', en: 'Traditional open markets in Sabah.', ms: 'Pasar terbuka tradisional di Sabah.' },
+            { id: 'sb14', name: 'Hasil Laut', category: 'Economy', region: 'sabah', en: 'Sabah as a hub for trepang and agar-agar.', ms: 'Sabah sebagai pusat gamat dan agar-agar.' },
+            { id: 'sb15', name: 'Damar', category: 'Economy', region: 'sabah', en: 'Resin used for lighting and caulking boats.', ms: 'Damar yang digunakan untuk lampu dan bot.' },
+            { id: 'sb16', name: 'Rotan', category: 'Economy', region: 'sabah', en: 'Abundant forest resource for weaving.', ms: 'Hasil hutan yang banyak untuk aktiviti tenunan.' },
+            { id: 'sb17', name: 'Tembakau', category: 'Economy', region: 'sabah', en: 'Later commercial crops in Sabah history.', ms: 'Tanaman komersial dalam sejarah ekonomi Sabah.' },
+
+            // --- SABAH: Culture & Society ---
+            { id: 'sb3', name: 'Gunung Kinabalu', category: 'Culture', region: 'sabah', en: 'Home to the mountain sacred to Kadazandusun.', ms: 'Tempat bersemadinya roh mengikut kepercayaan Kadazan.' },
+            { id: 'sb4', name: 'Kadazandusun', category: 'Culture', region: 'sabah', en: 'Largest indigenous group in Sabah.', ms: 'Etnik terbesar yang mendiami Sabah.' },
+            { id: 'sb5', name: 'Pesta Kaamatan', category: 'Culture', region: 'sabah', en: 'Harvest festival honoring the Rice Spirit.', ms: 'Pesta menuai tanda syukur kepada Semangat Padi.' },
+            { id: 'sb9', name: 'Sumazau', category: 'Culture', region: 'sabah', en: 'Traditional folk dance of Sabah.', ms: 'Tarian tradisional masyarakat Sabah.' },
+            { id: 'sb18', name: 'Murut', category: 'Culture', region: 'sabah', en: 'Known for their high-jumping "Magunatip" dance.', ms: 'Terkenal dengan tarian Magunatip yang melompat.' },
+            { id: 'sb19', name: 'Bajau', category: 'Culture', region: 'sabah', en: 'Legendary seafarers and horsemen of the East.', ms: 'Pelayar hebat dan penunggang kuda yang mahir.' },
+            { id: 'sb20', name: 'Bobohizan', category: 'Culture', region: 'sabah', en: 'Spiritual priestesses of the Kadazandusun.', ms: 'Pendeta wanita bagi masyarakat Kadazandusun.' },
+
+            // --- SABAH: Alam Melayu ---
+            { id: 'sb6', name: 'Suluk / Sulu', category: 'Alam Melayu', region: 'sabah', en: 'Links Sabah to the Sulu Archipelago.', ms: 'Menghubungkan Sabah dengan Kepulauan Sulu.' },
+            { id: 'sb21', name: 'Teluk Darvel', category: 'Alam Melayu', region: 'sabah', en: 'Strategic water body for ancient trade.', ms: 'Kawasan perairan strategik bagi perdagangan kuno.' },
+            { id: 'sb22', name: 'Kesultanan Sulu', category: 'Alam Melayu', region: 'sabah', en: 'Ruled parts of East Sabah since 17th century.', ms: 'Memerintah timur Sabah sejak abad ke-17.' }
+        ];
+
+        const translations = {
+            en: {
+                title: "Borneo Legacies",
+                description: "Master the heritage of Sarawak & Sabah. Sort the essence of culture and economy to prosper.",
+                rule1: "Historical items will descend from the Borneo rainforest.",
+                rule2: "Match items to the correct Hub (Sarawak or Sabah).",
+                rule3: "Maintain a combo to reach maximum Prosperity levels!",
+                rule4: "Wrong choices will drain your Expedition Time.",
+                start_btn: "Begin Journey",
+                score: "Prosperity Points",
+                high_score: "Ancient Record",
+                timer: "Remaining Sun",
+                archive: "Historical Archive",
+                expedition_complete: "Expedition Concluded!",
+                final_score: "Total Heritage Points",
+                restart_btn: "Return to Roots",
+                Governance: "Governance",
+                Economy: "Economy",
+                Culture: "Culture",
+                "Alam Melayu": "Malay World",
+                rank1: "Guardian of Borneo 👑",
+                rank2: "Expert Chronicles 📜",
+                rank3: "Regional Scout 🛶",
+                rank4: "Novice Traveler 🚶",
+                pros0: "Developing Region",
+                pros1: "Rising Settlement",
+                pros2: "Thriving Trading Hub",
+                pros3: "Golden Province",
+                pros4: "Ultimate Borneo Legacy"
+            },
+            ms: {
+                title: "Warisan Borneo",
+                description: "Kuasai warisan Sarawak & Sabah. Susun intipati budaya dan ekonomi untuk makmur.",
+                rule1: "Item sejarah akan turun dari hutan hujan Borneo.",
+                rule2: "Padankan item dengan Hab yang betul (Sarawak atau Sabah).",
+                rule3: "Kekalkan kombo untuk mencapai tahap Kemakmuran tertinggi!",
+                rule4: "Pilihan salah akan mengurangkan Masa Ekspedisi anda.",
+                start_btn: "Mulakan Perjalanan",
+                score: "Mata Kemakmuran",
+                high_score: "Rekod Purba",
+                timer: "Sisa Matahari",
+                archive: "Arkib Sejarah",
+                expedition_complete: "Ekspedisi Tamat!",
+                final_score: "Jumlah Mata Warisan",
+                restart_btn: "Kembali ke Akar",
+                Governance: "Pemerintahan",
+                Economy: "Ekonomi",
+                Culture: "Kebudayaan",
+                "Alam Melayu": "Alam Melayu",
+                rank1: "Penjaga Tanah Borneo 👑",
+                rank2: "Pakar Hikayat 📜",
+                rank3: "Peninjau Wilayah 🛶",
+                rank4: "Pengembara Baharu 🚶",
+                pros0: "Wilayah Membangun",
+                pros1: "Petempatan Berkembang",
+                pros2: "Pusat Dagangan Pesat",
+                pros3: "Wilayah Keemasan",
+                pros4: "Legenda Warisan Borneo"
+            }
+        };
+
+        // --- GAME ENGINE STATE ---
+        let currentLang = 'ms';
+        let score = 0;
+        let timeLeft = 60;
+        let gameActive = false;
+        let timerInterval = null;
+        let itemSpawner = null;
+        let combo = 0;
+        let prosperityLevel = 0; // 0-4
+        let highScore = localStorage.getItem('borneo_high_score_v2') || 0;
+
+        // UI Element Accessor
+        const ui = {
+            gameCanvas: document.getElementById('game-canvas'),
+            scoreVal: document.getElementById('score-val'),
+            highScoreVal: document.getElementById('high-score-val'),
+            timerVal: document.getElementById('timer-val'),
+            logContent: document.getElementById('log-content'),
+            comboDisplay: document.getElementById('combo-display'),
+            gameView: document.getElementById('game-view'),
+            startOverlay: document.getElementById('start-overlay'),
+            resultOverlay: document.getElementById('result-overlay'),
+            finalScore: document.getElementById('final-score-val'),
+            stars: document.getElementById('stars-display'),
+            rank: document.getElementById('rank-text')
+        };
+
+        ui.highScoreVal.innerText = highScore;
+
+        /**
+         * Language Logic
+         */
+        function toggleLanguage() {
+            currentLang = currentLang === 'ms' ? 'en' : 'ms';
+            updateUIStrings();
+            // Refresh items on screen language
+            document.querySelectorAll('.item').forEach(el => {
+                const id = el.dataset.id;
+                const data = ALL_ITEMS.find(i => i.id === id);
+                if (data) {
+                    el.querySelector('.item-category').innerText = translations[currentLang][data.category] || data.category;
+                }
+            });
+        }
+
+        function updateUIStrings() {
+            document.querySelectorAll('[data-key]').forEach(el => {
+                const key = el.getAttribute('data-key');
+                if (translations[currentLang][key]) {
+                    el.innerText = translations[currentLang][key];
+                }
+            });
+            updateProsperityUI();
+        }
+
+        /**
+         * Prosperity System
+         */
+        function updateProsperity(points) {
+            score += points;
+            ui.scoreVal.innerText = score;
+
+            // Thresholds for prosperity
+            const thresholds = [0, 1000, 3000, 6000, 10000];
+            let newLevel = 0;
+            for (let i = thresholds.length - 1; i >= 0; i--) {
+                if (score >= thresholds[i]) {
+                    newLevel = i;
+                    break;
+                }
+            }
+
+            if (newLevel !== prosperityLevel) {
+                prosperityLevel = newLevel;
+                triggerLevelUp();
+            }
+        }
+
+        function triggerLevelUp() {
+            // Visual feedback for level up
+            ui.gameView.style.filter = `hue-rotate(${prosperityLevel * 30}deg) brightness(${1 + prosperityLevel * 0.1})`;
+            ui.gameView.style.transition = 'filter 2s ease';
+
+            const banner = document.createElement('div');
+            banner.style.cssText = `
+                position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%);
+                font-size: 3rem; font-weight: 800; color: #fff; text-shadow: 0 0 20px #fbbf24;
+                z-index: 1000; animation: levelPop 2s forwards; pointer-events: none;
+            `;
+            banner.innerText = translations[currentLang][`pros${prosperityLevel}`];
+            document.body.appendChild(banner);
+            setTimeout(() => banner.remove(), 2000);
+        }
+
+        function updateProsperityUI() {
+            // Placeholder for optional UI bar
+        }
+
+        /**
+         * Game Lifecycle
+         */
+        function startGame() {
+            ui.startOverlay.classList.add('hidden');
+            score = 0;
+            timeLeft = 60;
+            combo = 0;
+            prosperityLevel = 0;
+            gameActive = true;
+            ui.scoreVal.innerText = '0';
+            ui.logContent.innerHTML = '';
+            ui.gameView.style.filter = 'none';
+            ui.timerVal.classList.remove('timer-warning');
+
+            updateUIStrings();
+
+            timerInterval = setInterval(() => {
+                if (!gameActive) return;
+                timeLeft--;
+                ui.timerVal.innerText = timeLeft + 's';
+
+                if (timeLeft <= 10) ui.timerVal.classList.add('timer-warning');
+                if (timeLeft <= 0) endGame();
+            }, 1000);
+
+            spawnItem();
+        }
+
+        function spawnItem() {
+            if (!gameActive) return;
+
+            const baseItem = ALL_ITEMS[Math.floor(Math.random() * ALL_ITEMS.length)];
+            const itemEl = document.createElement('div');
+            itemEl.className = 'item';
+            itemEl.dataset.id = baseItem.id;
+
+            // Random spawning logistics
+            const margin = 100;
+            const x = margin + Math.random() * (ui.gameCanvas.offsetWidth - (margin * 2 + 150));
+            itemEl.style.left = x + 'px';
+            itemEl.style.top = '-120px';
+
+            itemEl.innerHTML = `
+                <span class="item-category">${translations[currentLang][baseItem.category] || baseItem.category}</span>
+                <span>${baseItem.name}</span>
+            `;
+
+            // Selection Logic
+            itemEl.onclick = (e) => {
+                e.stopPropagation();
+                if (!gameActive) return;
+
+                if (window.selectedEl) window.selectedEl.classList.remove('selected');
+
+                itemEl.classList.add('selected');
+                window.selectedItem = baseItem;
+                window.selectedEl = itemEl;
+
+                // Pulsate effect on catchers to guide user
+                document.querySelectorAll('.catcher').forEach(c => c.style.border = '2px solid rgba(255,255,255,0.5)');
+            };
+
+            ui.gameCanvas.appendChild(itemEl);
+
+            // Physics loop for this specific item
+            let pos = -120;
+            const difficultyScale = 1.0 + (score / 2000);
+            const drift = (Math.random() - 0.5) * 0.5;
+            let currentLeft = x;
+
+            const fallLoop = setInterval(() => {
+                if (!gameActive) {
+                    clearInterval(fallLoop);
+                    itemEl.remove();
+                    return;
+                }
+
+                pos += difficultyScale;
+                currentLeft += drift;
+                itemEl.style.top = pos + 'px';
+                itemEl.style.left = currentLeft + 'px';
+
+                // Check for miss
+                if (pos > ui.gameCanvas.offsetHeight - 140) {
+                    clearInterval(fallLoop);
+                    if (window.selectedEl === itemEl) {
+                        window.selectedEl = null;
+                        window.selectedItem = null;
+                        document.querySelectorAll('.catcher').forEach(c => c.style.border = 'none');
+                    }
+
+                    itemEl.style.opacity = '0';
+                    itemEl.style.transform = 'scale(0.8)';
+                    setTimeout(() => itemEl.remove(), 300);
+                    handleMiss();
+                }
+            }, 16);
+
+            // Dynamic spawning interval
+            const spawnDelay = Math.max(700, 2500 - (score / 8));
+            itemSpawner = setTimeout(spawnItem, spawnDelay);
+        }
+
+        /**
+         * Interaction Handlers
+         */
+        document.querySelectorAll('.catcher').forEach(c => {
+            c.onclick = () => {
+                if (!window.selectedItem || !gameActive) return;
+
+                const region = c.id.includes('sarawak') ? 'sarawak' : 'sabah';
+
+                if (window.selectedItem.region === region) {
+                    handleCorrect(window.selectedItem, c);
+                } else {
+                    handleWrong(c);
+                }
+
+                // Cleanup selection
+                window.selectedEl.remove();
+                window.selectedItem = null;
+                window.selectedEl = null;
+                document.querySelectorAll('.catcher').forEach(c => c.style.border = 'none');
+            };
+        });
+
+        function handleCorrect(item, catcher) {
+            const basePoints = 100;
+            const comboBonus = combo * 20;
+            const totalAdd = basePoints + comboBonus;
+
+            updateProsperity(totalAdd);
+            combo++;
+
+            createDynamicStars(catcher);
+            showComboFeedback();
+
+            // Record to log
+            const log = document.createElement('div');
+            log.className = 'log-entry';
+            const catLabel = translations[currentLang][item.category] || item.category;
+            log.innerHTML = `<strong>[${catLabel}] ${item.name}</strong><br><small>${item[currentLang]}</small>`;
+            ui.logContent.prepend(log);
+
+            // Animate hub
+            catcher.animate([
+                { transform: 'scale(1)', boxShadow: '0 0 0px var(--primary)' },
+                { transform: 'scale(1.15)', boxShadow: '0 0 30px var(--primary)' },
+                { transform: 'scale(1)', boxShadow: '0 10px 30px rgba(0,0,0,0.4)' }
+            ], { duration: 300, easing: 'ease-out' });
+        }
+
+        function handleWrong(catcher) {
+            timeLeft -= 8;
+            resetComboState();
+            ui.timerVal.innerText = timeLeft + 's';
+
+            // Error shake
+            catcher.animate([
+                { transform: 'translateX(0) rotate(0)' },
+                { transform: 'translateX(-15px) rotate(-5deg)' },
+                { transform: 'translateX(15px) rotate(5deg)' },
+                { transform: 'translateX(0) rotate(0)' }
+            ], { duration: 250 });
+
+            floatingText('-8s', '#ef4444');
+        }
+
+        function handleMiss() {
+            if (combo > 0) {
+                resetComboState();
+                floatingText('MISS!', '#94a3b8');
+            }
+        }
+
+        function resetComboState() {
+            combo = 0;
+            ui.comboDisplay.style.opacity = '0';
+        }
+
+        function showComboFeedback() {
+            if (combo < 2) return;
+            ui.comboDisplay.innerText = `X${combo}`;
+            ui.comboDisplay.style.opacity = '1';
+            ui.comboDisplay.style.color = combo > 5 ? '#fbbf24' : '#fff';
+            ui.comboDisplay.animate([
+                { transform: 'translate(-50%, 0) scale(0.5)', opacity: 0 },
+                { transform: 'translate(-50%, 0) scale(1.5)', opacity: 1 },
+                { transform: 'translate(-50%, 0) scale(1)', opacity: 1 }
+            ], { duration: 400, easing: 'back.out' });
+        }
+
+        /**
+         * Visual Utility Functions
+         */
+        function floatingText(text, color) {
+            const el = document.createElement('div');
+            el.innerText = text;
+            el.style.cssText = `
+                position: absolute; left: 50%; top: 30%; transform: translate(-50%, 0);
+                color: ${color}; font-size: 3rem; font-weight: 800; z-index: 500;
+                pointer-events: none; text-shadow: 0 5px 15px rgba(0,0,0,0.5);
+            `;
+            ui.gameCanvas.appendChild(el);
+
+            el.animate([
+                { transform: 'translate(-50%, 0)', opacity: 1 },
+                { transform: 'translate(-50%, -100px)', opacity: 0 }
+            ], { duration: 1000, easing: 'ease-out' }).onfinish = () => el.remove();
+        }
+
+        function createDynamicStars(targetEl) {
+            const rect = targetEl.getBoundingClientRect();
+            const count = 10 + Math.min(combo, 10);
+
+            for (let i = 0; i < count; i++) {
+                const s = document.createElement('div');
+                s.className = 'star-particle';
+                s.innerText = ['⭐', '✨', '✦', '✧'][Math.floor(Math.random() * 4)];
+                s.style.left = (rect.left + rect.width / 2) + 'px';
+                s.style.top = rect.top + 'px';
+                document.body.appendChild(s);
+
+                const angle = Math.random() * Math.PI * 2;
+                const distance = 50 + Math.random() * 150;
+                const duration = 600 + Math.random() * 600;
+
+                s.animate([
+                    { transform: 'translate(0,0) scale(1) rotate(0deg)', opacity: 1 },
+                    { transform: `translate(${Math.cos(angle) * distance}px, ${Math.sin(angle) * distance}px) scale(0) rotate(360deg)`, opacity: 0 }
+                ], { duration, easing: 'cubic-bezier(0, .9, .57, 1)' }).onfinish = () => s.remove();
+            }
+        }
+
+        /**
+         * End Game Logic
+         */
+        function endGame() {
+            gameActive = false;
+            clearInterval(timerInterval);
+            clearTimeout(itemSpawner);
+
+            // Cleanup UI
+            document.querySelectorAll('.item').forEach(i => i.remove());
+
+            // High Score Check
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem('borneo_high_score_v2', highScore);
+                ui.highScoreVal.innerText = highScore;
+            }
+
+            // Prepare Result
+            ui.finalScore.innerText = score;
+            ui.resultOverlay.classList.remove('hidden');
+
+            let starText = '⭐';
+            let rankKey = 'rank4';
+
+            if (score > 2000) { starText = '⭐⭐'; rankKey = 'rank3'; }
+            if (score > 5000) { starText = '⭐⭐⭐'; rankKey = 'rank2'; }
+            if (score > 8000) { starText = '⭐⭐⭐⭐'; rankKey = 'rank1'; }
+            if (score > 12000) { starText = '⭐⭐⭐⭐⭐'; rankKey = 'rank1'; }
+
+            ui.stars.innerText = starText;
+            ui.rank.innerText = translations[currentLang][rankKey];
+
+            // Result animation
+            ui.resultOverlay.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 500 });
+        }
+
+        // Global key listeners for fun
+        window.onkeydown = (e) => {
+            if (e.key === 'Escape') {
+                if (!gameActive) location.reload();
+            }
+        };
+
+        // Initial Start
+        updateUIStrings();
+
+    </script>
+
+</body>
+
+</html>
+```
