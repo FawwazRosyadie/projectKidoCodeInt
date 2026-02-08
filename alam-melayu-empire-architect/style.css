@@ -1,0 +1,504 @@
+:root {
+    --primary-gold: #ffd700;
+    --gold-glow: rgba(255, 215, 0, 0.4);
+    --accent-red: #d40000;
+    --deep-royal: #1a1a2e;
+    --glass-bg: rgba(26, 26, 46, 0.85);
+    --glass-border: rgba(255, 215, 0, 0.3);
+    --text-light: #fdfdfd;
+    --rice-green: #4caf50;
+    --sea-blue: #00bcd4;
+    --forest-brown: #795548;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    user-select: none;
+    scrollbar-width: thin;
+    scrollbar-color: var(--primary-gold) transparent;
+}
+
+#game-wrapper {
+    font-family: sans-serif;
+    background: #050505 url('bg.png') no-repeat center center;
+    background-size: cover;
+    color: var(--text-light);
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    width: 100%;
+}
+
+/* --- Animations --- */
+@keyframes float {
+    0% {
+        transform: translateY(0px);
+    }
+
+    50% {
+        transform: translateY(-10px);
+    }
+
+    100% {
+        transform: translateY(0px);
+    }
+}
+
+@keyframes pulse-gold {
+    0% {
+        box-shadow: 0 0 5px var(--gold-glow);
+    }
+
+    50% {
+        box-shadow: 0 0 20px var(--gold-glow);
+    }
+
+    100% {
+        box-shadow: 0 0 5px var(--gold-glow);
+    }
+}
+
+@keyframes slide-in-top {
+    from {
+        transform: translateY(-100%);
+    }
+
+    to {
+        transform: translateY(0);
+    }
+}
+
+@keyframes ship-move {
+    0% {
+        left: -10%;
+        transform: scaleX(1);
+        opacity: 0;
+    }
+
+    10% {
+        opacity: 1;
+    }
+
+    90% {
+        opacity: 1;
+    }
+
+    100% {
+        left: 110%;
+        transform: scaleX(1);
+        opacity: 0;
+    }
+}
+
+/* --- UI Layers --- */
+/* Removed #game-wrapper styles as it is the container now above */
+
+header {
+    height: 80px;
+    padding: 0 40px;
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.9), transparent);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 100;
+    animation: slide-in-top 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.main-logo {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.main-logo h1 {
+    font-family: sans-serif;
+    font-size: 1.8rem;
+    background: linear-gradient(45deg, var(--primary-gold), #fff);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+}
+
+/* --- Top Resource Bar --- */
+.resources-bar {
+    display: flex;
+    gap: 25px;
+    background: var(--glass-bg);
+    padding: 10px 30px;
+    border-radius: 12px;
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.res-pill {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.res-label {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    font-weight: 800;
+    color: var(--primary-gold);
+    letter-spacing: 1px;
+    margin-bottom: 2px;
+}
+
+.res-value {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1.2rem;
+    font-weight: 700;
+}
+
+/* --- Main Content Grid --- */
+.game-layout {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 350px 1fr 350px;
+    gap: 25px;
+    padding: 25px;
+    overflow: hidden;
+}
+
+.side-panel {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+.panel-tab-btn {
+    background: rgba(255, 215, 0, 0.1);
+    color: var(--primary-gold);
+    border: none;
+    padding: 15px;
+    font-family: sans-serif;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s;
+    flex: 1;
+    font-size: 0.9rem;
+}
+
+.panel-tab-btn.active {
+    background: var(--primary-gold);
+    color: #000;
+}
+
+.panel-header {
+    padding: 15px 20px;
+    background: rgba(255, 215, 0, 0.05);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--glass-border);
+}
+
+.panel-content {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* --- World View (Center Piece) --- */
+.viewport {
+    position: relative;
+    background: radial-gradient(circle, rgba(26, 26, 46, 0.4) 0%, rgba(0, 0, 0, 0.6) 100%);
+    border-radius: 30px;
+    border: 2px solid var(--glass-border);
+    overflow: hidden;
+    box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.8);
+}
+
+#world-map {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    transform-style: preserve-3d;
+}
+
+/* Weather Effects Overlay */
+#weather-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 50;
+    transition: background 2s;
+}
+
+.rain {
+    /* Removed external URL */
+    background: rgba(0, 0, 80, 0.4);
+    /* Simple CSS rain using gradient or just color for now to be safe */
+    position: relative;
+    overflow: hidden;
+}
+
+/* Replaced rain animation with simple opacity if needed, but removing external image is key */
+
+/* --- Interactive Assets --- */
+.kingdom-node {
+    position: absolute;
+    cursor: pointer;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    z-index: 10;
+}
+
+.kingdom-node:hover {
+    transform: translate(-50%, -50%) scale(1.15);
+    filter: drop-shadow(0 0 15px var(--primary-gold));
+}
+
+.node-icon {
+    font-size: 3.5rem;
+    filter: drop-shadow(0 5px 15px rgba(0, 0, 0, 0.8));
+    position: relative;
+}
+
+.node-label {
+    margin-top: 10px;
+    background: rgba(0, 0, 0, 0.8);
+    padding: 4px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--primary-gold);
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+/* Visual Kingdom Upgrades */
+.building-layer {
+    position: absolute;
+    bottom: 10%;
+    width: 100%;
+    height: 40%;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    gap: 20px;
+    pointer-events: none;
+}
+
+.building-spot {
+    width: 80px;
+    height: 80px;
+    background: rgba(255, 215, 0, 0.05);
+    border: 1px dashed var(--glass-border);
+    border-radius: 10px;
+    transition: all 0.5s;
+}
+
+.building-spot.active {
+    border: none;
+    background: none;
+    animation: float 4s infinite ease-in-out;
+}
+
+/* --- Cards & Components --- */
+.card {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 15px;
+    border: 1px solid rgba(255, 215, 0, 0.15);
+    transition: transform 0.2s;
+}
+
+.card:hover {
+    border-color: var(--primary-gold);
+    background: rgba(255, 215, 0, 0.08);
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.card-title {
+    font-weight: 800;
+    color: var(--primary-gold);
+    font-size: 0.9rem;
+}
+
+.card-desc {
+    font-size: 0.75rem;
+    color: #bbb;
+    line-height: 1.4;
+    margin-bottom: 12px;
+}
+
+.btn {
+    width: 100%;
+    padding: 8px 15px;
+    background: linear-gradient(135deg, #FFD700, #B8860B);
+    color: #000;
+    border: none;
+    border-radius: 8px;
+    font-weight: 800;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: sans-serif;
+}
+
+.btn:disabled {
+    filter: grayscale(1) opacity(0.5);
+    cursor: not-allowed;
+}
+
+.btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px var(--gold-glow);
+}
+
+/* --- Notifications & Events --- */
+#notification-box {
+    position: absolute;
+    /* Changed from fixed */
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: none;
+}
+
+.toast {
+    background: var(--glass-bg);
+    border-left: 5px solid var(--primary-gold);
+    padding: 12px 25px;
+    border-radius: 4px;
+    color: #fff;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+    animation: slide-up 0.4s ease-out forwards;
+}
+
+@keyframes slide-up {
+    from {
+        transform: translateY(50px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Modal Overlays */
+.overlay {
+    position: absolute;
+    /* Changed from fixed */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.9);
+    z-index: 5000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(10px);
+}
+
+.modal-content {
+    background: var(--deep-royal);
+    width: 700px;
+    max-width: 90%;
+    border: 2px solid var(--primary-gold);
+    border-radius: 20px;
+    padding: 40px;
+    text-align: center;
+    position: relative;
+}
+
+.modal-content h2 {
+    font-family: sans-serif;
+    font-size: 3rem;
+    color: var(--primary-gold);
+    margin-bottom: 20px;
+}
+
+/* Scrollable Tutorial Info */
+.tutorial-text {
+    max-height: 300px;
+    overflow-y: auto;
+    text-align: left;
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 10px;
+    margin-bottom: 25px;
+    line-height: 1.6;
+    font-size: 0.9rem;
+}
+
+/* System Info Pill (Non-intrusive) */
+#system-info {
+    position: absolute;
+    /* Changed from fixed */
+    top: 100px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.6);
+    padding: 5px 20px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    color: var(--primary-gold);
+    z-index: 90;
+    pointer-events: none;
+}
+
+/* --- Hide/Show Utils --- */
+.hidden {
+    display: none !important;
+}
+
+/* Red for danger/errors */
+.text-red {
+    color: #ff5252;
+}
+
+.text-gold {
+    color: var(--primary-gold);
+}
+
+/* High Score Display */
+.top-score-box {
+    position: absolute;
+    /* Changed from fixed */
+    bottom: 25px;
+    right: 25px;
+    background: var(--glass-bg);
+    padding: 10px 20px;
+    border-radius: 50px;
+    border: 1px solid var(--primary-gold);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.8rem;
+    font-weight: 800;
+}

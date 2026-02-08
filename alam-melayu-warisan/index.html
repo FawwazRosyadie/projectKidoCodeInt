@@ -5,1231 +5,168 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Alam Melayu: Warisan Sosiobudaya & Ekonomi</title>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Playfair+Display:wght@700;900&display=swap');
-
-        :root {
-            --primary: #d4af37;
-            --primary-dark: #aa8b2e;
-            --secondary: #1a2a2d;
-            --accent: #e5c066;
-            --text: #f0f0f0;
-            --danger: #e74c3c;
-            --success: #2ecc71;
-            --glass: rgba(255, 255, 255, 0.1);
-            --glass-border: rgba(255, 255, 255, 0.2);
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            user-select: none;
-        }
-
-        body {
-            font-family: 'Outfit', sans-serif;
-            background: radial-gradient(circle at center, #2c3e50 0%, #000000 100%);
-            color: var(--text);
-            overflow: hidden;
-            height: 100vh;
-            width: 100vw;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        #game-container {
-            position: relative;
-            width: 100%;
-            max-width: 1200px;
-            height: 100%;
-            max-height: 800px;
-            background: url('https://www.transparenttextures.com/patterns/black-paper.png'),
-                linear-gradient(135deg, #1a2a2d 0%, #0a0a0a 100%);
-            border: 4px solid var(--primary);
-            border-radius: 20px;
-            box-shadow: 0 0 50px rgba(212, 175, 55, 0.3);
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* --- UI Overlay --- */
-        #top-bar {
-            padding: 20px 40px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: var(--glass);
-            backdrop-filter: blur(10px);
-            border-bottom: 1px solid var(--glass-border);
-            z-index: 100;
-        }
-
-        .stat-box {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .stat-label {
-            font-size: 0.8rem;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            color: var(--primary);
-            font-weight: 600;
-        }
-
-        .stat-value {
-            font-size: 1.8rem;
-            font-weight: 800;
-            font-family: 'Playfair Display', serif;
-        }
-
-        .btn-lang {
-            background: rgba(0, 0, 0, 0.3);
-            border: 2px solid var(--primary);
-            color: var(--primary);
-            padding: 8px 12px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-family: inherit;
-            font-weight: 800;
-            transition: all 0.3s ease;
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-
-        .btn-lang span {
-            padding: 2px 6px;
-            border-radius: 3px;
-        }
-
-        .btn-lang span.active {
-            background: var(--primary);
-            color: var(--secondary);
-        }
-
-        .btn-lang:hover {
-            box-shadow: 0 0 15px var(--primary);
-        }
-
-        /* --- Screens --- */
-        .screen {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            display: none;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: 40px;
-            z-index: 50;
-        }
-
-        .screen.active {
-            display: flex;
-        }
-
-        #menu-screen {
-            background: rgba(0, 0, 0, 0.85);
-            text-align: center;
-        }
-
-        h1 {
-            font-family: 'Playfair Display', serif;
-            font-size: 4rem;
-            margin-bottom: 10px;
-            background: linear-gradient(to bottom, #fff, var(--primary));
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-            text-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
-        }
-
-        .subtitle {
-            font-size: 1.2rem;
-            margin-bottom: 40px;
-            color: #ccc;
-            letter-spacing: 5px;
-            text-transform: uppercase;
-        }
-
-        .main-menu-btn {
-            background: linear-gradient(45deg, var(--primary), var(--primary-dark));
-            border: none;
-            padding: 15px 40px;
-            color: var(--secondary);
-            font-size: 1.2rem;
-            font-weight: 800;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-            text-transform: uppercase;
-            margin-bottom: 20px;
-        }
-
-        .main-menu-btn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 0 20px var(--primary);
-        }
-
-        /* --- Gameplay Area --- */
-        #game-play-area {
-            flex: 1;
-            position: relative;
-            display: flex;
-            flex-direction: column;
-        }
-
-        #conveyor-belt {
-            height: 180px;
-            background: rgba(255, 255, 255, 0.05);
-            border-bottom: 2px dashed var(--glass-border);
-            position: relative;
-            display: flex;
-            align-items: center;
-            overflow: visible;
-        }
-
-        #conveyor-belt::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, #000 0%, transparent 10%, transparent 90%, #000 100%);
-            pointer-events: none;
-        }
-
-        .river-label {
-            position: absolute;
-            top: 10px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 0.7rem;
-            letter-spacing: 3px;
-            opacity: 0.5;
-            text-transform: uppercase;
-        }
-
-        #stations-grid {
-            flex: 1;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            grid-template-rows: 1fr 1fr;
-            gap: 20px;
-            padding: 20px;
-        }
-
-        .station {
-            background: var(--glass);
-            border: 1px solid var(--glass-border);
-            border-radius: 15px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            position: relative;
-            padding: 20px;
-            text-align: center;
-        }
-
-        .station:hover {
-            background: rgba(212, 175, 55, 0.1);
-            border-color: var(--primary);
-            transform: translateY(-5px);
-        }
-
-        .station i {
-            font-size: 3rem;
-            margin-bottom: 10px;
-            color: var(--primary);
-        }
-
-        .station-name {
-            font-size: 1.1rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            margin-bottom: 5px;
-        }
-
-        .station-desc {
-            font-size: 0.8rem;
-            opacity: 0.7;
-        }
-
-        /* --- Game Entities --- */
-        .legacy-item {
-            position: absolute;
-            width: 100px;
-            height: 120px;
-            background: var(--glass);
-            border: 2px solid var(--primary);
-            border-radius: 10px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            cursor: grab;
-            transition: transform 0.1s;
-            z-index: 60;
-            backdrop-filter: blur(5px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
-            left: -150px;
-        }
-
-        .legacy-item:active {
-            cursor: grabbing;
-            transform: scale(1.1);
-        }
-
-        .legacy-item:hover {
-            box-shadow: 0 0 20px var(--primary);
-            border-color: #fff;
-            z-index: 100 !important;
-        }
-
-        .legacy-item img,
-        .legacy-item .icon-fallback {
-            width: 60px;
-            height: 60px;
-            margin-bottom: 5px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 2rem;
-        }
-
-        .legacy-item .item-text {
-            font-size: 0.7rem;
-            text-align: center;
-            font-weight: 600;
-            padding: 0 5px;
-        }
-
-        /* --- Stars --- */
-        .star-container {
-            display: flex;
-            gap: 5px;
-            margin-top: 10px;
-        }
-
-        .star {
-            color: #444;
-            font-size: 1.5rem;
-            transition: color 0.5s ease;
-        }
-
-        .star.earned {
-            color: var(--primary);
-            text-shadow: 0 0 10px var(--primary);
-        }
-
-        /* --- Notifications --- */
-        .notification {
-            position: absolute;
-            pointer-events: none;
-            color: var(--primary);
-            font-weight: 800;
-            font-size: 1.5rem;
-            animation: floatUp 1s ease-out forwards;
-            z-index: 200;
-        }
-
-        @keyframes floatUp {
-            0% {
-                transform: translateY(0);
-                opacity: 1;
-            }
-
-            100% {
-                transform: translateY(-100px);
-                opacity: 0;
-            }
-        }
-
-        /* --- Result Screen --- */
-        #result-screen h2 {
-            font-family: 'Playfair Display', serif;
-            font-size: 3rem;
-            color: var(--primary);
-        }
-
-        .result-stats {
-            margin: 30px 0;
-            width: 100%;
-            max-width: 400px;
-        }
-
-        .result-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 10px 0;
-            border-bottom: 1px solid var(--glass-border);
-        }
-
-        /* --- Social Structure Bar --- */
-        #social-bar {
-            padding: 10px 40px;
-            background: rgba(0, 0, 0, 0.5);
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-        }
-
-        .social-chip {
-            padding: 5px 15px;
-            border: 1px solid var(--glass-border);
-            border-radius: 20px;
-            font-size: 0.8rem;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .social-chip .color-dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-        }
-
-        /* --- Game Over --- */
-        .rank-title {
-            font-size: 2rem;
-            font-weight: 800;
-            margin: 20px 0;
-            color: var(--accent);
-        }
-
-        /* --- Responsive --- */
-        @media (max-width: 768px) {
-            h1 {
-                font-size: 2.5rem;
-            }
-
-            #stations-grid {
-                grid-template-columns: 1fr;
-            }
-
-            #top-bar {
-                padding: 10px;
-            }
-
-            .stat-value {
-                font-size: 1.2rem;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-    <div id="game-container">
-        <!-- Top HUD -->
-        <div id="top-bar">
-            <div class="stat-box">
-                <span class="stat-label" data-key="score">Score</span>
-                <span id="score-val" class="stat-value">0</span>
+    <div class="game-wrapper">
+        <div id="game-container">
+            <!-- Top HUD -->
+            <div id="top-bar">
+                <div class="stat-box">
+                    <span class="stat-label" data-key="score">Score</span>
+                    <span id="score-val" class="stat-value">0</span>
+                </div>
+
+                <div class="stat-box">
+                    <span class="stat-label" id="timer-label" data-key="timer">Timer</span>
+                    <span id="timer-val" class="stat-value">02:00</span>
+                </div>
+
+                <div class="stat-box" id="combo-box" style="opacity: 0; transition: 0.3s; margin: 0 20px;">
+                    <span class="stat-label">Combo</span>
+                    <span id="combo-val" class="stat-value" style="color: var(--accent);">0x</span>
+                </div>
+
+                <div class="stat-box">
+                    <span class="stat-label" data-key="stars">Prosperity</span>
+                    <div class="star-container">
+                        <span class="star" id="star-1">★</span>
+                        <span class="star" id="star-2">★</span>
+                        <span class="star" id="star-3">★</span>
+                    </div>
+                </div>
+
+                <button class="btn-lang" id="lang-toggle">
+                    <span id="lang-ms">MS</span>
+                    <span id="lang-en">EN</span>
+                </button>
             </div>
 
-            <div class="stat-box">
-                <span class="stat-label" id="timer-label" data-key="timer">Timer</span>
-                <span id="timer-val" class="stat-value">02:00</span>
+            <div id="multiplier-bar-container"
+                style="position: absolute; top: 110px; left: 50%; transform: translateX(-50%); width: 200px; height: 6px; background: rgba(0,0,0,0.5); border-radius: 3px; overflow: hidden; display: none; z-index: 90;">
+                <div id="multiplier-progress"
+                    style="width: 100%; height: 100%; background: gold; transition: width 1s linear;"></div>
             </div>
 
-            <div class="stat-box" id="combo-box" style="opacity: 0; transition: 0.3s; margin: 0 20px;">
-                <span class="stat-label">Combo</span>
-                <span id="combo-val" class="stat-value" style="color: var(--accent);">0x</span>
-            </div>
+            <!-- Gameplay Area -->
+            <div id="game-play-area">
+                <div id="conveyor-belt">
+                    <span class="river-label" data-key="river">Aliran Warisan / Heritage Flow</span>
+                </div>
 
-            <div class="stat-box">
-                <span class="stat-label" data-key="stars">Prosperity</span>
-                <div class="star-container">
-                    <span class="star" id="star-1">★</span>
-                    <span class="star" id="star-2">★</span>
-                    <span class="star" id="star-3">★</span>
+                <div id="stations-grid">
+                    <div class="station" id="station-ekonomi" data-station="ekonomi">
+                        <i>⚓</i>
+                        <span class="station-name" data-key="st_economy">Pelabuhan & Ekonomi</span>
+                        <span class="station-desc" data-key="desc_economy">Dagangan Rempah, Emas & Hasil Laut</span>
+                    </div>
+                    <div class="station" id="station-bahasa" data-station="bahasa">
+                        <i>📜</i>
+                        <span class="station-name" data-key="st_culture">Bahasa & Persuratan</span>
+                        <span class="station-desc" data-key="desc_culture">Skrip Purba, Hikayat & Karya Sastera</span>
+                    </div>
+                    <div class="station" id="station-senibina" data-station="senibina">
+                        <i>🕌</i>
+                        <span class="station-name" data-key="st_arch">Seni Bina</span>
+                        <span class="station-desc" data-key="desc_arch">Candi, Masjid & Bandar Purba</span>
+                    </div>
+                    <div class="station" id="station-sosial" data-station="sosial">
+                        <i>👑</i>
+                        <span class="station-name" data-key="st_social">Struktur Sosial</span>
+                        <span class="station-desc" data-key="desc_social">Hierarki Raja, Bangsawan & Rakyat</span>
+                    </div>
                 </div>
             </div>
 
-            <button class="btn-lang" id="lang-toggle">
-                <span id="lang-ms">MS</span>
-                <span id="lang-en">EN</span>
-            </button>
+            <!-- Social Bar -->
+            <div id="social-bar">
+                <div class="social-chip">
+                    <div class="color-dot" style="background: gold;"></div> <span data-key="cls_royal">Diraja</span>
+                </div>
+                <div class="social-chip">
+                    <div class="color-dot" style="background: silver;"></div> <span
+                        data-key="cls_noble">Bangsawan</span>
+                </div>
+                <div class="social-chip">
+                    <div class="color-dot" style="background: saddlebrown;"></div> <span data-key="cls_free">Rakyat
+                        Merdeka</span>
+                </div>
+                <div class="social-chip">
+                    <div class="color-dot" style="background: #444;"></div> <span data-key="cls_slave">Hamba</span>
+                </div>
+            </div>
+
+            <!-- Screens -->
+            <div id="menu-screen" class="screen active">
+                <h1 data-key="title">ALAM MELAYU</h1>
+                <div class="subtitle" data-key="subtitle">Empayar Kebudayaan</div>
+                <button class="main-menu-btn" id="start-btn" data-key="start">Mula Berkhidmat / Start Service</button>
+                <p style="max-width: 600px; opacity: 0.8; line-height: 1.6;" data-key="instruction">
+                    Uruskan kegemilangan Kerajaan Alam Melayu. Isih barangan dagangan, skrip purba, dan struktur sosial
+                    ke
+                    balai yang betul sebelum masa tamat!
+                </p>
+            </div>
+
+            <div id="result-screen" class="screen">
+                <h2 data-key="game_over">Tamat Perkhidmatan</h2>
+                <div id="rank-title" class="rank-title">WAZIR AGUNG</div>
+
+                <div class="result-stats">
+                    <div class="result-row">
+                        <span data-key="final_score">Mata Akhir</span>
+                        <span id="final-score-val">0</span>
+                    </div>
+                    <div class="result-row">
+                        <span data-key="top_score">Skor Tertinggi</span>
+                        <span id="high-score-val">0</span>
+                    </div>
+                </div>
+
+                <div id="achievement-list"
+                    style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; justify-content: center;">
+                    <!-- Achievements pop here -->
+                </div>
+
+                <div style="display: flex; gap: 20px; margin-top: 20px;">
+                    <button class="main-menu-btn" id="restart-btn" data-key="restart">Main Semula / Play Again</button>
+                    <button class="main-menu-btn" id="submit-btn"
+                        style="background: linear-gradient(45deg, #2ecc71, #27ae60);">Hantar / Submit</button>
+                </div>
+            </div>
         </div>
 
-        <div id="multiplier-bar-container"
-            style="position: absolute; top: 110px; left: 50%; transform: translateX(-50%); width: 200px; height: 6px; background: rgba(0,0,0,0.5); border-radius: 3px; overflow: hidden; display: none; z-index: 90;">
-            <div id="multiplier-progress"
-                style="width: 100%; height: 100%; background: gold; transition: width 1s linear;"></div>
-        </div>
-
-        <!-- Gameplay Area -->
-        <div id="game-play-area">
-            <div id="conveyor-belt">
-                <span class="river-label" data-key="river">Aliran Warisan / Heritage Flow</span>
+        <!-- Achievements Notification -->
+        <div id="ach-popup"
+            style="position: absolute; bottom: 20px; right: 20px; background: gold; color: black; padding: 15px; border-radius: 10px; transform: translateX(200%); transition: 0.5s; z-index: 1000; font-weight: 800; display: flex; align-items: center; gap: 10px;">
+            <span style="font-size: 2rem;">🏆</span>
+            <div>
+                <div style="font-size: 0.7rem; text-transform: uppercase; opacity: 0.7;">Achievement Unlocked</div>
+                <div id="ach-text">Master Merchant</div>
             </div>
-
-            <div id="stations-grid">
-                <div class="station" id="station-ekonomi" data-station="ekonomi">
-                    <i>⚓</i>
-                    <span class="station-name" data-key="st_economy">Pelabuhan & Ekonomi</span>
-                    <span class="station-desc" data-key="desc_economy">Dagangan Rempah, Emas & Hasil Laut</span>
-                </div>
-                <div class="station" id="station-bahasa" data-station="bahasa">
-                    <i>📜</i>
-                    <span class="station-name" data-key="st_culture">Bahasa & Persuratan</span>
-                    <span class="station-desc" data-key="desc_culture">Skrip Purba, Hikayat & Karya Sastera</span>
-                </div>
-                <div class="station" id="station-senibina" data-station="senibina">
-                    <i>🕌</i>
-                    <span class="station-name" data-key="st_arch">Seni Bina</span>
-                    <span class="station-desc" data-key="desc_arch">Candi, Masjid & Bandar Purba</span>
-                </div>
-                <div class="station" id="station-sosial" data-station="sosial">
-                    <i>👑</i>
-                    <span class="station-name" data-key="st_social">Struktur Sosial</span>
-                    <span class="station-desc" data-key="desc_social">Hierarki Raja, Bangsawan & Rakyat</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Social Bar -->
-        <div id="social-bar">
-            <div class="social-chip">
-                <div class="color-dot" style="background: gold;"></div> <span data-key="cls_royal">Diraja</span>
-            </div>
-            <div class="social-chip">
-                <div class="color-dot" style="background: silver;"></div> <span data-key="cls_noble">Bangsawan</span>
-            </div>
-            <div class="social-chip">
-                <div class="color-dot" style="background: saddlebrown;"></div> <span data-key="cls_free">Rakyat
-                    Merdeka</span>
-            </div>
-            <div class="social-chip">
-                <div class="color-dot" style="background: #444;"></div> <span data-key="cls_slave">Hamba</span>
-            </div>
-        </div>
-
-        <!-- Screens -->
-        <div id="menu-screen" class="screen active">
-            <h1 data-key="title">ALAM MELAYU</h1>
-            <div class="subtitle" data-key="subtitle">Empayar Kebudayaan</div>
-            <button class="main-menu-btn" id="start-btn" data-key="start">Mula Berkhidmat / Start Service</button>
-            <p style="max-width: 600px; opacity: 0.8; line-height: 1.6;" data-key="instruction">
-                Uruskan kegemilangan Kerajaan Alam Melayu. Isih barangan dagangan, skrip purba, dan struktur sosial ke
-                balai yang betul sebelum masa tamat!
-            </p>
-        </div>
-
-        <div id="result-screen" class="screen">
-            <h2 data-key="game_over">Tamat Perkhidmatan</h2>
-            <div id="rank-title" class="rank-title">WAZIR AGUNG</div>
-
-            <div class="result-stats">
-                <div class="result-row">
-                    <span data-key="final_score">Mata Akhir</span>
-                    <span id="final-score-val">0</span>
-                </div>
-                <div class="result-row">
-                    <span data-key="top_score">Skor Tertinggi</span>
-                    <span id="high-score-val">0</span>
-                </div>
-            </div>
-
-            <div id="achievement-list"
-                style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; justify-content: center;">
-                <!-- Achievements pop here -->
-            </div>
-
-            <button class="main-menu-btn" id="restart-btn" data-key="restart">Main Semula / Play Again</button>
         </div>
     </div>
 
-    <!-- Achievements Notification -->
-    <div id="ach-popup"
-        style="position: absolute; bottom: 20px; right: 20px; background: gold; color: black; padding: 15px; border-radius: 10px; transform: translateX(200%); transition: 0.5s; z-index: 1000; font-weight: 800; display: flex; align-items: center; gap: 10px;">
-        <span style="font-size: 2rem;">🏆</span>
-        <div>
-            <div style="font-size: 0.7rem; text-transform: uppercase; opacity: 0.7;">Achievement Unlocked</div>
-            <div id="ach-text">Master Merchant</div>
-        </div>
-    </div>
-
+    <!-- Mock Environment for Local Testing -->
     <script>
-        /**
-         * ALAM MELAYU MINIGAME ENGINE
-         * Topic: Sosiobudaya & Ekonomi Kerajaan Alam Melayu
-         * Development for Kidocode Project
-         */
-
-        const LANG = {
-            ms: {
-                title: "EMPAYAR NUSANTARA",
-                subtitle: "WARISAN SOSIOBUDAYA & EKONOMI",
-                start: "Mula Berkhidmat",
-                score: "Mata",
-                timer: "Masa",
-                stars: "Kemakmuran",
-                river: "ALIRAN WARISAN SEJARAH",
-                st_economy: "Dermaga & Perdagangan",
-                desc_economy: "Isih Rempah, Emas, & Hasil Hutan",
-                st_culture: "Balai Persuratan",
-                desc_culture: "Skrip Purba, Inskripsi & Karya Sastera",
-                st_arch: "Tapak Seni Bina",
-                desc_arch: "Pembangunan Candi, Masjid & Monumen",
-                st_social: "Dewan Struktur Sosial",
-                desc_social: "Tentukan Hierarki Masyarakat",
-                cls_royal: "Diraja",
-                cls_noble: "Bangsawan",
-                cls_free: "Rakyat Merdeka",
-                cls_slave: "Hamba",
-                game_over: "TAMAT PERKHIDMATAN",
-                final_score: "Mata Keseluruhan",
-                top_score: "Skor Tertinggi",
-                restart: "Main Semula",
-                instruction: "Uraskan kegemilangan Kerajaan Alam Melayu. Isih item ke balai yang betul dengan menyeretnya! Item yang terlepas akan mengurangkan kemakmuran kingdom.",
-                ranks: ["Rakyat Biasa", "Satu-Satu", "Pembesar Kerajaan", "Wazir Agung", "Maharaja Budaya"],
-                fact_title: "TAHUKAH ANDA?",
-                btn_next: "Teruskan",
-                era_1: "Era Pembentukan",
-                era_2: "Zaman Kemuncak",
-                era_3: "Keemasan Nusantara",
-                multiplier_msg: "Multiplier Aktif!",
-                not_matched: "Salah Balai!",
-                missed: "Terlepas!",
-                ach_1: "Diplomat Ekonomi",
-                ach_2: "Arkitek Ulung",
-                ach_3: "Pujangga Istana",
-                ach_4: "Penjaga Kedaulatan"
-            },
-            en: {
-                title: "NUSANTARA EMPIRE",
-                subtitle: "SOCIO-CULTURAL & ECONOMIC LEGACY",
-                start: "Begin Service",
-                score: "Score",
-                timer: "Timer",
-                stars: "Prosperity",
-                river: "HISTORICAL HERITAGE FLOW",
-                st_economy: "Docks & Trade Hub",
-                desc_economy: "Sort Spices, Gold, & Jungle Produce",
-                st_culture: "Scriptorium",
-                desc_culture: "Ancient Scripts & Literary Works",
-                st_arch: "Architecture Site",
-                desc_arch: "Building Temples, Mosques & Monuments",
-                st_social: "Social Structure Hall",
-                desc_social: "Define Society Hierarchy",
-                cls_royal: "Royalty",
-                cls_noble: "Nobility",
-                cls_free: "Free Citizens",
-                cls_slave: "Slaves",
-                game_over: "SERVICE ENDED",
-                final_score: "Total Score",
-                top_score: "Top Score",
-                restart: "Play Again",
-                instruction: "Manage the glory of the Alam Melayu Kingdoms. Sort items to the correct hall by dragging them! Missed items reduce kingdom prosperity.",
-                ranks: ["Commoner", "Apprentice", "Court Official", "Grand Vizier", "Cultural Emperor"],
-                fact_title: "DID YOU KNOW?",
-                btn_next: "Continue",
-                era_1: "Era of Formation",
-                era_2: "Age of Prosperity",
-                era_3: "Nusantara Golden Age",
-                multiplier_msg: "Multiplier Active!",
-                not_matched: "Wrong Hall!",
-                missed: "Missed Item!",
-                ach_1: "Economic Diplomat",
-                ach_2: "Master Architect",
-                ach_3: "Palace Poet",
-                ach_4: "Guardian of Sovereignty",
-                combo: "Combo!",
-                multiplier_active: "Multiplier x2 Active!"
-            }
-        };
-
-        const ITEMS_DATA = [
-            // Ekonomi (Economic Activities)
-            { id: 'spices', type: 'ekonomi', ms: 'Rempah Ratus', en: 'Spices', icon: '🌿', fact: 'Cengkih dan buah pala adalah komoditi utama yang menarik pedagang luar ke Alam Melayu.' },
-            { id: 'gold', type: 'ekonomi', ms: 'Emas', en: 'Gold', icon: '💰', fact: 'Semenanjung Tanah Melayu dikenali sebagai "Golden Chersonese" atau Semenanjung Emas oleh orang Greko-Roman.' },
-            { id: 'camphor', type: 'ekonomi', ms: 'Kapur Barus', en: 'Camphor', icon: '💎', fact: 'Kapur barus digunakan sebagai ubat dan bahan pengawet, dieksport dari pelabuhan Barus di Sumatera.' },
-            { id: 'beads', type: 'ekonomi', ms: 'Manik Kaca', en: 'Glass Beads', icon: '🔮', fact: 'Manik kaca menjadi simbol status dan bahan pertukaran penting dalam perdagangan maritim.' },
-            { id: 'aromatic', type: 'ekonomi', ms: 'Kayu Gaharu', en: 'Aromatic Wood', icon: '🪵', fact: 'Gaharu digunakan untuk colok dan wangian, merupakan hasil hutan yang sangat berharga.' },
-            { id: 'tortoise', type: 'ekonomi', ms: 'Kulit Penyu', en: 'Tortoise Shell', icon: '🐢', fact: 'Kulit penyu dieksport ke China untuk dijadikan bahan perhiasan dan perubatan.' },
-            { id: 'silk', type: 'ekonomi', ms: 'Laluan Sutera', en: 'Silk Road Item', icon: '🧣', fact: 'Pelabuhan Alam Melayu menjadi pusat entrepot strategik antara China dan India.' },
-
-            // Bahasa & Persuratan (Language & Literature)
-            { id: 'palava', type: 'bahasa', ms: 'Inskripsi Palava', en: 'Palava Inscription', icon: '🗿', fact: 'Skrip Palava berasal dari India Selatan dan digunakan dalam batu bersurat awal Alam Melayu.' },
-            { id: 'kawi', type: 'bahasa', ms: 'Aksara Kawi', en: 'Kawi Script', icon: '🍃', fact: 'Aksara Kawi digunakan meluas untuk menulis bahasa Kawi purba di Jawa dan sekitarnya.' },
-            { id: 'jawi', type: 'bahasa', ms: 'Tulisan Jawi', en: 'Jawi Writing', icon: '🖊️', fact: 'Tulisan Jawi berkembang pesat seiring dengan penyebaran Islam di Alam Melayu.' },
-            { id: 'hikayat', type: 'bahasa', ms: 'Hikayat Seri Rama', en: 'Epic of Rama', icon: '📘', fact: 'Hikayat Seri Rama membuktikan pengaruh ajaran Hindu-Buddha dalam sastera awal.' },
-            { id: 'gurindam', type: 'bahasa', ms: 'Gurindam 12', en: 'Aphorisms (Gurindam)', icon: '📜', fact: 'Gurindam merupakan puisi lama yang mengandungi nasihat dan pengajaran moral.' },
-            { id: 'nagarak', type: 'bahasa', ms: 'Nagarakartagama', en: 'Nagarakartagama', icon: '📜', fact: 'Karya agung Prapanca ini menceritakan tentang kegemilangan empayar Majapahit.' },
-            { id: 'sanskrit', type: 'bahasa', ms: 'Bahasa Sanskrit', en: 'Sanskrit Language', icon: '🕉️', fact: 'Banyak perkataan Bahasa Melayu hari ini berakar daripada Bahasa Sanskrit.' },
-
-            // Seni Bina (Architecture)
-            { id: 'candi', type: 'senibina', ms: 'Candi Borobudur', en: 'Borobudur Temple', icon: '🏯', fact: 'Borobudur merupakan monumen Buddha terbesar di dunia, dibina oleh kerajaan Sailendra.' },
-            { id: 'angkor', type: 'senibina', ms: 'Angkor Wat', en: 'Angkor Wat', icon: '🏯', fact: 'Angkor Wat di Kemboja melambangkan kehebatan seni bina empayar Khmer.' },
-            { id: 'mosque', type: 'senibina', ms: 'Masjid Demak', en: 'Demak Mosque', icon: '🕌', fact: 'Masjid Demak merupakan salah satu masjid tertua di Jawa yang mengekalkan ciri seni bina tempatan.' },
-            { id: 'relief', type: 'senibina', ms: 'Arca & Relief', en: 'Carvings & Relief', icon: '🧱', fact: 'Relief pada candi menceritakan tentang kehidupan seharian dan kepercayaan masyarakat purba.' },
-            { id: 'ship', type: 'senibina', ms: 'Kapal Layar', en: 'Maritime Ships', icon: '⛵', fact: 'Teknologi perkapalan Alam Melayu sangat maju, membolehkan pelayaran jarak jauh.' },
-
-            // Sosial (Social Structure)
-            { id: 'king', type: 'sosial', ms: 'Raja / Maharaja', en: 'King / Emperor', icon: '👑', fact: 'Raja berada di puncak hierarki sosial dan dianggap sebagai tonggak kedaulatan.' },
-            { id: 'lords', type: 'sosial', ms: 'Pembesar / Datu', en: 'Chiefs / Datu', icon: '🛡️', fact: 'Pembesar bertanggungjawab mentadbir wilayah dan membantu raja dalam pemerintahan.' },
-            { id: 'merdeka', type: 'sosial', ms: 'Rakyat Merdeka', en: 'Free Citizens', icon: '👨‍🌾', fact: 'Rakyat merdeka terdiri daripada petani, pedagang, dan tukang yang menyumbang kepada ekonomi.' },
-            { id: 'slaves', type: 'sosial', ms: 'Hamba', en: 'Slaves', icon: '⛓️', fact: 'Hamba berada di lapisan paling bawah dan berkhidmat untuk golongan atasan.' }
-        ];
-
-        class Game {
-            constructor() {
-                this.currentLang = 'ms';
-                this.score = 0;
-                this.highScore = localStorage.getItem('alamMelayuHighScore') || 0;
-                this.timeLeft = 120;
-                this.gameState = 'MENU';
-                this.items = [];
-                this.spawnTimerId = null;
-                this.countDownId = null;
-                this.draggedElement = null;
-                this.draggedID = null;
-                this.prosperity = 50; // Start at 50%
-                this.multiplier = 1;
-                this.multiplierTimer = 0;
-                this.era = 1;
-                this.correctCount = 0;
-                this.comboCount = 0;
-                this.maxCombo = 0;
-                this.achievements = [];
-
-                this.init();
-            }
-
-            init() {
-                // UI Bindings
-                this.dom = {
-                    container: document.getElementById('game-container'),
-                    score: document.getElementById('score-val'),
-                    timer: document.getElementById('timer-val'),
-                    langBtn: document.getElementById('lang-toggle'),
-                    startBtn: document.getElementById('start-btn'),
-                    restartBtn: document.getElementById('restart-btn'),
-                    menuScreen: document.getElementById('menu-screen'),
-                    resultScreen: document.getElementById('result-screen'),
-                    gameArea: document.getElementById('game-play-area'),
-                    conveyor: document.getElementById('conveyor-belt'),
-                    finalScore: document.getElementById('final-score-val'),
-                    highScore: document.getElementById('high-score-val'),
-                    rankTitle: document.getElementById('rank-title'),
-                    stars: [
-                        document.getElementById('star-1'),
-                        document.getElementById('star-2'),
-                        document.getElementById('star-3')
-                    ],
-                    combo: document.getElementById('combo-val'),
-                    comboContainer: document.getElementById('combo-box'),
-                    multiplierBar: document.getElementById('multiplier-bar-container'),
-                    multiplierProgress: document.getElementById('multiplier-progress'),
-                    langMs: document.getElementById('lang-ms'),
-                    langEn: document.getElementById('lang-en')
-                };
-
-                // Fact Overlay
-                this.createFactOverlay();
-
-                // Event Listeners
-                this.dom.langBtn.addEventListener('click', () => this.toggleLang());
-                this.dom.startBtn.addEventListener('click', () => this.startGame());
-                this.dom.restartBtn.addEventListener('click', () => this.startGame());
-
-                // Interaction Listeners
-                this.setupStations();
-                this.updateLanguageUI();
-                this.createParticleContainer();
-            }
-
-            createFactOverlay() {
-                this.factOverlay = document.createElement('div');
-                this.factOverlay.id = 'fact-overlay';
-                this.factOverlay.style.cssText = `
-                position: absolute; top:0; left:0; width:100%; height:100%;
-                background: rgba(0,0,0,0.9); display: none;
-                flex-direction: column; justify-content: center; align-items: center;
-                z-index: 300; text-align: center; padding: 40px;
-            `;
-                this.factOverlay.innerHTML = `
-                <div class="fact-box" style="max-width: 500px; padding: 30px; border: 2px solid var(--primary); border-radius: 20px; background: #1a1a1a;">
-                    <h3 id="fact-title-text" style="color: var(--primary); margin-bottom: 20px; font-family: 'Playfair Display', serif; font-size: 2rem;"></h3>
-                    <p id="fact-content" style="font-size: 1.1rem; line-height: 1.6; margin-bottom: 30px;"></p>
-                    <button class="main-menu-btn" id="fact-close-btn" style="margin-bottom: 0;"></button>
-                </div>
-            `;
-                this.dom.container.appendChild(this.factOverlay);
-                document.getElementById('fact-close-btn').addEventListener('click', () => {
-                    this.factOverlay.style.display = 'none';
-                    this.gameState = 'PLAYING';
-                });
-            }
-
-            createParticleContainer() {
-                this.particleLayer = document.createElement('div');
-                this.particleLayer.id = 'particle-layer';
-                this.particleLayer.style.cssText = `
-                position: absolute; top:0; left:0; width:100%; height:100%;
-                pointer-events: none; z-index: 150;
-            `;
-                this.dom.container.appendChild(this.particleLayer);
-            }
-
-            toggleLang() {
-                this.currentLang = this.currentLang === 'ms' ? 'en' : 'ms';
-                this.updateLanguageUI();
-
-                // Update items
-                document.querySelectorAll('.legacy-item').forEach(el => {
-                    const id = el.dataset.id;
-                    const data = ITEMS_DATA.find(i => i.id === id);
-                    el.querySelector('.item-text').innerText = data[this.currentLang];
-                });
-            }
-
-            updateLanguageUI() {
-                const strings = LANG[this.currentLang];
-                document.querySelectorAll('[data-key]').forEach(el => {
-                    const key = el.getAttribute('data-key');
-                    if (strings[key]) el.innerText = strings[key];
-                });
-
-                // Update Lang Toggle Visuals
-                if (this.currentLang === 'ms') {
-                    this.dom.langMs.classList.add('active');
-                    this.dom.langEn.classList.remove('active');
-                } else {
-                    this.dom.langMs.classList.remove('active');
-                    this.dom.langEn.classList.add('active');
-                }
-
-                document.getElementById('fact-close-btn').innerText = strings.btn_next;
-                document.getElementById('fact-title-text').innerText = strings.fact_title;
-            }
-
-            startGame() {
-                this.score = 0;
-                this.timeLeft = 120;
-                this.prosperity = 50;
-                this.gameState = 'PLAYING';
-                this.era = 1;
-                this.correctCount = 0;
-                this.comboCount = 0;
-                this.multiplier = 1;
-                this.multiplierTimer = 0;
-                this.achievements = [];
-
-                this.dom.score.innerText = '0';
-                this.dom.combo.innerText = '0x';
-                this.dom.comboContainer.style.opacity = '0';
-                this.dom.multiplierBar.style.display = 'none';
-                this.dom.timer.innerText = '02:00';
-                this.updateStars();
-                this.updateEraUI();
-
-                this.dom.menuScreen.classList.remove('active');
-                this.dom.resultScreen.classList.remove('active');
-                this.dom.conveyor.querySelectorAll('.legacy-item').forEach(e => e.remove());
-
-                this.startTimers();
-            }
-
-            startTimers() {
-                if (this.spawnTimerId) clearInterval(this.spawnTimerId);
-                if (this.countDownId) clearInterval(this.countDownId);
-
-                this.countDownId = setInterval(() => {
-                    if (this.gameState !== 'PLAYING') return;
-
-                    this.timeLeft--;
-                    const mins = Math.floor(this.timeLeft / 60);
-                    const secs = this.timeLeft % 60;
-                    this.dom.timer.innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-
-                    if (this.multiplierTimer > 0) {
-                        this.multiplierTimer--;
-                        const percent = (this.multiplierTimer / 10) * 100;
-                        this.dom.multiplierProgress.style.width = percent + '%';
-
-                        if (this.multiplierTimer === 0) {
-                            this.multiplier = 1;
-                            this.dom.multiplierBar.style.display = 'none';
-                            this.showNotification("Multiplier Ended", "orange", this.dom.container);
-                        }
-                    }
-
-                    if (this.timeLeft <= 0) this.endGame();
-                }, 1000);
-
-                this.spawnLoop();
-            }
-
-            spawnLoop() {
-                const spawnStep = () => {
-                    if (this.gameState === 'FINISHED') return;
-
-                    if (this.gameState === 'PLAYING') {
-                        this.spawnItem();
-                    }
-
-                    let baseRate = 2200;
-                    if (this.era === 2) baseRate = 1600;
-                    if (this.era === 3) baseRate = 1000;
-
-                    const rate = Math.max(700, baseRate - (this.score / 15));
-                    this.spawnTimerId = setTimeout(spawnStep, rate);
-                };
-                spawnStep();
-            }
-
-            spawnItem() {
-                // Filter items based on Era for better progression
-                let pool = ITEMS_DATA;
-                if (this.era === 1) pool = ITEMS_DATA.filter(i => ['spices', 'gold', 'palava', 'merdeka', 'slaves', 'candi'].includes(i.id));
-
-                const data = pool[Math.floor(Math.random() * pool.length)];
-                const el = document.createElement('div');
-                el.className = 'legacy-item';
-                el.draggable = true;
-                el.dataset.id = data.id;
-                el.dataset.type = data.type;
-
-                el.innerHTML = `
-                <div class="icon-fallback">${data.icon}</div>
-                <div class="item-text">${data[this.currentLang]}</div>
-            `;
-
-                const top = 30 + Math.random() * 50;
-                el.style.top = top + 'px';
-                this.dom.conveyor.appendChild(el);
-
-                let posX = -120;
-                const moveSpeed = (this.era * 0.8) + (this.score / 500) + 1.2;
-
-                const move = () => {
-                    if (this.gameState === 'FINISHED' || !el.parentElement) return;
-                    if (this.gameState === 'PLAYING') {
-                        posX += moveSpeed;
-                        el.style.left = posX + 'px';
-                    }
-
-                    if (posX > this.dom.conveyor.offsetWidth) {
-                        this.handleMiss();
-                        el.remove();
-                    } else {
-                        requestAnimationFrame(move);
-                    }
-                };
-                requestAnimationFrame(move);
-
-                el.addEventListener('dragstart', (e) => {
-                    this.draggedElement = el;
-                    this.draggedID = data.id;
-                    el.style.transform = 'scale(1.2) rotate(5deg)';
-                    el.style.opacity = '0.7';
-                });
-
-                el.addEventListener('dragend', () => {
-                    this.draggedElement = null;
-                    if (el) {
-                        el.style.transform = 'none';
-                        el.style.opacity = '1';
-                    }
-                });
-            }
-
-            setupStations() {
-                document.querySelectorAll('.station').forEach(st => {
-                    st.addEventListener('dragover', (e) => {
-                        e.preventDefault();
-                        st.style.border = '2px solid var(--primary)';
-                        st.style.transform = 'scale(1.02)';
-                    });
-
-                    st.addEventListener('dragleave', () => {
-                        st.style.border = '1px solid var(--glass-border)';
-                        st.style.transform = 'scale(1)';
-                    });
-
-                    st.addEventListener('drop', (e) => {
-                        e.preventDefault();
-                        st.style.border = '1px solid var(--glass-border)';
-                        st.style.transform = 'scale(1)';
-
-                        if (this.draggedElement) {
-                            const targetType = st.dataset.station;
-                            const itemType = this.draggedElement.dataset.type;
-                            const itemID = this.draggedElement.dataset.id;
-
-                            if (targetType === itemType) {
-                                this.handleCorrect(st, itemID);
-                            } else {
-                                this.handleWrong(st);
-                            }
-                            this.draggedElement.remove();
-                        }
-                    });
-                });
-            }
-
-            handleCorrect(station, itemID) {
-                const data = ITEMS_DATA.find(i => i.id === itemID);
-                this.comboCount++;
-                if (this.comboCount > this.maxCombo) this.maxCombo = this.comboCount;
-
-                const comboBonus = Math.floor(this.comboCount / 5);
-                const points = 10 * this.multiplier * this.era * (comboBonus + 1);
-                this.score += points;
-                this.correctCount++;
-                this.prosperity = Math.min(100, this.prosperity + 5);
-
-                this.dom.score.innerText = this.score;
-                this.updateStars();
-                this.showNotification(`+${points}`, "var(--success)", station);
-                this.spawnParticles(station, "var(--success)");
-
-                // Combo UI
-                if (this.comboCount > 1) {
-                    this.dom.combo.innerText = this.comboCount + 'x';
-                    this.dom.comboContainer.style.opacity = '1';
-                    this.dom.combo.style.transform = 'scale(1.4)';
-                    setTimeout(() => this.dom.combo.style.transform = 'scale(1)', 200);
-                }
-
-                // Social Multiplier Logic
-                if (data.type === 'sosial' && (data.id === 'king' || data.id === 'lords')) {
-                    this.multiplier = 2;
-                    this.multiplierTimer = 10;
-                    this.dom.multiplierBar.style.display = 'block';
-                    this.dom.multiplierProgress.style.width = '100%';
-                    this.showNotification(LANG[this.currentLang].multiplier_msg, "gold", station);
-                }
-
-                // Fact Pop-up Logic
-                if (this.correctCount % 10 === 0) {
-                    this.showFact(data);
-                }
-
-                // Achievements Logic
-                this.checkAchievements(data);
-
-                // Progress Eras
-                if (this.score > 300 && this.era === 1) this.advanceEra(2);
-                if (this.score > 1000 && this.era === 2) this.advanceEra(3);
-
-                // Visual Punch
-                station.style.animation = 'pulse 0.3s ease';
-                setTimeout(() => station.style.animation = '', 300);
-
-                // Audio Simulation (Visual Pulse of HUD)
-                this.dom.score.parentElement.style.transform = 'scale(1.2)';
-                setTimeout(() => this.dom.score.parentElement.style.transform = 'scale(1)', 100);
-            }
-
-            checkAchievements(item) {
-                const strings = LANG[this.currentLang];
-                if (this.score >= 500 && !this.achievements.includes('ach_1')) {
-                    this.unlockAchievement('ach_1', strings.ach_1);
-                }
-                if (this.correctCount >= 20 && !this.achievements.includes('ach_2')) {
-                    this.unlockAchievement('ach_2', strings.ach_2);
-                }
-                if (item.type === 'bahasa' && !this.achievements.includes('ach_3')) {
-                    this.unlockAchievement('ach_3', strings.ach_3);
-                }
-                if (this.prosperity >= 95 && !this.achievements.includes('ach_4')) {
-                    this.unlockAchievement('ach_4', strings.ach_4);
-                }
-            }
-
-            unlockAchievement(id, name) {
-                this.achievements.push(id);
-                const pop = document.getElementById('ach-popup');
-                document.getElementById('ach-text').innerText = name;
-                pop.style.transform = 'translateX(0)';
-                setTimeout(() => pop.style.transform = 'translateX(200%)', 3000);
-            }
-
-            handleWrong(station) {
-                this.comboCount = 0;
-                this.dom.comboContainer.style.opacity = '0';
-                this.prosperity = Math.max(0, this.prosperity - 15);
-                this.showNotification(LANG[this.currentLang].not_matched, "var(--danger)", station);
-                this.spawnParticles(station, "var(--danger)");
-                this.updateStars();
-
-                // Shake Screen
-                this.dom.container.style.animation = 'shake 0.2s';
-                setTimeout(() => this.dom.container.style.animation = '', 200);
-            }
-
-            handleMiss() {
-                this.comboCount = 0;
-                this.dom.comboContainer.style.opacity = '0';
-                this.prosperity = Math.max(0, this.prosperity - 10);
-                this.showNotification(LANG[this.currentLang].missed, "rgba(255,255,255,0.5)", this.dom.conveyor);
-                this.updateStars();
-
-                if (this.prosperity <= 0) {
-                    // Could end early but keeping it playable
-                }
-            }
-
-            showFact(data) {
-                this.gameState = 'PAUSED';
-                const strings = LANG[this.currentLang];
-                document.getElementById('fact-content').innerText = data.fact || data[this.currentLang];
-                this.factOverlay.style.display = 'flex';
-            }
-
-            advanceEra(newEra) {
-                this.era = newEra;
-                this.updateEraUI();
-                const msg = LANG[this.currentLang][`era_${newEra}`];
-                this.showBigNf(msg);
-            }
-
-            updateEraUI() {
-                const colors = ["#2c3e50", "#1a2a2d", "#2d1a1a"];
-                const bg = `linear-gradient(135deg, ${colors[this.era - 1]} 0%, #000 100%)`;
-                this.dom.container.style.background = bg;
-            }
-
-            updateStars() {
-                const count = Math.floor(this.prosperity / 33.3);
-                this.dom.stars.forEach((star, idx) => {
-                    star.classList.toggle('earned', idx < count);
-                });
-            }
-
-            showNotification(text, color, target) {
-                const rect = target.getBoundingClientRect();
-                const note = document.createElement('div');
-                note.className = 'notification';
-                note.innerText = text;
-                note.style.color = color;
-                note.style.left = (rect.left + rect.width / 2) + 'px';
-                note.style.top = (rect.top + 20) + 'px';
-                document.body.appendChild(note);
-                setTimeout(() => note.remove(), 1000);
-            }
-
-            showBigNf(text) {
-                const nf = document.createElement('div');
-                nf.style.cssText = `
-                    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-                    font-size: 3.5rem; font-weight: 900; color: var(--primary);
-                    text-shadow: 0 0 30px rgba(212, 175, 55, 0.5); z-index: 200; pointer-events: none;
-                    animation: bigFade 2.5s forwards; text-transform: uppercase;
-                    font-family: 'Playfair Display', serif; display: flex; flex-direction: column; align-items: center; gap: 10px;
-                `;
-                nf.innerHTML = `<div>${text}</div><div style="font-size: 1.2rem; background: var(--primary); color: black; padding: 5px 15px; border-radius: 20px;">ERA ADVANCED</div>`;
-                this.dom.container.appendChild(nf);
-                setTimeout(() => nf.remove(), 2500);
-                this.spawnEraParticles();
-            }
-
-            spawnEraParticles() {
-                for (let i = 0; i < 30; i++) {
-                    setTimeout(() => {
-                        const p = document.createElement('div');
-                        p.style.cssText = `
-                            position: absolute; width: 10px; height: 10px;
-                            background: gold; border-radius: 50%;
-                            left: ${Math.random() * 100}%; bottom: -20px;
-                            pointer-events: none; opacity: 0.6; z-index: 5;
-                            box-shadow: 0 0 10px gold;
-                        `;
-                        this.dom.container.appendChild(p);
-
-                        p.animate([
-                            { transform: 'translateY(0) scale(1)', opacity: 0.6 },
-                            { transform: `translateY(-${this.dom.container.offsetHeight + 50}px) scale(0)`, opacity: 0 }
-                        ], { duration: 3000 + Math.random() * 2000, easing: 'ease-out' }).onfinish = () => p.remove();
-                    }, i * 50);
-                }
-            }
-
-            spawnParticles(target, color) {
-                const rect = target.getBoundingClientRect();
-                for (let i = 0; i < 15; i++) {
-                    const p = document.createElement('div');
-                    p.style.cssText = `
-                        position: absolute; width: ${Math.random() * 6 + 2}px; height: ${Math.random() * 6 + 2}px;
-                        background: ${color}; border-radius: ${Math.random() > 0.5 ? '50%' : '0'};
-                        left: ${rect.left + rect.width / 2}px;
-                        top: ${rect.top + rect.height / 2}px;
-                        pointer-events: none;
-                        z-index: 1000;
-                    `;
-                    this.particleLayer.appendChild(p);
-                    const angle = Math.random() * Math.PI * 2;
-                    const dist = 40 + Math.random() * 80;
-                    const tx = Math.cos(angle) * dist;
-                    const ty = Math.sin(angle) * dist;
-                    p.animate([
-                        { transform: 'translate(0,0) rotate(0deg)', opacity: 1 },
-                        { transform: `translate(${tx}px, ${ty}px) rotate(360deg)`, opacity: 0 }
-                    ], { duration: 800, easing: 'cubic-bezier(0.1, 1, 0.1, 1)' }).onfinish = () => p.remove();
-                }
-            }
-
-            endGame() {
-                this.gameState = 'FINISHED';
-                if (this.spawnTimerId) clearTimeout(this.spawnTimerId);
-                if (this.countDownId) clearInterval(this.countDownId);
-                if (this.score > this.highScore) {
-                    this.highScore = this.score;
-                    localStorage.setItem('alamMelayuHighScore', this.score);
-                }
-                this.dom.finalScore.innerText = this.score;
-                this.dom.highScore.innerText = this.highScore;
-                const ranks = LANG[this.currentLang].ranks;
-                let ridx = 0;
-                if (this.score > 300) ridx = 1;
-                if (this.score > 800) ridx = 2;
-                if (this.score > 1800) ridx = 3;
-                if (this.score > 3000) ridx = 4;
-                this.dom.rankTitle.innerText = ranks[ridx];
-
-                const achList = document.getElementById('achievement-list');
-                achList.innerHTML = '';
-                this.achievements.forEach(id => {
-                    const badge = document.createElement('div');
-                    badge.style.cssText = "background: var(--primary); color: black; padding: 5px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: 800;";
-                    badge.innerText = LANG[this.currentLang][id];
-                    achList.appendChild(badge);
-                });
-                this.dom.resultScreen.classList.add('active');
-            }
+        // Use document as root if not in platform
+        if (typeof root === 'undefined') {
+            window.root = document;
         }
-
-        const style = document.createElement('style');
-        style.innerHTML = `
-            @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
-            @keyframes bigFade { 0% { opacity: 0; transform: translate(-50%, -120%) scale(0.8); } 20% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); } 80% { opacity: 1; transform: translate(-50%, -50%) scale(1); } 100% { opacity: 0; transform: translate(-50%, 0%) scale(0.9); } }
-            @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-10px); } 75% { transform: translateX(10px); } }
-            .legacy-item:hover { box-shadow: 0 0 20px var(--primary); border-color: #fff; z-index: 100 !important; }
-            .stat-box { transition: transform 0.1s; }
-            #conveyor-belt::after { content: ''; position: absolute; top:0; left:0; width:100%; height:100%; background: linear-gradient(90deg, #000 0%, transparent 10%, transparent 90%, #000 100%); pointer-events: none; }
-        `;
-        document.head.appendChild(style);
-
-        window.onload = () => {
-            new Game();
-        };
+        // Mock game object if not in platform
+        if (typeof game === 'undefined') {
+            window.game = {
+                end: (data) => {
+                    console.log('Game Ended:', data);
+                    alert('Game Ended! Score: ' + data.score);
+                },
+                emit: (event, data) => console.log('Event Emitted:', event, data)
+            };
+        }
     </script>
+    <script src="script.js"></script>
 </body>
 
 </html>
